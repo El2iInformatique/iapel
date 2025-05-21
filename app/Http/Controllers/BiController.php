@@ -137,7 +137,10 @@ class BiController extends Controller
         // Lire et décoder le fichier JSON
         $data = json_decode(file_get_contents($filePath), true);
 
-        if (str_starts_with($document, 'cerfa')) {
+        if (str_starts_with($document, 'cerfa_15497_')) {
+            return view('cerfa_15497', compact('data', 'client', 'uid', 'document'));
+        }
+        else if (str_starts_with($document, 'cerfa')) {
             return view($document, compact('data', 'client', 'uid'));
         } else {
             return view('bi', compact('data', 'client', 'document', 'uid'));

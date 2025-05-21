@@ -73,6 +73,8 @@ Route::post('/delete-visuel', function(Request $request) {
 
 // routes de générations des pdfs 
 Route::get('/generate-cerfa_15497', [PdfController::class, 'generateCerfa']);
+Route::get('/generate-cerfa_15497_1', [PdfController::class, 'generateCerfa']);
+Route::get('/generate-cerfa_15497_2', [PdfController::class, 'generateCerfa']);
 Route::get('/generate-cerfa_13948-03', [PdfController::class, 'generateAttestationTVA']);
 Route::get('/generate-rapport_intervention', [PdfController::class, 'generateBi']);
 

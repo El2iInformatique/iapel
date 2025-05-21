@@ -1,10 +1,10 @@
 <?php
-    $pdfPath = storage_path('app/public/'.$client.'/cerfa_15497/'.$uid.'/'.$uid.'.pdf');
+    $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf');
 ?>
 
 @if(file_exists($pdfPath))
     <script>
-        window.location.href = "{{ route('pdf.view', ['client' => $client, 'document' => 'cerfa_15497','uid' => $uid]) }}";
+        window.location.href = "{{ route('pdf.view', ['client' => $client, 'document' => $document,'uid' => $uid]) }}";
     </script>
 @else
 <!DOCTYPE html>
@@ -12,7 +12,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>Formulaire CERFA 15497-03</title>
+    <title>Formulaire CERFA 15497-04</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     
@@ -27,7 +27,7 @@
                     <div class="card-body">
 
                         <!-- Formulaire -->
-                        <form action="{{ route('bi.submit', ['client' => $client, 'document' => 'cerfa_15497', 'uid' => $uid]) }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('bi.submit', ['client' => $client, 'document' => $document, 'uid' => $uid]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                                 <h5 class="mt-4">[1] Opérateur</h5>
                                 <hr>
