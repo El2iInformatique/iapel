@@ -141,7 +141,7 @@ class BiController extends Controller
             return view('cerfa_15497', compact('data', 'client', 'uid', 'document'));
         }
         else if (str_starts_with($document, 'cerfa')) {
-            return view($document, compact('data', 'client', 'uid'));
+            return view($document, compact('data', 'client', 'uid', 'document'));
         } else {
             return view('bi', compact('data', 'client', 'document', 'uid'));
         }
