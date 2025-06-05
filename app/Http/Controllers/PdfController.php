@@ -16,7 +16,7 @@ class PdfController extends Controller
     
     public function show($client,$document,$uid)
     {
-        return view('pdf', compact('client','document','uid'));        
+        return view('pdf', compact('client','document', 'uid'));        
     }
 
     public function generateDownloadPDF(Request $request)
@@ -530,6 +530,27 @@ class PdfController extends Controller
                 $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
                                       
             }
+        }
+
+        $x_complement_client = 10; //alignement x des complement client 
+        $y_complement_client = 20; //alignement y des complement client 
+
+        if ($data['complement_client'] && count($data['complement_client']) > 0) {
+            $complement_client = $data['complement_client'];
+
+            $pdf->AddPage();
+            $pdf->SetFont('helvetica', 'b', 14);
+
+
+            foreach ($data['complement_client'] as $item) { // Donne a $item un tableau avec item et question
+                
+                $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
+                $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
+                $pdf->Text($x_complement_client + 100, $y_complement_client, $item['value']);
+
+                $y_complement_client += 10;
+            }
+
         }
 
         // Aplatir le PDF en l'empêchant d'être modifié
