@@ -212,12 +212,27 @@ class BiController extends Controller
             $data['complement_client'] = [];
 
             foreach ($request->all() as $key => $value) {
-                if (str_starts_with($key, 'item')) {
+
+                if ($request->hasfile($key)) {
                     $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
+
+                    $imagePath = $request->file($key)->store($biPath, 'public');
+                    $data['complement_client'][] = [
+                        'value' => $imagePath,
+                        'question' => $question,
+                        'type' => 'img'
+                    ];
+                }
+                else if (str_starts_with($key, 'item')) {
+                    $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
+                    
+                    Log::info('Question : ' . $question);
+                    Log::info("Valeur : " . $value);
 
                     $data['complement_client'][] = [
                         'value' => $value,
-                        'question' => $question
+                        'question' => $question,
+                        'type' => 'text'
                     ];
                 }
             }

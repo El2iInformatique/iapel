@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class PdfController extends Controller
 {
-    
+
     public function show($client,$document,$uid)
     {
         return view('pdf', compact('client','document', 'uid'));        
@@ -538,18 +538,57 @@ class PdfController extends Controller
         if ($data['complement_client'] && count($data['complement_client']) > 0) {
             $complement_client = $data['complement_client'];
 
-            $pdf->AddPage();
-            $pdf->SetFont('helvetica', 'b', 14);
+            $pdf->AddPage(); 
+            $pdf->SetFont('helvetica', 'b', 9);
 
-
+            // boucle sur les complement client 
             foreach ($data['complement_client'] as $item) { // Donne a $item un tableau avec item et question
                 
-                $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
-                $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
-                $pdf->Text($x_complement_client + 100, $y_complement_client, $item['value']);
+                if ($item['type'] === 'text') {
+                    $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
+                    $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
 
-                $y_complement_client += 10;
+                    $texteFormaterArray = $this->formatTexte($item['value']);
+
+                    foreach ($texteFormaterArray as $key => $value) {
+                        if ($key === 0) $pdf->Text($x_complement_client + 100, $y_complement_client, $value);
+                        else $pdf->Text($x_complement_client + 5, $y_complement_client, $value);
+
+                        $y_complement_client += 8;
+                    }
+                    
+                }
+                else {
+                    $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
+                    $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
+
+                    $imagePath = storage_path('app/public/'.$item['value']);
+                    if ($imagePath && file_exists($imagePath)) {
+                        list($width, $height) = getimagesize($imagePath); // Récupère la taille originale
+                        $maxWidth = 55;
+                        $maxHeight = 50;
+                        // Calcul du redimensionnement en conservant le ratio
+                        if ($width > $height) {
+                            $newWidth = $maxWidth;
+                            $newHeight = ($height / $width) * $maxWidth;
+                        } else {
+                            $newHeight = $maxHeight;
+                            $newWidth = ($width / $height) * $maxHeight;
+                        }
+                        // Calcul des positions pour centrer dans le carré
+                        $xImage = $x_complement_client + ($maxWidth - $newWidth) / 2;
+                        $yImage = $y_complement_client + 5 + ($maxHeight - $newHeight) / 2;
+
+                        // Affichage de l'image redimensionnée
+                        $pdf->Image($imagePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);  
+                        
+                        $y_complement_client = $yImage + $newHeight + 8;
+                    }
+                }
+                
             }
+
+            $pdf->Text($x_complement_client, $y_complement_client, 'Test');
 
         }
 
@@ -560,6 +599,29 @@ class PdfController extends Controller
             'Content-Disposition' => 'inline; filename="' . $uid . '"'
         ]);
     }
+
+    private function formatTexte($texte) {
+        $texte = trim($texte);
+        $resultat = [];
+    
+        // Première ligne : max 40 caractères
+        if (strlen($texte) <= 52) {
+            $resultat[] = $texte;
+        } else {
+            $resultat[] = substr($texte, 0, 52);
+            $reste = substr($texte, offset: 50);
+    
+            // Lignes suivantes : max 100 caractères
+            while (strlen($reste) > 0) {
+                $resultat[] = substr($reste, 0, 108);
+                $reste = substr($reste, 108);
+            }
+        }
+    
+        // Retourne le texte avec des retours à la ligne
+        return $resultat;
+    }
+    
 
     public function generateCerfa(Request $request)
     {
