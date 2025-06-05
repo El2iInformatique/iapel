@@ -33,6 +33,7 @@ class DevisController extends Controller
 
         $devisDir = $token->devis_id . '_' . $noToken;
 
+	$devisPath = $token->organisation_id . '/devis/' . $devisDir . '/';
         $pdfPath = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '.pdf';
         $pdfPathCertif = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '_certifie.pdf';
         try {
@@ -44,6 +45,10 @@ class DevisController extends Controller
             if (Storage::disk('public')->exists($pdfPathCertif)) {
                 Storage::disk('public')->delete($pdfPathCertif);
             }
+
+	    if (Storage::disk('public')->exists($devisPath)){
+		Storage::disk('public')->deleteDirectory($devisPath);
+	    }
 
             // Supprimer le token
             $token->delete();
