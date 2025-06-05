@@ -99,7 +99,7 @@ class SignatureController extends Controller
             $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
 
             // Si avant-dernière page, appliquer signature et date
-            if ($i == $pageCount - 1) {
+            if ($i == $pageCount - $tokenEntry->nb_pages) {
                 $hauteurSignature = $tokenEntry->position_signature;
 
                 $ratioConversion = 6.98; // ce 6.98 a l'air de sortir du chapeau mais je jure que c'est un ratio correct que j'ai calculé a la main
