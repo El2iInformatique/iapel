@@ -10,9 +10,9 @@ class Token extends Model {
     use HasFactory;
 
     protected $fillable = ['token', 'organisation_id', 'tiers','client_email', 'devis_id', 'used', 'expires_at', 'titre', 'montant_HT', 'montant_TVA', 
-                            'montant_TTC','x_signature','y_signature','x_date','y_date'];
+                            'montant_TTC','x_signature','y_signature','x_date','y_date','nb_pages'];
 
-    public static function generateToken($organisationId,$tiers, $devisId, $clientEmail, $titre, $montantHT, $montantTVA, $montantTTC,$coords) {
+    public static function generateToken($organisationId,$tiers, $devisId, $clientEmail, $titre, $montantHT, $montantTVA, $montantTTC,$coords, $nbpages) {
 
         return self::create([
             'token' => Str::random(40),
@@ -29,6 +29,7 @@ class Token extends Model {
             'y_signature' => $coords['y_signature'],
             'x_date' => $coords['x_date'],
             'y_date' => $coords['y_date'],
+            'nb_pages' => $nbpages,
         ]);
     }
 

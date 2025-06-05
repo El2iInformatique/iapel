@@ -22,6 +22,7 @@ class TokenController extends Controller
             'montant_TVA' => 'required|numeric|min:0',
             'montant_TTC' => 'required|numeric|min:0',
             'coords' => 'required|json',
+            'nb_pages' => 'required|numeric|min:0',
         ]);
 
         if (!$request->hasHeader('secret-token')) {
@@ -54,7 +55,8 @@ class TokenController extends Controller
             $request->montant_HT,
             $request->montant_TVA,
             $request->montant_TTC,
-            $coords
+            $coords,
+            $request->nb_pages,
         );
 
         return response()->json([
