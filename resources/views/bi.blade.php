@@ -203,6 +203,27 @@
                                     </div>
                                 </div>
 
+                                <!-- Test si le client a une partie supplémentaire -->
+                                @if (isset($client_layout))
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="accordion_header_customisation">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_customisation" aria-expanded="false" aria-controls="accordion_collapse_customisation">
+                                            4 - Complement d'intervention rajouter
+                                        </button>
+                                    </h2>
+                                    <div id="accordion_collapse_customisation" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
+                                        <div class="accordion-body">
+                                            <!-- Layout modifier du client-->
+
+                                            @include('custom/'. $client_layout['nom_layout'])
+
+                                            <div id="complements_apercu" class="mt-3 row"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+
                             </diV>
 
                             <hr>

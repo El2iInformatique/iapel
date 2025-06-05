@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Token;
+use App\Models\layou_client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -33,8 +34,12 @@ class BiController extends Controller
     public function createJson(Request $request)
     {
 
-        $data = json_decode($request->getContent(), true);
-
+        $data = $request->input();
+        Log::info('Content : ');
+        Log::info($request->getContent());
+        Log::info('input : ');
+        Log::info($request->input());
+        
         $uid = $data['uid'];
         $document = $data['document'];
         $client = $data['client'];
@@ -143,7 +148,16 @@ class BiController extends Controller
         else if (str_starts_with($document, 'cerfa')) {
             return view($document, compact('data', 'client', 'uid', 'document'));
         } else {
-            return view('bi', compact('data', 'client', 'document', 'uid'));
+
+            $client_layout = layou_client::where('nom_client', $client)->first();
+
+            if (!$client_layout) {
+                return view('bi', compact('data', 'client', 'document', 'uid'));
+            }
+            else {
+                return view('bi', compact('data', 'client', 'document', 'uid', 'client_layout'));
+            }
+            
         }
     }
 
@@ -193,10 +207,25 @@ class BiController extends Controller
                     ];
                 }
             }
+            
+            // Ajout des complement du client dans le json
+            $data['complement_client'] = [];
+
+            foreach ($request->all() as $key => $value) {
+                if (str_starts_with($key, 'item')) {
+                    $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
+
+                    $data['complement_client'][] = [
+                        'value' => $value,
+                        'question' => $question
+                    ];
+                }
+            }
 
             if ($request->input('signature')) {
                 $data['signature'] = $request->input('signature');
             }
+            
         } else if (str_starts_with($document, 'cerfa_15497')) {
             // Mettre à jour les données avec les nouvelles valeurs du formulaire
             $data['operateur'] = $request->input('operateur');
