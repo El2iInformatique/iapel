@@ -343,24 +343,24 @@ class PdfController extends Controller
         $pdf->useTemplate($tplIdx);
 
         
-        $pdf->SetFont('helvetica', 'b', 9);
-        $pdf->SetXY(42, 43.2);
-        $pdf->Write(10, ($data['uid'] ?? ''));    
-        $pdf->SetXY(22, 48.5);
+        $pdf->SetFont('helvetica', 'b', 8);
+        $pdf->SetXY(23, 36.70);
+        $pdf->Write(10, ($data['uid'] ?? 'TEST'));    
+        $pdf->SetXY(31, y: 44);
         $pdf->Write(10, ($data['date_intervention'] ?? date('d/m/Y')));    
-        $pdf->SetXY(30, 53.5);
+        $pdf->SetXY(32, 54);
         $pdf->Write(10, ($data['intervenant'] ?? ''));    
-        $pdf->SetXY(30, 57.5);
+        $pdf->SetXY(29, 59.5);
         $pdf->Write(10, ($data['equipier'] ?? ''));    
 
         
-        $pdf->SetXY(40, 66);
+        $pdf->SetXY(37.25, 66);
         $pdf->Write(10, ($data['code_client'] ?? ''));  
-        $pdf->SetXY(40, 71);
+        $pdf->SetXY(29, 71);
         $pdf->Write(10, ($data['email_client'] ?? ''));  
-        $pdf->SetXY(145, 66);
+        $pdf->SetXY(142, 66.25);
         $pdf->Write(10, ($data['telephone_client'] ?? ''));  
-        $pdf->SetXY(145, 71);
+        $pdf->SetXY(139, 71.5);
         $pdf->Write(10, ($data['portable_client'] ?? ''));  
         
         $pdf->SetFont('helvetica', 'b', 11);
@@ -379,7 +379,7 @@ class PdfController extends Controller
 
         
 
-        $pdf->SetFont('helvetica', '', 12);
+        $pdf->SetFont('helvetica', '', 9);
 
         $pdf->SetXY(70, 45);
         $pdf->Write(10, ($data['lieu_intervention'] ?? ''));    
@@ -393,7 +393,7 @@ class PdfController extends Controller
         $pdf->SetXY(15, 108);
         $pdf->MultiCell(180, 10, ($data['compte_rendu']."\n" ?? ''));
 
-        $pdf->SetXY(14, 194);
+        $pdf->SetXY(88, 194);
         $pdf->MultiCell(70, 10, ($data['materiel']."\n" ?? ''));
 
         $pdf->SetFont('helvetica', '', 11);
@@ -415,6 +415,11 @@ class PdfController extends Controller
         }
         if (isset($data['devis_a_faire']) && ($data['devis_a_faire'] == 'oui')) {            
             $pdf->SetXY(14.6, 146.8);
+            $pdf->Write(10, 'X');
+        }
+
+        if (isset($data['absent']) && ($data['absent'] == 'oui')) {            
+            $pdf->SetXY(14.6, 160); 
             $pdf->Write(10, 'X');
         }
 
@@ -531,6 +536,7 @@ class PdfController extends Controller
                                       
             }
         }
+
 
         $x_complement_client = 10; //alignement x des complement client 
         $y_complement_client = 20; //alignement y des complement client 
