@@ -65,7 +65,7 @@
                                                     </div>
                                                     <div class="mb-3">    
                                                         Intervenant : <strong>{{ $data['intervenant'] }}</strong><br>
-                                                        Date d'intervention' : <strong>{{ $data['date_intervention'] ?? date('d/m/Y') }}</strong>
+                                                        Date d'intervention' :  <strong> {{ $data['date_intervention'] ?? date('d/m/Y') }} </strong>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
@@ -242,6 +242,12 @@
                                 <canvas id="signature-pad" class="border" style="width: 100%; height: 300px;"></canvas>
                                 <input type="hidden" name="signature" id="signature">
                                 <button type="button" class="btn btn-secondary mt-2" id="clear-signature">Effacer</button>
+
+                                <hr>
+                                <div class="col" data-provide="datepicker">
+                                    <label class="form-label" for="fait-le">Fait le :</label>
+                                    <input min="{{ date("y-m-d") }}" type="date" class="form-control" name="fait-le" id="fait-le">
+                                </div>
                             </div>
                             
                             <hr>
@@ -259,6 +265,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+
+
         document.getElementById("complement").addEventListener("change", function(event) {
             const files = event.target.files;
             const previewContainer = document.getElementById("complements_apercu");

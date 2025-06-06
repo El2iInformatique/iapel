@@ -440,7 +440,7 @@ class PdfController extends Controller
                     $newWidth = ($width / $height) * $maxHeight;
                 }
                 // Calcul des positions pour centrer dans le carré
-                $x = 63 + ($maxWidth - $newWidth) / 2;
+                $x = 68.5 + ($maxWidth - $newWidth) / 2;
                 $y = 134 + ($maxHeight - $newHeight) / 2;
 
                 // Affichage de l'image redimensionnée
@@ -464,7 +464,7 @@ class PdfController extends Controller
                     $newWidth = ($width / $height) * $maxHeight;
                 }
                 // Calcul des positions pour centrer dans le carré
-                $x = 130 + ($maxWidth - $newWidth) / 2;
+                $x = 139 + ($maxWidth - $newWidth) / 2;
                 $y = 134 + ($maxHeight - $newHeight) / 2;
 
                 // Affichage de l'image redimensionnée
@@ -536,6 +536,14 @@ class PdfController extends Controller
                                       
             }
         }
+
+        $pdf->SetFont('helvetica', 'i', 12);
+        $pdf->SetXY( 57, 210);
+        $pdf->Write(12, $data['fait-le']);
+
+        $pdf->SetFont('helvetica', 'i', 14);
+        $pdf->SetXY( 18, 234);
+        $pdf->Write(12, $data['intervenant']);
 
 
         $x_complement_client = 10; //alignement x des complement client 

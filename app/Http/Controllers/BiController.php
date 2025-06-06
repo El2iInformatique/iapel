@@ -185,6 +185,7 @@ class BiController extends Controller
             $data['facturable'] = $request->input('facturable');
             $data['terminee'] = $request->input('terminee');
             $data['absent'] = $request->input('absent');
+            $data['fait-le'] = $request->input('fait-le');
             $data['devis_a_faire'] = $request->input('devis_a_faire');
 
             if ($request->hasFile('photo_avant')) {
