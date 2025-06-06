@@ -116,7 +116,7 @@ class BiController extends Controller
 
         $providedToken = $request->header('secret-token');
 
-        if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
+        if (!hash_equals($providedToken,     $secretToken) && !hash_equals($providedToken, $adminToken)) {
             return response()->json(['error' => 'Not authorized.'], 403);
         }
 
@@ -215,7 +215,7 @@ class BiController extends Controller
 
             foreach ($request->all() as $key => $value) {
 
-                if ($request->hasfile($key)) {
+                if ($request->hasfile($key) && str_starts_with($key, 'item')) {
                     $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
 
                     $imagePath = $request->file($key)->store($biPath, 'public');

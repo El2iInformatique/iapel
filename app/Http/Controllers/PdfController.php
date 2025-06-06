@@ -511,38 +511,38 @@ class PdfController extends Controller
                     $x = $x + 58.5;
                 }
             }
+        }
 
-            if (isset($data['signature'])) {
-                $signatureBase64 = $data['signature'];
-                $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
-                $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
-                file_put_contents($signaturePath, $signatureData);
-                
-                list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
-                $maxWidth = 69;
-                $maxHeight = 28;
-                // Calcul du redimensionnement en conservant le ratio
-                if ($width > $height) {
-                    $newWidth = $maxWidth;
-                    $newHeight = ($height / $width) * $maxWidth;
-                } else {
-                    $newHeight = $maxHeight;
-                    $newWidth = ($width / $height) * $maxHeight;
-                }
-                // Calcul des positions pour centrer dans le carré
-                $xImage = 14 + ($maxWidth - $newWidth) / 2;
-                $yImage = 230 + ($maxHeight - $newHeight) / 2;
-                $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
-                                      
+        if (isset($data['signature'])) {
+            $signatureBase64 = $data['signature'];
+            $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
+            $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
+            file_put_contents($signaturePath, $signatureData);
+            
+            list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
+            $maxWidth = 64;
+            $maxHeight = 20;
+            // Calcul du redimensionnement en conservant le ratio
+            if ($width > $height) {
+                $newWidth = $maxWidth;
+                $newHeight = ($height / $width) * $maxWidth;
+            } else {
+                $newHeight = $maxHeight;
+                $newWidth = ($width / $height) * $maxHeight;
             }
+            // Calcul des positions pour centrer dans le carré
+            $xImage = 14 + ($maxWidth - $newWidth) / 2;
+            $yImage = 195 + ($maxHeight - $newHeight) / 2;
+            $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
+                                  
         }
 
         $pdf->SetFont('helvetica', 'i', 12);
-        $pdf->SetXY( 57, 210);
+        $pdf->SetXY( 57, 213);
         $pdf->Write(12, $data['fait-le']);
 
         $pdf->SetFont('helvetica', 'i', 14);
-        $pdf->SetXY( 18, 234);
+        $pdf->SetXY( 15, 232);
         $pdf->Write(12, $data['intervenant']);
 
 
@@ -572,7 +572,7 @@ class PdfController extends Controller
                     }
                     
                 }
-                else {
+                else  {
                     $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
                     $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
 
