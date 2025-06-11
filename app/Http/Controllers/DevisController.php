@@ -33,7 +33,7 @@ class DevisController extends Controller
 
         $devisDir = $token->devis_id . '_' . $noToken;
 
-	$devisPath = $token->organisation_id . '/devis/' . $devisDir . '/';
+	    $devisPath = $token->organisation_id . '/devis/' . $devisDir . '/';
         $pdfPath = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '.pdf';
         $pdfPathCertif = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '_certifie.pdf';
         try {
