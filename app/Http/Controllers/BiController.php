@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Token;
 use App\Models\layou_client;
+use App\Http\Controllers\TokenController;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+
+
+use App\Models\TokenLinksRapport;
 
 
 class BiController extends Controller
@@ -35,10 +40,6 @@ class BiController extends Controller
     {
 
         $data = $request->input();
-        Log::info('Content : ');
-        Log::info($request->getContent());
-        Log::info('input : ');
-        Log::info($request->input());
         
         $uid = $data['uid'];
         $document = $data['document'];
@@ -51,6 +52,7 @@ class BiController extends Controller
         }
 
         $jsonPath = $folderPath . '/' . $uid . '.json';
+
         try {
             if (file_exists($jsonPath)) {
                 unlink($jsonPath);
@@ -70,7 +72,14 @@ class BiController extends Controller
                     'code_postal' => $data['code_postal'] ?? ''
                 ];
             } else if ($document == 'rapport_intervention') {
+                $dataToken = [
+                    'client' => $client,
+                    'document' => $document,
+                    'uid' => $uid
+                ];
+
                 $jsonData = [
+                    'dataToken' => $dataToken,
                     'code_client' => $data['code_client'] ?? '',
                     'nom_client' => $data['nom_client'] ?? '',
                     'email_client' => $data['email_client'] ?? '',
@@ -86,16 +95,53 @@ class BiController extends Controller
                     'intervenant' => $data['intervenant'] ?? '',
                     'description' => $data['description'] ?? ''
                 ];
+                
             }
+            
+            $token = TokenController::generateTokenRapport( $request, 'app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json' );
 
+            if (!$token) {
+                return response()->json([
+                    'error' => 'Token non généré',
+                ]);
+            }
             file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT));
+
+            return response()->json([
+                'message' => 'Token généré avec succès',
+                'token' => $token,
+                'bi_url' => url('/bi/' . $token),
+            ]);
+
         } catch (\Exception $e) {
             Log::error('Erreur lors de la création du fichier JSON : ' . $e->getMessage());
         }
     }
 
-    public function download($client, $document, $uid)
+
+    public function download($token)
     {
+        if (!TokenController::isValideTokenRapport($token)) {
+            return abort(404, 'Token invalide');
+        }
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $dataToken['paths']);
+
+        // Vérifier si le fichier existe
+        if (!file_exists($filePath)) {
+            return abort(404, 'Fichier JSON introuvable');
+        }
+
+        // Lire et décoder le fichier JSON
+        $data = json_decode(file_get_contents($filePath), true);
+
+        $client = $data["dataToken"]["client"];
+        $document = $data["dataToken"]["document"];
+        $uid = $data["dataToken"]["uid"];
+        $token = $dataToken->token;
+
         $filePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
         if (!file_exists($filePath)) {
@@ -129,10 +175,15 @@ class BiController extends Controller
         ]);
     }
 
-    public function show($client, $document, $uid)
+    public function show($token)
     {
+        if (!TokenController::isValideTokenRapport($token)) {
+            return abort(404, 'Token non existant');
+        }
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+
         // Construire le chemin du fichier JSON
-        $filePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json');
+        $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
@@ -141,6 +192,11 @@ class BiController extends Controller
 
         // Lire et décoder le fichier JSON
         $data = json_decode(file_get_contents($filePath), true);
+
+        $client = $data["dataToken"]["client"];
+        $document = $data["dataToken"]["document"];
+        $uid = $data["dataToken"]["uid"];
+        $token = $dataToken->token;
 
         if (str_starts_with($document, 'cerfa_15497_')) {
             return view('cerfa_15497', compact('data', 'client', 'uid', 'document'));
@@ -152,19 +208,24 @@ class BiController extends Controller
             $client_layout = layou_client::where('nom_client', $client)->first();
 
             if (!$client_layout) {
-                return view('bi', compact('data', 'client', 'document', 'uid'));
+                return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
             }
             else {
-                return view('bi', compact('data', 'client', 'document', 'uid', 'client_layout'));
+                return view('bi', compact('data', 'token', 'uid', 'client', 'document', 'client_layout'));
             }
             
         }
     }
 
-    public function submit(Request $request, $client, $document, $uid)
+    public function submit(Request $request, $token)
     {
-        // Définition du chemin du fichier JSON
-        $filePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json');
+        if (!TokenController::isValideTokenRapport($token)) {
+            return abort(404, 'Token non existant');
+        }
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier JSON existe
         if (!file_exists($filePath)) {
@@ -173,6 +234,9 @@ class BiController extends Controller
 
         // Lire le contenu existant
         $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
 
         if ($document == 'rapport_intervention') {
             $biPath = $client . '/' . $document . '/' . $uid;
@@ -360,7 +424,7 @@ class BiController extends Controller
         file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         // Rediriger avec un message de succès
-        return redirect()->route('pdf.view', ['client' => $client, 'document' => $document, 'uid' => $uid]);
+        return redirect()->route('pdf.view', ['token' => $token]);
     }
 
 
@@ -371,6 +435,8 @@ class BiController extends Controller
             if (!$request->hasHeader('secret-token')) {
                 return response()->json(['error' => 'No token provided.'], 403);
             }
+
+
 
             $secretToken = config("secrets.$entreprise");
             $adminToken = config('secrets.admin');
@@ -518,6 +584,7 @@ class BiController extends Controller
 
     public function open($client, $document, $uid, Request $request): JsonResponse
     {
+        
         if (!$request->hasHeader('secret-token')) {
             return response()->json(['error' => 'No token provided.'], 403);
         }
@@ -530,7 +597,7 @@ class BiController extends Controller
         if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
             return response()->json(['error' => 'Not authorized.'], 403);
         }
-
+        
 
         $jsonpath = "$client/$document/$uid/$uid.json";
 

@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\CerfaController;
 use App\Http\Controllers\BiController;
@@ -9,34 +12,67 @@ use App\Http\Controllers\SignatureController;
 use Illuminate\Http\Request;
 
 
+
 require base_path('routes/api.php');
+
+
+// Routes pour APEL Bâtiment mobile + Desktop pour la gestion des documents en ligne
+
+// Route avec protection
+// Définition de la limite de taux pour le type de requête "rapport"
+
+
+RateLimiter::for('anti-bruteforce-rapport', function (Request $request) {
+    return Limit::perMinute(15)->by($request->ip()); // 15 requêtes par minute par IP
+});
+
+Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
+
+    // Formulaire de saisie du document d'intervention
+    Route::get('/bi/{token}', [BiController::class, 'show'])->name('bi.view');
+
+    // Envoi des formulaires de saisies des documents d'intervention
+    Route::post('/submit/{token}', [BiController::class, 'submit'])->name('bi.submit');
+
+    // Génération et affichage des PDFs
+    Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view');
+
+    // Création du JSON de données pour le document
+    Route::post('/create-json', [BiController::class, 'createJson']);
+
+    // Data d'un document
+    Route::get('/open/{client}/{document}/{uid}', [BiController::class, 'open']);
+
+    // Suppression d'un document
+    Route::get('/delete/{client}/{document}/{uid}', [BiController::class, 'delete'])->middleware(Null);
+    
+});
+
+
+
+//Route sans protection
+Route::get('/test', function() {
+    return view('fake-create-json');
+});
+
+Route::get('/68', function () {
+    return redirect()->away('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+});
 
 Route::get('/', function () {
     return redirect()->away('https://www.el2i.fr');
 });
 
-// Routes pour APEL Bâtiment mobile + Desktop pour la gestion des documents en ligne
 
 // Listing des documents disponibles pour un client
 Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
-// Formulaire de saisie du document d'intervention
-Route::get('/bi/{client}/{document}/{uid}', [BiController::class, 'show'])->name('bi.view');
-// Création du JSON de données pour le document
-Route::post('/create-json', [BiController::class, 'createJson']);
+
 // Téléchargement du document d'intervention réalisé
-Route::get('/download/{client}/{document}/{uid}', [BiController::class, 'download']);
+Route::get('/download/{token}', [BiController::class, 'download']);
 // Fonction de vérification de l'état du document d'intervention
 Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check']);
-// Envoi des formulaires de saisies des documents d'intervention
-Route::post('/submit/{client}/{document}/{uid}', [BiController::class, 'submit'])->name('bi.submit');
-// Génération et affichage des PDFs
-Route::get('/pdf/{client}/{document}/{uid}', [PdfController::class, 'show'])->name('pdf.view');
 // Listing de tous les documents enregistrés pour un client
 Route::get('/list/{client}', [BiController::class, 'listSavedDocs']);
-// Data d'un document
-Route::get('/open/{client}/{document}/{uid}', [BiController::class, 'open']);
-// Suppression d'un document
-Route::get('/delete/{client}/{document}/{uid}', [BiController::class, 'delete']);
 // Affichage d'un PDF de devis
 Route::get('/pdf-devis/{token}',[PdfController::class,'viewDevis']);
 

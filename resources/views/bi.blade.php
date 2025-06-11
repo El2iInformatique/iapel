@@ -32,7 +32,7 @@
                     <div class="card-body">
 
                         <!-- Formulaire -->
-                        <form action="{{ route('bi.submit', ['client' => $client, 'document' => 'rapport_intervention', 'uid' => $uid]) }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('bi.submit', ['token' => $token]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="alert alert-info" role="alert">
                                 Intervention pour : <strong>{{ $data['description'] }}</strong>
