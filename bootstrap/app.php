@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'anti-spam' => \App\Http\Middleware\AntiSpamMiddleware::class,
         ]);
+
+        $middleware->alias([
+            'VerifToken' => \App\Http\Middleware\VerifTokenMiddleware::class,
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

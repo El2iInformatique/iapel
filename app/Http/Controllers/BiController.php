@@ -121,9 +121,6 @@ class BiController extends Controller
 
     public function download($token)
     {
-        if (!TokenController::isValideTokenRapport($token)) {
-            return abort(404, 'Token invalide');
-        }
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
@@ -177,9 +174,6 @@ class BiController extends Controller
 
     public function show($token)
     {
-        if (!TokenController::isValideTokenRapport($token)) {
-            return abort(404, 'Token non existant');
-        }
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
@@ -219,9 +213,6 @@ class BiController extends Controller
 
     public function submit(Request $request, $token)
     {
-        if (!TokenController::isValideTokenRapport($token)) {
-            return abort(404, 'Token non existant');
-        }
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
@@ -291,9 +282,6 @@ class BiController extends Controller
                 }
                 else if (str_starts_with($key, 'item')) {
                     $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
-                    
-                    Log::info('Question : ' . $question);
-                    Log::info("Valeur : " . $value);
 
                     $data['complement_client'][] = [
                         'value' => $value,

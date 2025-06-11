@@ -19,9 +19,7 @@ class PdfController extends Controller
 
     public function show($token)
     {
-        if (!TokenController::isValideTokenRapport($token)) {
-            return abort(404, 'Token non existant');
-        }
+
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
@@ -52,8 +50,6 @@ class PdfController extends Controller
         $expiresAt = Carbon::parse($tokenRecord->expires_at);
 
         if ($expiresAt->lessThan(now())) {
-            Log::info('Token invalide : date depasser');
-
             $tokenRecord->delete();
             return false;
         }

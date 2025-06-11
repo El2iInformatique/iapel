@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\CerfaController;
 use App\Http\Controllers\BiController;
-use App\Http\Controllers\TokenController;
 use App\Http\Controllers\SignatureController;
 use Illuminate\Http\Request;
 
@@ -29,13 +28,13 @@ RateLimiter::for('anti-bruteforce-rapport', function (Request $request) {
 Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
 
     // Formulaire de saisie du document d'intervention
-    Route::get('/bi/{token}', [BiController::class, 'show'])->name('bi.view');
+    Route::get('/bi/{token}', [BiController::class, 'show'])->name('bi.view')->middleware('VerifToken');
 
     // Envoi des formulaires de saisies des documents d'intervention
-    Route::post('/submit/{token}', [BiController::class, 'submit'])->name('bi.submit');
+    Route::post('/submit/{token}', [BiController::class, 'submit'])->name('bi.submit')->middleware('VerifToken');;
 
     // Génération et affichage des PDFs
-    Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view');
+    Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view')->middleware('VerifToken');;
 
     // Création du JSON de données pour le document
     Route::post('/create-json', [BiController::class, 'createJson']);
@@ -44,7 +43,7 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     Route::get('/open/{client}/{document}/{uid}', [BiController::class, 'open']);
 
     // Suppression d'un document
-    Route::get('/delete/{client}/{document}/{uid}', [BiController::class, 'delete'])->middleware(Null);
+    Route::get('/delete/{client}/{document}/{uid}', [BiController::class, 'delete']);
     
 });
 
@@ -68,7 +67,7 @@ Route::get('/', function () {
 Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
 
 // Téléchargement du document d'intervention réalisé
-Route::get('/download/{token}', [BiController::class, 'download']);
+Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken');
 // Fonction de vérification de l'état du document d'intervention
 Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check']);
 // Listing de tous les documents enregistrés pour un client
@@ -94,6 +93,7 @@ Route::post('/upload-visuel', function(Request $request) {
     }
     return response()->json(['success' => false], 400);
 });
+
 Route::post('/delete-visuel', function(Request $request) {
     $name = $request->input('name');
     $client = $request->input('client');

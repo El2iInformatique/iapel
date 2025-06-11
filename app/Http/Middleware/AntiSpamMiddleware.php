@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Cache; // Pour stocker les tentatives de spam
 
+// -------------------- Nom utiliser pour le moment -------------------- \\
+
 class AntiSpamMiddleware
 {
     /**
