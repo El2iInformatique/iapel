@@ -40,7 +40,7 @@ class BiController extends Controller
     {
 
         $data = $request->input();
-        
+
         $uid = $data['uid'];
         $document = $data['document'];
         $client = $data['client'];
@@ -59,12 +59,26 @@ class BiController extends Controller
             }
 
             if (str_starts_with($document, 'cerfa_15497')) {
-                $jsonData = [
+              $dataToken = [
+                  'client' => $client,
+                  'document' => $document,
+                  'uid' => $uid
+              ];
+
+              $jsonData = [
+                  'dataToken' => $dataToken,
                     'operateur' => $data['Operateur'] ?? '',
                     'detenteur' => $data['Detenteur'] ?? ''
                 ];
             } else if ($document == 'cerfa_13948-03') {
-                $jsonData = [
+              $dataToken = [
+                  'client' => $client,
+                  'document' => $document,
+                  'uid' => $uid
+              ];
+
+              $jsonData = [
+                  'dataToken' => $dataToken,
                     'nom' => $data['nom'] ?? '',
                     'prenom' => $data['prenom'] ?? '',
                     'adresse' => $data['adresse'] ?? '',
@@ -95,9 +109,8 @@ class BiController extends Controller
                     'intervenant' => $data['intervenant'] ?? '',
                     'description' => $data['description'] ?? ''
                 ];
-                
             }
-            
+
             $token = TokenController::generateTokenRapport( $request, 'app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json' );
 
             if (!$token) {
@@ -193,10 +206,10 @@ class BiController extends Controller
         $token = $dataToken->token;
 
         if (str_starts_with($document, 'cerfa_15497_')) {
-            return view('cerfa_15497', compact('data', 'client', 'uid', 'document'));
+            return view('cerfa_15497', compact('data', 'token', 'uid', 'client', 'document'));
         }
         else if (str_starts_with($document, 'cerfa')) {
-            return view($document, compact('data', 'client', 'uid', 'document'));
+            return view($document, compact('data', 'token', 'uid', 'client', 'document'));
         } else {
 
             $client_layout = layou_client::where('nom_client', $client)->first();
@@ -207,7 +220,7 @@ class BiController extends Controller
             else {
                 return view('bi', compact('data', 'token', 'uid', 'client', 'document', 'client_layout'));
             }
-            
+
         }
     }
 
@@ -264,7 +277,7 @@ class BiController extends Controller
                     ];
                 }
             }
-            
+
             // Ajout des complement du client dans le json
             $data['complement_client'] = [];
 
@@ -294,7 +307,7 @@ class BiController extends Controller
             if ($request->input('signature')) {
                 $data['signature'] = $request->input('signature');
             }
-            
+
         } else if (str_starts_with($document, 'cerfa_15497')) {
             // Mettre à jour les données avec les nouvelles valeurs du formulaire
             $data['operateur'] = $request->input('operateur');
@@ -572,7 +585,7 @@ class BiController extends Controller
 
     public function open($client, $document, $uid, Request $request): JsonResponse
     {
-        
+
         if (!$request->hasHeader('secret-token')) {
             return response()->json(['error' => 'No token provided.'], 403);
         }
@@ -585,7 +598,7 @@ class BiController extends Controller
         if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
             return response()->json(['error' => 'Not authorized.'], 403);
         }
-        
+
 
         $jsonpath = "$client/$document/$uid/$uid.json";
 

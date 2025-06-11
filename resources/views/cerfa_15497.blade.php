@@ -15,7 +15,7 @@
     <title>Formulaire CERFA 15497-04</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
-    
+
 </head>
 <body>
 
@@ -27,7 +27,7 @@
                     <div class="card-body">
 
                         <!-- Formulaire -->
-                        <form action="{{ route('bi.submit', ['client' => $client, 'document' => $document, 'uid' => $uid]) }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('bi.submit', ['token' => $token]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                                 <h5 class="mt-4">[1] Opérateur</h5>
                                 <hr>
@@ -72,7 +72,7 @@
                                         <input type="text" class="form-control" id="tonnage" name="tonnage" value="{{ old('tonnage') }}">
                                     </div>
                                 </div>
-                                
+
                                 <h5 class="mt-4">[4] Nature de l'intervention</h5>
                                 <hr>
                                 <!-- Cases à cocher en 2 colonnes -->
@@ -121,7 +121,7 @@
                                         <div class="col-md-6">
                                             <input type="text" class="form-control" id="autre_valeur" name="autre_valeur" value="{{ old('autre_valeur') }}">
                                         </div>
-                                    </div>   
+                                    </div>
                                 </div>
 
                                 <h5 class="mt-4">[5] Détecteur manuel de fuite</h5>
@@ -248,7 +248,7 @@
                                             {{ isset($data['constat_fuites']) && $data['constat_fuites'] === 'oui' ? 'checked' : '' }}>
                                         <label class="form-check-label" for="constat_oui">Oui</label>
                                     </div>
-                                    
+
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="constat_fuites" value="non" id="constat_non"
                                             {{ !isset($data['constat_fuites']) || $data['constat_fuites'] === 'non' ? 'checked' : '' }}>
@@ -359,7 +359,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Manipulation fluide -->
                                 <h5 class="mt-4">[12] Dénomination ADR/RID</h5>
                                 <hr>
@@ -471,7 +471,7 @@
             imgPreview.classList.remove("d-none");
         };
         reader.readAsDataURL(event.target.files[0]);
-    });        
+    });
     */
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -481,7 +481,7 @@
         let localisationFuitesRadioOui = document.getElementById("constat_oui");
         let localisationFuitesRadioNon = document.getElementById("constat_non");
         let localisationFuitesValeur = document.getElementById("localisation_fuites");
-        
+
         let canvasDetenteur = document.getElementById("signature-pad-detenteur");
         let signatureInputDetenteur = document.getElementById("signature-detenteur");
         let clearButtonDetenteur = document.getElementById("clear-signature-detenteur");
@@ -517,7 +517,7 @@
         localisationFuitesRadioOui.addEventListener("change", toggleLocalisationFuitesField);
         localisationFuitesRadioNon.addEventListener("change", toggleLocalisationFuitesField);
 
-        
+
 
         // Créer la signature avec gestion souris + tactile
         let signaturePadDetenteur = new SignaturePad(canvasDetenteur, {
@@ -537,7 +537,7 @@
             canvasDetenteur.width = canvasDetenteur.offsetWidth * ratio;
             canvasDetenteur.height = canvasDetenteur.offsetHeight * ratio;
             canvasDetenteur.getContext("2d").scale(ratio, ratio);
-            
+
             canvasOperateur.width = canvasOperateur.offsetWidth * ratio;
             canvasOperateur.height = canvasOperateur.offsetHeight * ratio;
             canvasOperateur.getContext("2d").scale(ratio, ratio);
@@ -586,7 +586,7 @@
             signaturePadOperateur.clear();
             signatureInputOperateur.value = "";
         });
-        
+
         // S'assurer que la signature est bien enregistrée avant soumission
         form.addEventListener("submit", function (event) {
             saveSignature(); // Enregistre la signature avant l'envoi
