@@ -28,14 +28,14 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">Fiche d'intervention n°{{ $uid }}</div>
+                    <div class="card-header">Bi n°{{ $uid }}</div>
                     <div class="card-body">
 
                         <!-- Formulaire -->
                         <form action="{{ route('bi.submit', ['token' => $token]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="alert alert-info" role="alert">
-                                Intervention pour : <strong>{{ $data['description'] }}</strong>
+                                Travaux : <strong>{{ $data['description'] }}</strong>
                             </div>
                             
                             <div class="accordion" id="accordion_bi">
@@ -44,7 +44,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_information">
                                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_information" aria-expanded="true" aria-controls="accordion_collapse_information">
-                                            1 - Information relative à l'intervention
+                                            <h5>1 - Détail de l'intervention</h5>
                                         </button>
                                     </h2>
                                     <div id="accordion_collapse_information" class="accordion-collapse collapse show" aria-labelledby="accordion_header_information" data-bs-parent="#accordion_bi">
@@ -60,7 +60,7 @@
                                                     <div class="mb-3">
                                                     <!-- Bouton pour ouvrir l'adresse -->
                                                         <button type="button" class="btn btn-primary" style="margin-left: 12px;" onclick="ouvrirNavigation()">
-                                                            📍 S'y rendre
+                                                            📍 Itinéraire
                                                         </button>
                                                     </div>
                                                     <div class="mb-3">    
@@ -92,7 +92,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_realisation">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_realisation" aria-expanded="false" aria-controls="accordion_collapse_realisation">
-                                            2 - Réalisation de l'intervention
+                                            <h5>2 - Réalisation de l'intervention</h5>
                                         </button>
                                     </h2>
                                     <div id="accordion_collapse_realisation" class="accordion-collapse collapse" aria-labelledby="accordion_header_realisation" data-bs-parent="#accordion_bi">
@@ -194,7 +194,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_complement">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_complement" aria-expanded="false" aria-controls="accordion_collapse_complement">
-                                            3 - Complément de l'intervention
+                                            <h5>3 - Complément de l'intervention</h5>
                                         </button>
                                     </h2>
                                     <div id="accordion_collapse_complement" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
@@ -203,7 +203,7 @@
                                             <div id="complements_apercu" class="mt-3 row"></div>
 
                                             <button type="button" class="btn btn-primary" onclick="document.getElementById('complement').click();">
-                                                📸 Ajouter un complément avec une photo
+                                                📸 Ajouter une photo
                                             </button>
 
                                             <!-- Input file caché qui déclenche l'appareil photo sur mobile -->
@@ -217,7 +217,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_customisation">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_customisation" aria-expanded="false" aria-controls="accordion_collapse_customisation">
-                                            4 - Complement d'intervention rajouter
+                                            <h5>4 - Particularité de l'intervention</h5>
                                         </button>
                                     </h2>
                                     <div id="accordion_collapse_customisation" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
@@ -238,21 +238,30 @@
                             <hr>
                             <!-- Gestion de la signature -->
                             <div class="col">     
-                                <label class="form-label">Signature du client ou de son représentant :</label>
-                                <canvas id="signature-pad" class="border" style="width: 100%; height: 300px;"></canvas>
+                                <label class="form-label" style="margin-left: 10%">Signature du client ou de son représentant :</label>
+                                <canvas id="signature-pad" class="border" style="width: 80%; height: 200px; margin-left: 10%; margin-right: 10%"></canvas>
                                 <input type="hidden" name="signature" id="signature">
-                                <button type="button" class="btn btn-secondary mt-2" id="clear-signature">Effacer</button>
+                                <button type="button" class="btn btn-secondary mt-2" id="clear-signature" style="margin-left: 10%">Effacer</button>
+                                <button type="button" class="btn btn-success mt-2" id="valide-signature">Valider</button>
 
                                 <hr>
-                                <div class="col" data-provide="datepicker">
-                                    <label class="form-label" for="fait-le">Fait le :</label>
-                                    <input min="{{ date("y-m-d") }}" type="date" class="form-control" name="fait-le" id="fait-le">
+                            </div>
+
+                            <br>
+                            <div class="col-12">
+                                <label class="form-label visually-hidden" for="fait-le">Fait le :</label>
+                                <div class="input-group">
+                                  <div class="input-group-text">Fait le :</div>
+                                  <input min="{{ date("y-m-d") }}" type="date" class="form-control" name="fait-le" id="fait-le">
                                 </div>
                             </div>
+
+                            <br>
+
                             
                             <hr>
                             <!-- Validation du formulaire -->
-                            <button type="submit" class="btn btn-primary w-100">Valider l'intervention et générer le PDF</button>
+                            <button type="submit" class="btn btn-success w-100">Valider l'intervention et générer le PDF</button>
                         </form>
                     </div>
                 </div>
@@ -530,12 +539,19 @@
             });
             sessionStorage.removeItem("storedFiles");
 
+            // Appeler la fonction de redimensionnement au chargement initial de la page
+            window.addEventListener('load', resizeCanvas);
+            // Appeler la fonction de redimensionnement chaque fois que la fenêtre est redimensionnée
+            window.addEventListener('resize', resizeCanvas);
+
             
             
             let form = document.querySelector("form");
             let canvas = document.getElementById("signature-pad");
             let signatureInput = document.getElementById("signature");
             let clearButton = document.getElementById("clear-signature");
+            let valideButton = document.getElementById("valide-signature");
+
             // Créer la signature avec gestion souris + tactile
             let signaturePad = new SignaturePad(canvas, {
                 backgroundColor: 'rgba(255, 255, 255, 0)', // Fond transparent
@@ -577,6 +593,14 @@
             clearButton.addEventListener("click", function () {
                 signaturePad.clear();
                 signatureInput.value = "";
+
+                signaturePad.on();
+                valideButton.disabled = false;
+            });
+
+            valideButton.addEventListener("click", function () {
+                signaturePad.off();
+                valideButton.disabled = true;
             });
             
             // S'assurer que la signature est bien enregistrée avant soumission
