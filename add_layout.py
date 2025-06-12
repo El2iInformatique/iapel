@@ -44,8 +44,8 @@ donneeBase = ""
 for i in range(1, nombreItem + 1):
     donneeBase += f""" <div class="mb-3">
 
-        <label for="telephone" class="form-label">Label question</label>  <! -- Affichage question -->
-        <input type="tel" class="form-control" name="item{i}">  <! -- Le input de la question -->
+        <label for="item{i}" class="form-label">Label question</label>  <! -- Affichage question -->
+        <input type="<mettre un type>" class="form-control" name="item{i}">  <! -- Le input de la question -->
         <input type="text" name="question-item{i}" value="Mettre une question" hidden>  <! -- La question (normalement la même que le label), c'est ce qui sera affiché dans le rapport -->
 
     </div>
