@@ -43,11 +43,11 @@
                                 <!-- Première section : information de l'intervention -->
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_information">
-                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_information" aria-expanded="true" aria-controls="accordion_collapse_information">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_information" aria-expanded="false" aria-controls="accordion_collapse_information">
                                             <h5>1 - Détail de l'intervention</h5>
                                         </button>
                                     </h2>
-                                    <div id="accordion_collapse_information" class="accordion-collapse collapse show" aria-labelledby="accordion_header_information" data-bs-parent="#accordion_bi">
+                                    <div id="accordion_collapse_information" class="accordion-collapse collapse" aria-labelledby="accordion_header_information" data-bs-parent="#accordion_bi">
                                         <div class="accordion-body">   
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
@@ -92,7 +92,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_realisation">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_realisation" aria-expanded="false" aria-controls="accordion_collapse_realisation">
-                                            <h5>2 - Réalisation de l'intervention</h5>
+                                            <h5>2 - Réalisation</h5>
                                         </button>
                                     </h2>
                                     <div id="accordion_collapse_realisation" class="accordion-collapse collapse" aria-labelledby="accordion_header_realisation" data-bs-parent="#accordion_bi">
@@ -194,7 +194,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_complement">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_complement" aria-expanded="false" aria-controls="accordion_collapse_complement">
-                                            <h5>3 - Complément de l'intervention</h5>
+                                            <h5>3 - Complément</h5>
                                         </button>
                                     </h2>
                                     <div id="accordion_collapse_complement" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
@@ -217,7 +217,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="accordion_header_customisation">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_customisation" aria-expanded="false" aria-controls="accordion_collapse_customisation">
-                                            <h5>4 - Particularité de l'intervention</h5>
+                                            <h5>4 - Particularité</h5>
                                         </button>
                                     </h2>
                                     <div id="accordion_collapse_customisation" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
