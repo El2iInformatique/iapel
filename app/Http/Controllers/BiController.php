@@ -35,7 +35,7 @@ class BiController extends Controller
         return response()->json($data);
     }
 
-    // fonction de création du JSON
+    // fonction de création du JSON et du TOKEN d'identification du fichier
     public function createJson(Request $request)
     {
 
@@ -52,6 +52,11 @@ class BiController extends Controller
         }
 
         $jsonPath = $folderPath . '/' . $uid . '.json';
+        $dataToken = [
+            'client' => $client,
+            'document' => $document,
+            'uid' => $uid
+        ];
 
         try {
             if (file_exists($jsonPath)) {
@@ -59,23 +64,14 @@ class BiController extends Controller
             }
 
             if (str_starts_with($document, 'cerfa_15497')) {
-              $dataToken = [
-                  'client' => $client,
-                  'document' => $document,
-                  'uid' => $uid
-              ];
 
               $jsonData = [
                   'dataToken' => $dataToken,
                     'operateur' => $data['Operateur'] ?? '',
                     'detenteur' => $data['Detenteur'] ?? ''
                 ];
+                
             } else if ($document == 'cerfa_13948-03') {
-              $dataToken = [
-                  'client' => $client,
-                  'document' => $document,
-                  'uid' => $uid
-              ];
 
               $jsonData = [
                   'dataToken' => $dataToken,
@@ -86,11 +82,6 @@ class BiController extends Controller
                     'code_postal' => $data['code_postal'] ?? ''
                 ];
             } else if ($document == 'rapport_intervention') {
-                $dataToken = [
-                    'client' => $client,
-                    'document' => $document,
-                    'uid' => $uid
-                ];
 
                 $jsonData = [
                     'dataToken' => $dataToken,
@@ -536,6 +527,7 @@ class BiController extends Controller
                 if (!isset($documents[$dirPath])) {
                     $documents[$dirPath] = [
                         'path' => $dirPath,
+                        'token_rapport' => null,
                         'status' => 'À traiter',
                         'data' => null
                     ];
@@ -549,6 +541,10 @@ class BiController extends Controller
                     try {
                         $jsonContent = Storage::disk('public')->get($file);
                         $jsonData = json_decode($jsonContent, true);
+
+                        $pathToken = "app/public/" . $file;
+                        $token = TokenLinksRapport::where('paths', $pathToken)->first()["token"];
+                        $documents[$dirPath]["token_rapport"] = $token;
 
                         if (isset($formatRules[$docType])) {
                             $rules = $formatRules[$docType];
