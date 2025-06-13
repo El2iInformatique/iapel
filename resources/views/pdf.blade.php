@@ -59,7 +59,7 @@
             <script>
                 // Lancer la génération du PDF via une requête AJAX
                 
-                fetch("/{{ $route }}?client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}")
+                fetch("/{{ $route }}?client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}&isAndroid={{ urlencode($isAndroid) }}")
                     .then(response => {
                         if (response.ok) {
                             

@@ -34,6 +34,7 @@
                         <!-- Formulaire -->
                         <form action="{{ route('bi.submit', ['token' => $token]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
+
                             <div class="alert alert-info" role="alert">
                                 Travaux : <strong>{{ $data['description'] }}</strong>
                             </div>
@@ -274,9 +275,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-
+        let nombrePhoto = 0;
 
         document.getElementById("complement").addEventListener("change", function(event) {
+
+            if (nombrePhoto === 2) {
+                return;
+            }
+
             const files = event.target.files;
             const previewContainer = document.getElementById("complements_apercu");
             const inputFile = document.getElementById("complement");
@@ -361,6 +367,7 @@
                                     `;
 
                                     previewContainer.appendChild(div);
+                                    nombrePhoto += 1;
                                 }
                             })
                             .catch(error => console.error("Erreur lors de l'upload :", error));
@@ -388,7 +395,13 @@
                     "Content-Type": "application/json",
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                response.json();
+
+                if (response.ok) {
+                    nombrePhoto -= 1;
+                }
+            })
             .then(data => console.log(data))
             .catch(error => console.error("Erreur lors de la suppression :", error));
         }
@@ -537,15 +550,9 @@
                     });
                 });
             });
+
             sessionStorage.removeItem("storedFiles");
 
-            // Appeler la fonction de redimensionnement au chargement initial de la page
-            window.addEventListener('load', resizeCanvas);
-            // Appeler la fonction de redimensionnement chaque fois que la fenêtre est redimensionnée
-            window.addEventListener('resize', resizeCanvas);
-
-            
-            
             let form = document.querySelector("form");
             let canvas = document.getElementById("signature-pad");
             let signatureInput = document.getElementById("signature");
@@ -553,18 +560,55 @@
             let valideButton = document.getElementById("valide-signature");
 
             // Créer la signature avec gestion souris + tactile
-            let signaturePad = new SignaturePad(canvas, {
-                backgroundColor: 'rgba(255, 255, 255, 0)', // Fond transparent
-                penColor: "black", // Couleur du stylo
-                backgroundColor: "white"
-            });
+            let signaturePad; // Variable pour stocker l'instance de SignaturePad
 
             function resizeCanvas() {
                 let ratio = Math.max(window.devicePixelRatio || 1, 1);
+                let displayWidth = canvas.clientWidth;
+                let displayHeight = canvas.clientHeight;
 
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
+                // Si le canvas n'a pas de dimensions CSS (par exemple, s'il est caché), ne pas tenter de le redimensionner.
+                if (displayWidth === 0 || displayHeight === 0) {
+                    console.warn("Canvas a des dimensions CSS de 0. Il est peut-être caché. ReTentative plus tard ou attendez qu'il soit visible.");
+                    // Si c'est dans un modal, vous devrez appeler resizeCanvas() quand le modal est 'shown.bs.modal'
+                    return;
+                }
+
+                // Sauvegarder les données de la signature si elle existe
+                let existingSignatureData = null;
+                if (signaturePad && !signaturePad.isEmpty()) {
+                    existingSignatureData = signaturePad.toData();
+                    
+                }
+
+                // 1. Définir la résolution interne du canvas en fonction du DPR
+                canvas.width = displayWidth * ratio;
+                canvas.height = displayHeight * ratio;
+
+                // 2. Réinitialiser et appliquer le scaling au contexte de dessin
+                let ctx = canvas.getContext("2d");
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // Réinitialise toute transformation précédente
+                ctx.scale(ratio, ratio); // Applique le scaling pour que les dessins futurs respectent le DPR
+
+                // 3. (Ré)initialiser Signature Pad avec les bonnes options
+                if (signaturePad) {
+                    // Si signaturePad existe déjà, il faut le détruire proprement et le recréer
+                    signaturePad.off(); // Désinscrit les écouteurs d'événements
+                    signaturePad = null;
+                }
+                signaturePad = new SignaturePad(canvas, {
+                    minWidth: 0.5, // Épaisseur minimale du trait (en pixels CSS)
+                    maxWidth: 2.5, // Épaisseur maximale du trait (en pixels CSS)
+                    penColor: 'rgb(0, 0, 0)', // Couleur du trait
+                    backgroundColor: 'rgba(255, 255, 255, 0)'
+                });
+
+                // 4. Recharger la signature si elle existait (pour conserver le dessin après redimensionnement)
+                if (existingSignatureData) {
+                    signaturePad.fromData(existingSignatureData);
+                }
+
+                console.log("Canvas redimensionné. CSS: " + displayWidth + "x" + displayHeight + "px. Interne: " + canvas.width + "x" + canvas.height + "px. DPR: " + ratio);
             }
             
             // Désactiver le resize après le premier chargement
@@ -572,6 +616,9 @@
                 resizeCanvas(); // Applique le redimensionnement une seule fois
                 signaturePad.clear();
             });
+
+            // Appeler la fonction de redimensionnement chaque fois que la fenêtre est redimensionnée
+            window.addEventListener('resize', resizeCanvas);
 
             // Sauvegarder la signature au format Base64
             function saveSignature() {
@@ -607,6 +654,8 @@
             form.addEventListener("submit", function (event) {
                 saveSignature(); // Enregistre la signature avant l'envoi
             });
+
+            
 
         });
     </script>
