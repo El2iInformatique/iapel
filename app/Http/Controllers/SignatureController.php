@@ -24,7 +24,7 @@ class SignatureController extends Controller
             ->first();
 
         if (!$tokenEntry) {
-            return response()->view('errors.403', [], Response::HTTP_FORBIDDEN);
+            abort(403);
         }
 
         // On vérifie si le devis a été signé en vérifiant la présence du PDF certifié
