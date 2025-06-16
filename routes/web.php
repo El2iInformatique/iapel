@@ -40,7 +40,7 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     Route::post('/create-json', [BiController::class, 'createJson']);
 
     // Data d'un document
-    Route::get('/open/{client}/{document}/{uid}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
+    Route::get('/open/{token}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
 
     // Suppression d'un document
     Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('HeaderVerifToken');

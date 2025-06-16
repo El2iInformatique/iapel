@@ -579,20 +579,27 @@ class BiController extends Controller
 
 
 
-    public function open($client, $document, $uid, Request $request): JsonResponse
+    public function open(Request $request, $token): JsonResponse
     {
 
-        if (!$request->hasHeader('secret-token')) {
-            return response()->json(['error' => 'No token provided.'], 403);
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $dataToken['paths']);
+
+        // Vérifier si le fichier JSON existe
+        if (!file_exists($filePath)) {
+            abort(404, "Fichier JSON introuvable : $filePath");
         }
 
-        $secretToken = config("secrets.$client");
-        $adminToken = config('secrets.admin');
-
-        $providedToken = $request->header('secret-token');
-
-        if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
-            return response()->json(['error' => 'Not authorized.'], 403);
+        try {
+            // Lire le contenu existant
+            $data = json_decode(file_get_contents($filePath), true);
+            $document = $data['dataToken']['document'];
+            $client = $data['dataToken']['client'];
+            $uid = $data['dataToken']['uid'];
+        } catch (\Throwable $th) {
+            abort('500', "erreur interne");
         }
 
 
@@ -626,11 +633,15 @@ class BiController extends Controller
             abort(404, "Fichier JSON introuvable : $filePath");
         }
 
-        // Lire le contenu existant
-        $data = json_decode(file_get_contents($filePath), true);
-        $document = $data['dataToken']['document'];
-        $client = $data['dataToken']['client'];
-        $uid = $data['dataToken']['uid'];
+        try {
+            // Lire le contenu existant
+            $data = json_decode(file_get_contents($filePath), true);
+            $document = $data['dataToken']['document'];
+            $client = $data['dataToken']['client'];
+            $uid = $data['dataToken']['uid'];
+        } catch (\Throwable $th) {
+            abort('500', "erreur interne");
+        }
 
 
         $path = "$client/$document/$uid";
