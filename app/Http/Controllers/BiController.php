@@ -70,7 +70,7 @@ class BiController extends Controller
                     'operateur' => $data['Operateur'] ?? '',
                     'detenteur' => $data['Detenteur'] ?? ''
                 ];
-                
+
             } else if ($document == 'cerfa_13948-03') {
 
               $jsonData = [
@@ -132,7 +132,7 @@ class BiController extends Controller
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
-            return abort(404, 'Fichier JSON introuvable');
+            abort(404, 'Fichier JSON introuvable');
         }
 
         // Lire et décoder le fichier JSON
@@ -185,7 +185,7 @@ class BiController extends Controller
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
-            return abort(404, 'Fichier JSON introuvable');
+            abort(404, 'Fichier JSON introuvable');
         }
 
         // Lire et décoder le fichier JSON
@@ -224,7 +224,7 @@ class BiController extends Controller
 
         // Vérifier si le fichier JSON existe
         if (!file_exists($filePath)) {
-            return abort(404, "Fichier JSON introuvable : $filePath");
+            abort(404, "Fichier JSON introuvable : $filePath");
         }
 
         // Lire le contenu existant
@@ -614,20 +614,24 @@ class BiController extends Controller
 
 
 
-    public function delete($client, $document, $uid, Request $request): JsonResponse
+    public function delete(Request $request, $token): JsonResponse
     {
-        if (!$request->hasHeader('secret-token')) {
-            return response()->json(['error' => 'No token provided.'], 403);
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $dataToken['paths']);
+
+        // Vérifier si le fichier JSON existe
+        if (!file_exists($filePath)) {
+            abort(404, "Fichier JSON introuvable : $filePath");
         }
 
-        $secretToken = config("secrets.$client");
-        $adminToken = config('secrets.admin');
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
 
-        $providedToken = $request->header('secret-token');
-
-        if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
-            return response()->json(['error' => 'Not authorized.'], 403);
-        }
 
         $path = "$client/$document/$uid";
 
@@ -638,6 +642,8 @@ class BiController extends Controller
         if (!Storage::disk('public')->deleteDirectory($path)) {
             return response()->json(['error' => 'Failed to delete folder.'], 500);
         }
+
+        $dataToken->delete();
 
         return response()->json(['status' => 'Success.'], 200);
     }
