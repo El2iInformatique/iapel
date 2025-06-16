@@ -228,8 +228,6 @@
                                             @include('custom/'. $client_layout['nom_layout'])
 
                                             <div id="complements_apercu" class="mt-3 row"></div>
-
-                                            <button type="button" class="btn btn-danger mt-2" id="valide-part4">Valider ❌</button>
                                             
                                         </div>
                                     </div>
@@ -560,19 +558,6 @@
             let clearButton = document.getElementById("clear-signature");
             let valideButton = document.getElementById("valide-signature");
 
-            @if (isset($client_layout))
-                let validatePart4Button = document.getElementById("valide-part4");
-                let isValidatePart4 = false;
-
-                validatePart4Button.addEventListener("click", () => {
-                    isValidatePart4 = true;
-                    validatePart4Button.classList.add("btn-success");
-                    validatePart4Button.classList.remove('btn-danger');
-                    validatePart4Button.innerHTML = "Valider ✅";
-                });
-            @endif
-
-
             // Créer la signature avec gestion souris + tactile
             let signaturePad; // Variable pour stocker l'instance de SignaturePad
 
@@ -667,17 +652,8 @@
             // S'assurer que la signature est bien enregistrée avant soumission
             form.addEventListener("submit", function (event) {
                 
-                @if (isset($client_layout))
-                    if (!isValidatePart4) {
-                        event.preventDefault();
-                    }
-                    else {
-                        saveSignature(); // Enregistre la signature avant l'envoi
-                    }
-                @else
-                    saveSignature(); // Enregistre la signature avant l'envoi
+                saveSignature(); // Enregistre la signature avant l'envoi
 
-                @endif
                 
             });
 
