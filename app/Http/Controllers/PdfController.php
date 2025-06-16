@@ -366,6 +366,15 @@ class PdfController extends Controller
         $tplIdx = $pdf->importPage(1);
         $pdf->useTemplate($tplIdx);
 
+        // Affichage logo de l'entreprise / client en haut de la page
+        $logoPath = storage_path('app/public/'.$client.'/logo.png');
+        Log::info("logo : " . $logoPath);
+        if ($logoPath && file_exists($logoPath)) {
+            list($width, $height) = getimagesize($logoPath); // Récupère la taille originale
+
+            $pdf->Image($logoPath, 10, 12, $width, $height, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+        }
+
         
         $pdf->SetFont('helvetica', 'b', 8);
         $pdf->SetXY(23, 36.70);
@@ -560,8 +569,6 @@ class PdfController extends Controller
             $xImage = 14 + ($maxWidth - $newWidth) ;
             $yImage = 197 + ($maxHeight - $newHeight);
 
-            Log::info("Out : width : " . $newWidth . ", height : " . $newHeight);
-
             if ($isAndroid === "1") {
                 $newWidth /= 1.5;
                 $newHeight /= 1.5;
@@ -638,7 +645,7 @@ class PdfController extends Controller
                 
             }
 
-            $pdf->Text($x_complement_client, $y_complement_client, 'Test');
+            //$pdf->Text($x_complement_client, $y_complement_client, 'Test');
 
         }
 
