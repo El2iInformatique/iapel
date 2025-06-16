@@ -34,16 +34,16 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     Route::post('/submit/{token}', [BiController::class, 'submit'])->name('bi.submit')->middleware('VerifToken');;
 
     // Génération et affichage des PDFs
-    Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view')->middleware('VerifToken');;
+    Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view')->middleware('VerifToken');
 
     // Création du JSON de données pour le document
     Route::post('/create-json', [BiController::class, 'createJson']);
 
     // Data d'un document
-    Route::get('/open/{client}/{document}/{uid}', [BiController::class, 'open']);
+    Route::get('/open/{client}/{document}/{uid}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
 
     // Suppression d'un document
-    Route::get('/delete/{client}/{document}/{uid}', [BiController::class, 'delete']);
+    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('HeaderVerifToken');
     
 });
 
