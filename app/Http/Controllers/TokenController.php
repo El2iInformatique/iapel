@@ -135,4 +135,25 @@ class TokenController extends Controller
 
         return true;
     }
+
+    public function getToken(Request $request, $client, $document, $uid){
+
+        if (!$request->hasHeader('secret-token')) {
+            return response()->json(['error' => 'No token provided.'], 403);
+        }
+
+        $secretToken = config("secrets.$client");
+        $adminToken = config('secrets.admin');
+
+        $providedToken = $request->header('secret-token');
+
+        if (!hash_equals($providedToken,     $secretToken) && !hash_equals($providedToken, $adminToken)) {
+            return response()->json(['error' => 'Not authorized.'], 403);
+        }
+
+        $tokenEntry = TokenLinksRapport::where('paths', 'app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json')->first();
+
+        return response()->json(['message' => 'token valide', 'token' => $tokenEntry->token,]);
+    }
+
 }

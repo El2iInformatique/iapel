@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TokenController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -74,6 +75,8 @@ Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check']);
 Route::get('/list/{client}', [BiController::class, 'listSavedDocs']);
 // Affichage d'un PDF de devis
 Route::get('/pdf-devis/{token}',[PdfController::class,'viewDevis']);
+
+Route::get('/getToken/{client}/{document}/{uid}',[TokenController::class,'getToken']);
 
 
 Route::post('/upload-visuel', function(Request $request) {
