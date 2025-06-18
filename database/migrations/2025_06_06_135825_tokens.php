@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('token_links_rapport', function (Blueprint $table) {
+        Schema::create('tokens', function (Blueprint $table) {
             $table->id();
             $table->string('token', 40)->unique();
             $table->string('paths',0);
+            $table->string("type_document");
             $table->timestamp('expires_at');
             $table->timestamp('created_at');
+            $table->boolean("used")->nullable(true);
         });
     }
 

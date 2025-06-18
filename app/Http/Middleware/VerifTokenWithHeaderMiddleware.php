@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Http\Controllers\TokenController;
-use App\Models\TokenLinksRapport;
+use App\Models\Token;
 
 
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class VerifTokenWithHeaderMiddleware
         Log::info("Demande de verification du token : " . $token);
 
         if (!self::VerifTokenWithHeader($token, $request)) {
-            abort(404, 'Token invalide ou mauvais mot de passe');
+            abort(404, 'Token invalide ou mot de passe incorrect');
         }
 
         return $next($request);
@@ -35,13 +35,13 @@ class VerifTokenWithHeaderMiddleware
     {
         
         if (!$request->header('secret-token')) {
-            abort(401, "Mot de passe manquant");
+            abort(403, "Mot de passe manquant");
         }
-        if (!TokenController::isValideTokenRapport($token)) {
+        if (!TokenController::validateToken($token)) {
             return false;
         }
 
-        $dataToken = TokenLinksRapport::where('token', $token)->first();
+        $dataToken = Token::where('token', $token)->first();
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier existe
@@ -57,7 +57,7 @@ class VerifTokenWithHeaderMiddleware
         $secretToken = $request->header('secret-token');
 
         $adminPassword = config('secrets.admin');
-        $clientPassword = config('secrets.' . $client) ?? "nulls";
+        $clientPassword = config('secrets.' . $client) ?? "null";
 
         Log::info("Secret token : " . $secretToken);
 

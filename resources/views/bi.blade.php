@@ -4,22 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Fiche d'intervention</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 
     <!-- Favicon principal -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="../../favicon-48x48.png">
 
     <!-- Icône pour Apple (iPhone/iPad) -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png">
 
     <!-- Icônes pour Android et PWA -->
-    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="../../android-chrome-512x512.png">
     
 </head>
 <body>
@@ -334,12 +335,15 @@
                             formData.append("document", "{{ $document }}");
                             formData.append("uid", "{{ $uid }}");
                             formData.append("image", compressedFile);
+                            
+                            
 
                             fetch("/upload-visuel", {
                                 method: "POST",
                                 body: formData,
                                 headers: {
-                                }
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') // Récupérer le token depuis la balise meta
+                                },
                             })
                             .then(response => response.json())
                             .then(data => {

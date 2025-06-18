@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Token;
-use App\Models\TokenLinksRapport;
 use App\Http\Controllers\TokenController;
 
 use setasign\Fpdi\Tcpdf\Fpdi;
@@ -20,7 +19,7 @@ class PdfController extends Controller
     public function show($token)
     {
 
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = Token::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);

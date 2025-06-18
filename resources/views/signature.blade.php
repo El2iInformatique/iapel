@@ -140,7 +140,9 @@
 
                 var signature = signaturePad.toDataURL("image/png");
 
-                fetch("{{ url('/signature/' . $token) }}", {
+                console.log("{{ url('/devis/signature/' . $token) }}");
+                
+                fetch("{{ url('/devis/signature/' . $token) }}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -173,8 +175,8 @@
                 saveSignature();
             });
             
-            var pdfUrl = "{{ url('devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
-            var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
+            var pdfUrl = "{{ url('devis/' . $organisation_id . '/' . $devis_id ) }}";
+            var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id ) }}";
             var viewPdfBtn = document.getElementById("viewPdfBtn");
 
             viewPdfBtn.addEventListener("click", function () {

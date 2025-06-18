@@ -46,7 +46,7 @@
     <body>
         <?php
             $isAndroid = stripos($_SERVER['HTTP_USER_AGENT'], 'Android') !== false;
-            $route = 'generate-'.$document;
+            $route = 'generate/generate-'.$document;
             $pdfUrl = "/storage/" . urlencode($client) . "/" . urlencode($document) . "/" . urlencode($uid) . "/" . urlencode($uid) . ".pdf";        
         ?>
         @if($isAndroid)

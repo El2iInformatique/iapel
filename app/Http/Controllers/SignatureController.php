@@ -6,9 +6,9 @@ use App\Models\Token;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
-use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
 
@@ -18,41 +18,47 @@ class SignatureController extends Controller
     // Afficher la page de signature
     public function show($token)
     {
-        $tokenEntry = Token::where('token', $token)
+        $dataToken = Token::where('token', $token)
             //->where('used', false)
             //->where('expires_at', '>', now())
             ->first();
 
-        if (!$tokenEntry) {
-            abort(403);
+        $filePath = storage_path( $dataToken['paths']);
+
+        // Vérifier si le fichier JSON existe
+        if (!file_exists($filePath)) {
+            abort(404, "Fichier JSON introuvable : $filePath");
         }
 
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
+
         // On vérifie si le devis a été signé en vérifiant la présence du PDF certifié
-        $uid = $tokenEntry->devis_id;
-        $document = 'devis';
-        $client = $tokenEntry->organisation_id;
         $devisName = $uid . '_' . $token;
         $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '_certifie.pdf'); // PDF du devis certifié
 
         if (file_exists($pdfPath)) {
             return view('signature_download', [
                 'token' => $token,
-                'devis_id' => $tokenEntry->devis_id,
-                'organisation_id' => $tokenEntry->organisation_id,
-                'titre' => $tokenEntry->titre,
-                'montant_HT' => $tokenEntry->montant_HT,
-                'montant_TVA' => $tokenEntry->montant_TVA,
-                'montant_TTC' => $tokenEntry->montant_TTC
+                'devis_id' => $data["devis_id"],
+                'organisation_id' => $data["organisation_id"],
+                'titre' => $data["titre"],
+                'montant_HT' => $data["montant_HT"],
+                'montant_TVA' => $data["montant_TVA"],
+                'montant_TTC' => $data["montant_TTC"]
             ]);
         } else {
             return view('signature', [
                 'token' => $token,
-                'devis_id' => $tokenEntry->devis_id,
-                'organisation_id' => $tokenEntry->organisation_id,
-                'titre' => $tokenEntry->titre,
-                'montant_HT' => $tokenEntry->montant_HT,
-                'montant_TVA' => $tokenEntry->montant_TVA,
-                'montant_TTC' => $tokenEntry->montant_TTC
+                'devis_id' => $data["devis_id"],
+                'organisation_id' => $data["organisation_id"],
+                'titre' => $data["titre"],
+                'montant_HT' => $data["montant_HT"],
+                'montant_TVA' => $data["montant_TVA"],
+                'montant_TTC' => $data["montant_TTC"]
             ]);
         }
     }
@@ -69,21 +75,26 @@ class SignatureController extends Controller
             //->where('expires_at', '>', now())
             ->first();
 
-        if (!$tokenEntry) {
-            //return response()->json(['message' => 'Token invalide ou expiré'], Response::HTTP_FORBIDDEN);
-        }
 
         // Marquer le token comme utilisé
         $tokenEntry->used = true;
         $tokenEntry->save();
 
-        // On modifie le pdf pour inclure la signature du client
-        $uid = $tokenEntry->devis_id;
-        $document = 'devis';
-        $nomDoc = $uid . '_' . $token;
-        $client = $tokenEntry->organisation_id;
-        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '.pdf'); // PDF du devis initial
-        $outputPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf'); // PDF du devis avec signature client
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $tokenEntry['paths']);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
+        }
+
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
+
+        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf'); // PDF du devis initial
+        $outputPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '_signe.pdf'); // PDF du devis avec signature client
 
         // Charger le PDF source
         $pdf = new Fpdi();
@@ -102,7 +113,7 @@ class SignatureController extends Controller
             if ($i == $pageCount - $tokenEntry->nb_pages) {
                 $hauteurSignature = $tokenEntry->position_signature;
 
-                $ratioConversion = 6.98; // ce 6.98 a l'air de sortir du chapeau mais je jure que c'est un ratio correct que j'ai calculé a la main
+                $ratioConversion = 6.98; // ce 6.98 a l'air de sortir du chapeau mais je jure que c'est un ratio correct que j'ai calculé a la main 
 
                 $xDate = $tokenEntry->x_date;
                 $yDate = $tokenEntry->y_date;
@@ -118,7 +129,7 @@ class SignatureController extends Controller
                 // Intégration de la signature
                 $signatureBase64 = $request->input('signature');
                 $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
-                $signaturePath = storage_path('app/public/' . $client . '/' . $document . '/'  . $nomDoc . '/' . $nomDoc . '_signature.png');
+                $signaturePath = storage_path('app/public/' . $client . '/' . $document . '/'  . $uid . '/' . $uid . '_signature.png');
                 file_put_contents($signaturePath, $signatureData);
                 list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
                 $maxWidth = 31;
@@ -155,10 +166,10 @@ class SignatureController extends Controller
 
 
         // On va signer électroniquement le devis
-        $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf'); // PDF du devis avec signature client
-        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_certifie.pdf'); // PDF du devis avec signature client
+        $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '_signe.pdf'); // PDF du devis avec signature client
+        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '_certifie.pdf'); // PDF du devis avec signature client
         $scriptPath = storage_path('app/signature/sign.py');
-        $pythonPath = trim(shell_exec("which python3"));
+        $pythonPath = "py"; //trim(shell_exec("which python3"));
         $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath]);
         $process->run();
 
@@ -170,5 +181,33 @@ class SignatureController extends Controller
         // Suppression des fichiers temporaires
         unlink($outputPath);
         unlink($signaturePath);
+    }
+
+
+    public function devis(Request $request, $token){
+
+        $tokenEntry = Token::where("token", $token)->first();
+        Log::info("Token : " . $tokenEntry);
+
+        $filePath = storage_path( $tokenEntry['paths']);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
+        }
+
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
+
+        $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid . '.pdf');
+        if (!file_exists($filePath)) {
+            abort(404);
+        }
+
+        return \Response::file($filePath, headers: [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }

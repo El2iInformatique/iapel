@@ -4,52 +4,32 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 
-use App\Http\Controllers\PdfController;
-use App\Http\Controllers\CerfaController;
-use App\Http\Controllers\BiController;
-use App\Http\Controllers\SignatureController;
+
 use Illuminate\Http\Request;
 
 
-
+// Import des routes
+// Route pour les tokens
 require base_path('routes/api.php');
 
+// route pour les devis
+require base_path('routes/principale/devis.php');
 
-// Routes pour APEL Bâtiment mobile + Desktop pour la gestion des documents en ligne
+// Route pour les rapport et cerfa
+require base_path('routes/principale/rapport-cerfa.php');
 
-// Route avec protection
-// Définition de la limite de taux pour le type de requête "rapport"
+// Route pour la generation des pdf
+require base_path('routes/principale/generate.php');
 
 
-RateLimiter::for('anti-bruteforce-rapport', function (Request $request) {
-    return Limit::perMinute(15)->by($request->ip()); // 15 requêtes par minute par IP
-});
 
-Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
-
-    // Formulaire de saisie du document d'intervention
-    Route::get('/bi/{token}', [BiController::class, 'show'])->name('bi.view')->middleware('VerifToken');
-
-    // Envoi des formulaires de saisies des documents d'intervention
-    Route::post('/submit/{token}', [BiController::class, 'submit'])->name('bi.submit')->middleware('VerifToken');;
-
-    // Génération et affichage des PDFs
-    Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view')->middleware('VerifToken');
-
-    // Création du JSON de données pour le document
-    Route::post('/create-json', [BiController::class, 'createJson']);
-
-    // Data d'un document
-    Route::get('/open/{token}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
-
-    // Suppression d'un document
-    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('HeaderVerifToken');
-    
+// Définition des limites de requete pour certaines routes
+RateLimiter::for('anti-bruteforce', function (Request $request) {
+    return Limit::perMinute(20)->by($request->ip()); // 15 requêtes par minute par IP
 });
 
 
-
-//Route sans protection
+//Route sans protection pour test
 Route::get('/test', function() {
     return view('fake-create-json');
 });
@@ -58,24 +38,13 @@ Route::get('/68', function () {
     return redirect()->away('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 });
 
+// Redirection en cas de demande de la route racine
 Route::get('/', function () {
     return redirect()->away('https://www.el2i.fr');
 });
 
 
-// Listing des documents disponibles pour un client
-Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
-
-// Téléchargement du document d'intervention réalisé
-Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken');
-// Fonction de vérification de l'état du document d'intervention
-Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check']);
-// Listing de tous les documents enregistrés pour un client
-Route::get('/list/{client}', [BiController::class, 'listSavedDocs']);
-// Affichage d'un PDF de devis
-Route::get('/pdf-devis/{token}',[PdfController::class,'viewDevis']);
-
-
+// Récupere les images est les stock dans le bon dossier
 Route::post('/upload-visuel', function(Request $request) {
     if ($request->hasFile('image')) {
         $file = $request->file('image');
@@ -85,15 +54,18 @@ Route::post('/upload-visuel', function(Request $request) {
         $name = 'compressed_' . time() . '_' . $file->getClientOriginalName();
         $path = $file->storeAs($client.'/'.$document.'/'.$uid, $name, 'public');
 
+
         return response()->json([
             'success' => true,
             'name' => $name, // On retourne uniquement le nom
             'url' => asset('storage/'.$client.'/'.$document.'/'.$uid.'/'. $name) // URL publique de l'image
         ]);
     }
+
     return response()->json(['success' => false], 400);
 });
 
+// Supprime l'image demander
 Route::post('/delete-visuel', function(Request $request) {
     $name = $request->input('name');
     $client = $request->input('client');
@@ -107,37 +79,3 @@ Route::post('/delete-visuel', function(Request $request) {
 });
 
 
-// routes de générations des pdfs
-Route::get('/generate-cerfa_15497', [PdfController::class, 'generateCerfa']);
-Route::get('/generate-cerfa_15497_1', [PdfController::class, 'generateCerfa']);
-Route::get('/generate-cerfa_15497_2', [PdfController::class, 'generateCerfa']);
-Route::get('/generate-cerfa_13948-03', [PdfController::class, 'generateAttestationTVA']);
-Route::get('/generate-rapport_intervention', [PdfController::class, 'generateBi']);
-
-Route::post('/generate-cerfa_13948-03', [PdfController::class, 'generateAttestationTVA']);
-
-Route::post('/generate-download-pdf', [PdfController::class, 'generateDownloadPDF']);
-
-
-//Routes pour la signature des devis
-Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('signature.show');
-Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('signature.sign');
-
-Route::get('/devis/{client}/{uid}', function ($client, $uid) {
-    $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid . '.pdf');
-    if (!file_exists($filePath)) {
-        abort(404);
-    }
-
-    return Response::file($filePath, [
-        'Content-Type' => 'application/pdf',
-    ]);
-});
-Route::get('/download-devis/{client}/{filename}', function ($client, $uid) {
-    $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid .'_certifie.pdf');
-    if (!file_exists($filePath)) {
-        abort(404);
-    }
-
-    return response()->download($filePath, "{$uid}.pdf");
-});

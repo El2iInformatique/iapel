@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\layou_client;
-use App\Http\Controllers\TokenController;
+use App\Models\Token;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,9 +11,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-
-
-use App\Models\TokenLinksRapport;
 
 
 class BiController extends Controller
@@ -35,97 +32,10 @@ class BiController extends Controller
         return response()->json($data);
     }
 
-    // fonction de création du JSON et du TOKEN d'identification du fichier
-    public function createJson(Request $request)
-    {
-
-        $data = $request->input();
-
-        $uid = $data['uid'];
-        $document = $data['document'];
-        $client = $data['client'];
-        $folderPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid);
-
-        // Vérifier si le dossier existe, sinon le créer
-        if (!File::exists($folderPath)) {
-            File::makeDirectory($folderPath, 0775, true, true);
-        }
-
-        $jsonPath = $folderPath . '/' . $uid . '.json';
-        $dataToken = [
-            'client' => $client,
-            'document' => $document,
-            'uid' => $uid
-        ];
-
-        try {
-            if (file_exists($jsonPath)) {
-                unlink($jsonPath);
-            }
-
-            if (str_starts_with($document, 'cerfa_15497')) {
-
-              $jsonData = [
-                  'dataToken' => $dataToken,
-                    'operateur' => $data['Operateur'] ?? '',
-                    'detenteur' => $data['Detenteur'] ?? ''
-                ];
-
-            } else if ($document == 'cerfa_13948-03') {
-
-              $jsonData = [
-                  'dataToken' => $dataToken,
-                    'nom' => $data['nom'] ?? '',
-                    'prenom' => $data['prenom'] ?? '',
-                    'adresse' => $data['adresse'] ?? '',
-                    'commune' => $data['commune'] ?? '',
-                    'code_postal' => $data['code_postal'] ?? ''
-                ];
-            } else if ($document == 'rapport_intervention') {
-
-                $jsonData = [
-                    'dataToken' => $dataToken,
-                    'code_client' => $data['code_client'] ?? '',
-                    'nom_client' => $data['nom_client'] ?? '',
-                    'email_client' => $data['email_client'] ?? '',
-                    'telephone_client' => $data['telephone_client'] ?? '',
-                    'portable_client' => $data['portable_client'] ?? '',
-                    'adresse_facturation' => $data['adresse_facturation'] ?? '',
-                    'cp_facturation' => $data['cp_facturation'] ?? '',
-                    'ville_facturation' => $data['ville_facturation'] ?? '',
-                    'lieu_intervention' => $data['lieu_intervention'] ?? '',
-                    'adresse_intervention' => $data['adresse_intervention'] ?? '',
-                    'cp_intervention' => $data['cp_intervention'] ?? '',
-                    'ville_intervention' => $data['ville_intervention'] ?? '',
-                    'intervenant' => $data['intervenant'] ?? '',
-                    'description' => $data['description'] ?? ''
-                ];
-            }
-
-            $token = TokenController::generateTokenRapport( $request, 'app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json' );
-
-            if (!$token) {
-                return response()->json([
-                    'error' => 'Token non généré',
-                ]);
-            }
-            file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT));
-
-            return response()->json([
-                'message' => 'Token généré avec succès',
-                'token' => $token,
-                'bi_url' => url('/bi/' . $token),
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erreur lors de la création du fichier JSON : ' . $e->getMessage());
-        }
-    }
-
 
     public function download($token)
     {
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = Token::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
@@ -178,7 +88,7 @@ class BiController extends Controller
 
     public function show($token)
     {
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = Token::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
@@ -204,6 +114,7 @@ class BiController extends Controller
         } else {
 
             $client_layout = layou_client::where('nom_client', $client)->first();
+            Log::info("Token : " . $token . ", client : " . $client . ", document" . $document . ", uid : " . $uid);
 
             if (!$client_layout) {
                 return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
@@ -217,7 +128,7 @@ class BiController extends Controller
 
     public function submit(Request $request, $token)
     {
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = Token::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
@@ -543,7 +454,7 @@ class BiController extends Controller
                         $jsonData = json_decode($jsonContent, true);
 
                         $pathToken = "app/public/" . $file;
-                        $token = TokenLinksRapport::where('paths', $pathToken)->first()["token"];
+                        $token = Token::where('paths', $pathToken)->first()["token"];
                         $documents[$dirPath]["token_rapport"] = $token;
 
                         if (isset($formatRules[$docType])) {
@@ -582,7 +493,7 @@ class BiController extends Controller
     public function open(Request $request, $token): JsonResponse
     {
 
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = Token::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
@@ -623,7 +534,7 @@ class BiController extends Controller
 
     public function delete(Request $request, $token): JsonResponse
     {
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = Token::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
