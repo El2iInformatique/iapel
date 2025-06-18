@@ -8,7 +8,6 @@ use App\Http\Controllers\TokenController;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -367,11 +366,11 @@ class PdfController extends Controller
 
         // Affichage logo de l'entreprise / client en haut de la page
         $logoPath = storage_path('app/public/'.$client.'/logo.png');
-        Log::info("logo : " . $logoPath);
-        if ($logoPath && file_exists($logoPath)) {
-            list($width, $height) = getimagesize($logoPath); // Récupère la taille originale
 
-            $pdf->Image($logoPath, 10, 12, $width, $height, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+        if ($logoPath && file_exists($logoPath)) {
+
+            $pdf->Image($logoPath, 10, 11, 120, 25, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+            
         }
 
         
