@@ -21,3 +21,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+/*.docx
+/*.tmp
+/*e.txt
+/python-script*
