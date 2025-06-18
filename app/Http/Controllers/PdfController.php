@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Token;
 use App\Models\TokenLinksRapport;
-use App\Http\Controllers\TokenController;
 
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver; 
 
 
 class PdfController extends Controller
@@ -370,9 +370,27 @@ class PdfController extends Controller
         $logoPath = storage_path('app/public/'.$client.'/logo.png');
         Log::info("logo : " . $logoPath);
         if ($logoPath && file_exists($logoPath)) {
-            list($width, $height) = getimagesize($logoPath); // Récupère la taille originale
+            $imageManager = new ImageManager(new Driver());
 
-            $pdf->Image($logoPath, 10, 12, $width, $height, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+            $width = 120;
+            $height = 60;
+
+            $image = $imageManager->read($logoPath);
+            $image->cover($width, $height);
+
+            // Génère un nom de fichier unique et temporaire pour l'image
+            $tempFilename = 'temp_resized_image_' . uniqid() . '.png';
+
+            // Chemin absolu vers l'emplacement temporaire
+            $tempImagePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tempFilename;
+
+
+            // Sauvegarde l'image redimensionnée dans le dossier temporaire du système
+            $image->save($tempImagePath);
+
+            $pdf->Image($tempImagePath, 10, 12, $width, $height, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+            
+            unlink($tempImagePath);
         }
 
         
