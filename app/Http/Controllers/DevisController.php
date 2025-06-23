@@ -6,36 +6,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Token;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+
 
 class DevisController extends Controller
 {
-    public function delete(Request $request, $noToken): JsonResponse
+    public function delete(Request $request, $token): JsonResponse
     {
-        $token = Token::where('token', $noToken)->first();
+        $dataToken = Token::where('token', $token)->first();
+        $filePath = storage_path( $dataToken->paths);
 
-        if (!$token) {
-            return response()->json(['error' => 'Token non trouvé'], 404);
+        if (!file_exists($filePath)) {
+            abort(404, "Fichier JSON introuvable : $filePath");
         }
 
-        if(!$request->hasHeader('secret-token')){
-            return response()->json(['error'=>'No secret token provided.'], 403);  
-        }
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+
+        $devisDir = $data['devis_id'];
+
+	    $devisPath = $data['organisation_id'] . '/devis/' . $devisDir . '/';
+        $pdfPath = $data['organisation_id'] . '/devis/' . $devisDir . '/' . $devisDir . '.pdf';
+        $pdfPathCertif = $data['organisation_id'] . '/devis/' . $devisDir . '/' . $devisDir . '_certifie.pdf';
         
-        $secretToken = config("secrets.$token->organisation_id"); 
-        $adminToken = config('secrets.admin'); 
-
-        $providedToken = $request->header('secret-token');
-
-        if(!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)){
-            return response()->json(['error'=>'Not authorized.'], 403);
-        }
-
-        $devisDir = $token->devis_id . '_' . $noToken;
-
-	    $devisPath = $token->organisation_id . '/devis/' . $devisDir . '/';
-        $pdfPath = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '.pdf';
-        $pdfPathCertif = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '_certifie.pdf';
         try {
             // Supprimer le(s) fichier(s) PDF s'il(s) existe(nt)
             if (Storage::disk('public')->exists($pdfPath)) {
@@ -51,7 +44,7 @@ class DevisController extends Controller
 	    }
 
             // Supprimer le token
-            $token->delete();
+            $dataToken->delete();
 
             return response()->json(['success' => 'Devis supprimé avec succès'], 200);
         } catch (\Exception $e) {
@@ -61,30 +54,24 @@ class DevisController extends Controller
         }
     }
 
-    public function check(Request $request, $noToken){
-        $token = Token::where('token', $noToken)->first();
+    public function check(Request $request, $token){
 
-        if (!$token) {
-            return response()->json(['exists' => false], 200);
+        $dataToken = Token::where('token', $token)->first();
+
+        $filePath = storage_path( $dataToken->paths);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
         }
 
-        if(!$request->hasHeader('secret-token')){
-            return response()->json(['error'=>'No secret token provided.'], 403);  
-        }
-        
-        $secretToken = config("secrets.$token->organisation_id"); 
-        $adminToken = config('secrets.admin'); 
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
 
-        $providedToken = $request->header('secret-token');
 
-        if(!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)){
-            return response()->json(['error'=>'Not authorized.'], 403);
-        }
+        $devisDir = $data["devis_id"];
 
-        $devisDir = $token->devis_id . '_' . $noToken;
-
-        $pdfPath = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '.pdf';
-        $pdfPathCertif = $token->organisation_id . '/devis/' . $devisDir . '/' . $devisDir . '_certifie.pdf';
+        $pdfPath = $data['organisation_id'] . '/devis/' . $devisDir . '/' . $devisDir . '.pdf';
+        $pdfPathCertif = $data['organisation_id'] . '/devis/' . $devisDir . '/' . $devisDir . '_certifie.pdf';
 
         try {
             
@@ -97,5 +84,60 @@ class DevisController extends Controller
             return response()->json(['error' => 'Erreur lors de la verification'], 500);
         }
     }
+
+
+    public function download_devis($token){
+
+        $tokenEntry = Token::where("token", $token)->first();
+        Log::info("Demande de téléchargement d'un devis : " . $token);
+
+        $filePath = storage_path( $tokenEntry['paths']);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
+        }
+
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
+
+        $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid . '.pdf');
+        if (!file_exists($filePath)) {
+            abort(404);
+        }
+
+        return \Response::file($filePath, headers: [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+    
+
+    public function download_devis_certifie ($token) {
+        
+        $tokenEntry = Token::where("token", $token)->first();
+        Log::info("Demande de téléchargement d'un devis certifié : " . $token);
+
+        $filePath = storage_path( $tokenEntry['paths']);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
+        }
+
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
+
+        $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid . '_certifie.pdf');
+        if (!file_exists($filePath)) {
+            abort(404);
+        }
+
+        return response()->download($filePath, "{$uid}.pdf");
+    }
+
 
 }

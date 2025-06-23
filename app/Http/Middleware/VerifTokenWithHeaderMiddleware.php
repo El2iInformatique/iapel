@@ -42,6 +42,10 @@ class VerifTokenWithHeaderMiddleware
         }
 
         $dataToken = Token::where('token', $token)->first();
+        if (!$dataToken) {
+            return false;
+        }
+        
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier existe

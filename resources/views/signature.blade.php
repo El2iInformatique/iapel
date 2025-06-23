@@ -133,8 +133,8 @@
                     alert("Veuillez signer avant de soumettre.");
                     return;
                 }
-                
-                
+                    
+                    
                 const infoModal_signature = new bootstrap.Modal(document.getElementById("info_modal_signature"));
                 infoModal_signature.show();
 
@@ -142,21 +142,23 @@
 
                 console.log("{{ url('/devis/signature/' . $token) }}");
                 
+                    
                 fetch("{{ url('/devis/signature/' . $token) }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify({ signature: signature })
-                })
-                .then(() => {
-                    window.location.reload(); // ✅ Recharge la page après succès
-                })
-                .catch(error => {
-                    console.error("Erreur :", error);
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
+                        body: JSON.stringify({ signature: signature })
+                    })
+                    .then(() => {
+                        window.location.reload(); // ✅ Recharge la page après succès
+                    })
+                    .catch(error => {
+                        console.error("Erreur :", error);
                 });
             }
+            
 
             // Empêcher le resize intempestif en bloquant les événements sur mobile
             canvas.addEventListener("touchstart", function () {
@@ -175,8 +177,8 @@
                 saveSignature();
             });
             
-            var pdfUrl = "{{ url('devis/' . $organisation_id . '/' . $devis_id ) }}";
-            var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id ) }}";
+            var pdfUrl = "{{ url('/devis/download-devis/' . $token ) }}";
+            var pdfDownloadUrl = "{{ url('/devis/download-devis/' . $token ) }}";
             var viewPdfBtn = document.getElementById("viewPdfBtn");
 
             viewPdfBtn.addEventListener("click", function () {

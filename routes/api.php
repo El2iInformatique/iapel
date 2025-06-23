@@ -15,17 +15,18 @@ Route::prefix('api')->group(function () {
         Route::post('/generate-token-devis', [TokenController::class, 'generateDevis'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->middleware('VerifHeaderPassword');
        
         // Création du JSON de données pour les documents rapport, cerfa
-        Route::post('/generate-token-rapport-cerfa', [TokenController::class, 'generateOther'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->middleware('VerifHeaderPassword');;
+        Route::post('/generate-token-rapport-cerfa', [TokenController::class, 'generateOther'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->middleware('VerifHeaderPassword');
 
         // Route de validation du token
-        Route::get('/validate-token/{token}', [TokenController::class, 'validateToken']);
+        Route::get('/validate-token/{token}', [TokenController::class, 'validateToken'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->middleware('VerifHeaderPassword');;
+
+        Route::get('/getToken/{client}/{document}/{uid}', [TokenController::class, 'getToken'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->middleware('VerifHeaderPassword');
 
     });
 
 
     Route::get('/tokens', function () {
         return response()->json(Token::all());
-    });
-    Route::post('/upload-pdf', [PdfController::class, 'upload'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    })->middleware('VerifHeaderPassword');
 
 });

@@ -235,30 +235,43 @@
                                 </div>
                                 @endif
 
-                            </diV>
-
-                            <hr>
-                            <!-- Gestion de la signature -->
-                            <div class="col">     
-                                <label class="form-label" style="margin-left: 10%">Signature du client ou de son représentant :</label>
-                                <canvas id="signature-pad" class="border" style="width: 80%; height: 200px; margin-left: 10%; margin-right: 10%"></canvas>
-                                <input type="hidden" name="signature" id="signature">
-                                <button type="button" class="btn btn-secondary mt-2" id="clear-signature" style="margin-left: 10%">Effacer</button>
-                                <button type="button" class="btn btn-success mt-2" id="valide-signature">Valider</button>
-
-                                <hr>
-                            </div>
-
-                            <br>
-                            <div class="col-12">
-                                <label class="form-label visually-hidden" for="fait-le">Fait le :</label>
-                                <div class="input-group">
-                                  <div class="input-group-text">Fait le :</div>
-                                  <input min="{{ date("y-m-d") }}" type="date" class="form-control" name="fait-le" id="fait-le">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="accordion_header_signature">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_signature" aria-expanded="false" aria-controls="accordion_collapse_signature">
+                                            <h5>5 - Signature</h5>
+                                        </button>
+                                    </h2>
+                                    <div id="accordion_collapse_signature" class="accordion-collapse collapse" aria-labelledby="accordion_header_signature" data-bs-parent="#accordion_bi">
+                                        <div class="accordion-body">
+                                            
+                                            <!-- Gestion de la signature -->
+                                            <div class="col">     
+                                                <label class="form-label" style="margin-left: 10%">Signature du client ou de son représentant :</label>
+                                                <canvas id="signature-pad" class="border" style="width: 80%; height: 200px; margin-left: 10%; margin-right: 10%"></canvas>
+                                                <input type="hidden" name="signature" id="signature">
+                                                
+                                                <button type="button" class="btn btn-secondary mt-2" id="clear-signature" style="margin-left: 10%">Effacer</button>
+                                                <button type="button" class="btn btn-success mt-2" id="valide-signature">Valider</button>
+    
+                                                <hr>
+                                            </div>
+    
+                                            <br>
+                                            <div class="col-12">
+                                                <label class="form-label visually-hidden" for="fait-le">Fait le :</label>
+                                                <div class="input-group">
+                                                <div class="input-group-text">Fait le :</div>
+                                                <input min="{{ date("y-m-d") }}" type="date" class="form-control" name="fait-le" id="fait-le">
+                                                </div>
+                                            </div>
+    
+                                            <br>
+    
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <br>
+                            </diV>
                             
                             <hr>
                             <!-- Validation du formulaire -->
@@ -614,14 +627,12 @@
                 console.log("Canvas redimensionné. CSS: " + displayWidth + "x" + displayHeight + "px. Interne: " + canvas.width + "x" + canvas.height + "px. DPR: " + ratio);
             }
             
-            // Désactiver le resize après le premier chargement
-            window.addEventListener("load", function () {
-                resizeCanvas(); // Applique le redimensionnement une seule fois
-                signaturePad.clear();
-            });
-
             // Appeler la fonction de redimensionnement chaque fois que la fenêtre est redimensionnée
             window.addEventListener('resize', resizeCanvas);
+
+            document.getElementById('accordion_collapse_signature').addEventListener('shown.bs.collapse', function () {
+                resizeCanvas(); // Maintenant que l'élément est visible, le canvas peut être correctement redimensionné
+            });
 
             // Sauvegarder la signature au format Base64
             function saveSignature() {

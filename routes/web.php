@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 
+use App\Http\Controllers\BiController;
+
 
 use Illuminate\Http\Request;
 
@@ -78,4 +80,5 @@ Route::post('/delete-visuel', function(Request $request) {
     return response()->json(['success' => false], 400);
 });
 
-
+// Suppression d'un document
+Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('HeaderVerifToken');

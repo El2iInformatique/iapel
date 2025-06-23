@@ -344,7 +344,8 @@ class PdfController extends Controller
 
         Log::info("Test : " . $isAndroid);
 
-        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
+        $pdfPath = storage_path('app/private/pdf/' . $document . '.pdf'); // PDF d'origine
+        //$pdfPath = storage_path('app/public/'.$client.'/'.$document . '.pdf'); // Ancienne methode
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
 
         // Lire le fichier JSON
@@ -567,11 +568,11 @@ class PdfController extends Controller
             $xImage = 14 + ($maxWidth - $newWidth) ;
             $yImage = 197 + ($maxHeight - $newHeight);
 
-            if ($isAndroid === "1") {
+            if ($isAndroid == "1") {
                 $newWidth /= 1.5;
                 $newHeight /= 1.5;
 
-                $yImage += 10;
+                $yImage += 12;
             }
             else {
                 $newWidth /= 1.3;
@@ -603,7 +604,7 @@ class PdfController extends Controller
             // boucle sur les complement client 
             foreach ($data['complement_client'] as $item) { // Donne a $item un tableau avec item et question
                 
-                if ($item['type'] === 'text') {
+                if ($item['type'] == 'text') {
                     $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
                     $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
 
@@ -653,28 +654,6 @@ class PdfController extends Controller
         return response()->file($outputPath, [
             'Content-Disposition' => 'inline; filename="' . $uid . '"'
         ]);
-    }
-
-    private function formatTexte($texte) {
-        $texte = trim($texte);
-        $resultat = [];
-    
-        // Première ligne : max 40 caractères
-        if (strlen($texte) <= 52) {
-            $resultat[] = $texte;
-        } else {
-            $resultat[] = substr($texte, 0, 52);
-            $reste = substr($texte, offset: 50);
-    
-            // Lignes suivantes : max 100 caractères
-            while (strlen($reste) > 0) {
-                $resultat[] = substr($reste, 0, 108);
-                $reste = substr($reste, 108);
-            }
-        }
-    
-        // Retourne le texte avec des retours à la ligne
-        return $resultat;
     }
     
 
@@ -1036,7 +1015,7 @@ class PdfController extends Controller
         ]);
 
         if (!$request->hasFile('pdf_file')) {
-            return response()->json(['message' => 'Aucun fichier reçu'], 400);
+            return response()->json(['message' => 'Aucun fichier reçu'], 418); // status réel : 400 ou 406
         }
 
         $file = $request->file('pdf_file');
@@ -1049,10 +1028,21 @@ class PdfController extends Controller
             return response()->json(['message' => 'Token non trouvé'], 404);
         }
 
-        $name = $token->devis_id . '_' . $noToken;
-        $newFilename = $name . '.pdf';
 
-        $relativePath = $token->organisation_id . '/devis/' . $name . '/';
+        $filePath = storage_path( $token['paths']);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
+        }
+
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+
+
+        //                Nom du devis 
+        $newFilename = $data['devis_id'] . '.pdf';
+
+        $relativePath = $data['organisation_id'] . '/devis/' . $data['devis_id'] . '/';
         $fullPath = storage_path('app/public/' . $relativePath);
 
         if (!File::exists($fullPath)) {
@@ -1065,9 +1055,9 @@ class PdfController extends Controller
         
         \Log::info("Fichier PDF uploadé avec succès", [
             'token' => $noToken,
-            'devis_id' => $token->devis_id,
+            'devis_id' => $data['devis_id'],
             'nom_fichier' => $newFilename,
-            'organisation' => $token->organisation_id,
+            'organisation' => $data['organisation_id'],
             'chemin_complet' => $finalPath
         ]);
 
@@ -1081,17 +1071,22 @@ class PdfController extends Controller
     public function viewDevis(Request $request, $token){
         $leToken = Token::where('token', $token)->first();
 
-        if (!$leToken) {
-            abort(404);
+        $filePath = storage_path( $leToken->paths);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
         }
 
-        $devisName = $leToken->devis_id . '_' . $token;
-        $isCertified = Storage::disk('public')->exists($leToken->organisation_id . '/devis/' . $devisName . '/' . $devisName . '_certifie.pdf'); 
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+
+        $devisName = $data['devis_id'];
+        $isCertified = Storage::disk('public')->exists($data['organisation_id'] . '/devis/' . $devisName . '/' . $devisName . '_certifie.pdf'); 
 
         return view('devis_pdf', [
-            'client' => $leToken->organisation_id,
+            'client' => $data['organisation_id'],
             'token' => $token,
-            'nomDevis' => $leToken->devis_id,
+            'nomDevis' => $devisName,
             'isCertified' => $isCertified
         ]);
     }

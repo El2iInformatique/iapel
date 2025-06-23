@@ -62,20 +62,25 @@ class BiController extends Controller
         return response()->download($filePath, "{$uid}.pdf");
     }
 
-    public function check($client, $document, $uid, Request $request)
+    public function check($token, Request $request)
     {
-        if (!$request->hasHeader('secret-token')) {
-            return response()->json(['error' => 'No token provided.'], 403);
+        $dataToken = Token::where('token', $token)->get()->first();
+
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $dataToken['paths']);
+
+        // Vérifier si le fichier existe
+        if (!file_exists($filePath)) {
+            abort(404, 'Fichier JSON introuvable');
         }
 
-        $secretToken = config("secrets.$client");
-        $adminToken = config('secrets.admin');
+        // Lire et décoder le fichier JSON
+        $data = json_decode(file_get_contents($filePath), true);
 
-        $providedToken = $request->header('secret-token');
-
-        if (!hash_equals($providedToken,     $secretToken) && !hash_equals($providedToken, $adminToken)) {
-            return response()->json(['error' => 'Not authorized.'], 403);
-        }
+        $client = $data["dataToken"]["client"];
+        $document = $data["dataToken"]["document"];
+        $uid = $data["dataToken"]["uid"];
+        $token = $dataToken->token;
 
         $jsonPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json');
         $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
@@ -335,20 +340,6 @@ class BiController extends Controller
     public function listSavedDocs($entreprise, Request $request): JsonResponse
     {
         try {
-            if (!$request->hasHeader('secret-token')) {
-                return response()->json(['error' => 'No token provided.'], 403);
-            }
-
-
-
-            $secretToken = config("secrets.$entreprise");
-            $adminToken = config('secrets.admin');
-
-            $providedToken = $request->header('secret-token');
-
-            if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
-                return response()->json(['error' => 'Not authorized.'], 403);
-            }
 
             $basePath = "$entreprise";
 
@@ -445,7 +436,7 @@ class BiController extends Controller
                 }
 
                 if (str_ends_with($file, '.pdf')) {
-                    $documents[$dirPath]['status'] = 'Validé';
+                    $documents[$dirPath]['status'] = 'Valide';
                 }
 
                 if (str_ends_with($file, '.json')) {

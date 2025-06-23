@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Token;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Http\File;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
+
 
 class SignatureController extends Controller
 {
@@ -22,24 +20,36 @@ class SignatureController extends Controller
             //->where('used', false)
             //->where('expires_at', '>', now())
             ->first();
-
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier JSON existe
         if (!file_exists($filePath)) {
             abort(404, "Fichier JSON introuvable : $filePath");
         }
-
+    
         // Lire le contenu existant
         $data = json_decode(file_get_contents($filePath), true);
         $document = $data['dataToken']['document'];
         $client = $data['dataToken']['client'];
         $uid = $data['dataToken']['uid'];
 
-        // On vérifie si le devis a été signé en vérifiant la présence du PDF certifié
-        $devisName = $uid . '_' . $token;
-        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '_certifie.pdf'); // PDF du devis certifié
+        if ($dataToken->used == 1) {
 
+            return response()->view('signature_download', [
+                'devis_id' => $data['devis_id'],
+                'titre' => $data['titre'],
+                'montant_HT' => $data['montant_HT'],
+                'montant_TVA' => $data['montant_TVA'],
+                'montant_TTC' => $data['montant_TTC'],
+                'token' => $dataToken->token
+            ]);
+
+        }
+
+        // On vérifie si le devis a été signé en vérifiant la présence du PDF certifié
+        $devisName = $uid;
+        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '_certifie.pdf'); // PDF du devis certifié
+        Log::info("Folder : " . $pdfPath);
         if (file_exists($pdfPath)) {
             return view('signature_download', [
                 'token' => $token,
@@ -81,7 +91,7 @@ class SignatureController extends Controller
         $tokenEntry->save();
 
         // Construire le chemin du fichier JSON
-        $filePath = storage_path( $tokenEntry['paths']);
+        $filePath = storage_path( $tokenEntry->paths);
 
         if (!file_exists($filePath)) {
             return abort(404, "Fichier JSON introuvable : $filePath");
@@ -100,7 +110,7 @@ class SignatureController extends Controller
         $pdf = new Fpdi();
         $pdf->SetAutoPageBreak(false);
 
-        // ombre total de pages dans le PDF source
+        // Nombre total de pages dans le PDF source
         $pageCount = $pdf->setSourceFile($pdfPath);
 
         // Importer toutes les pages
@@ -110,16 +120,15 @@ class SignatureController extends Controller
             $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
 
             // Si avant-dernière page, appliquer signature et date
-            if ($i == $pageCount - $tokenEntry->nb_pages) {
-                $hauteurSignature = $tokenEntry->position_signature;
+            if ($i == $pageCount - $data["nb_pages"]) {
 
                 $ratioConversion = 6.98; // ce 6.98 a l'air de sortir du chapeau mais je jure que c'est un ratio correct que j'ai calculé a la main 
 
-                $xDate = $tokenEntry->x_date;
-                $yDate = $tokenEntry->y_date;
+                $xDate = $data["coords"]["x_date"];
+                $yDate = $data["coords"]["y_date"];
 
-                $xSignature = $tokenEntry->x_signature;
-                $ySignature = $tokenEntry->y_signature;
+                $xSignature = $data["coords"]["x_signature"];
+                $ySignature = $data["coords"]["y_signature"];
 
                 // Intégration de la date
                 $date_signature = date('d/m/Y');
@@ -131,22 +140,11 @@ class SignatureController extends Controller
                 $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
                 $signaturePath = storage_path('app/public/' . $client . '/' . $document . '/'  . $uid . '/' . $uid . '_signature.png');
                 file_put_contents($signaturePath, $signatureData);
-                list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
-                $maxWidth = 31;
-                $maxHeight = 13;
-                // Calcul du redimensionnement en conservant le ratio
-                if ($width > $height) {
-                    $newWidth = $maxWidth;
-                    $newHeight = ($height / $width) * $maxWidth;
-                } else {
-                    $newHeight = $maxHeight;
-                    $newWidth = ($width / $height) * $maxHeight;
-                }
-                // Calcul des positions pour centrer dans le carré
 
+                // Calcul des positions pour centrer dans le carré
                 $xImage = $xSignature / $ratioConversion; 
                 $yImage = $ySignature / $ratioConversion;
-                $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+                $pdf->Image($signaturePath, $xImage, $yImage, 30, 10, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
 
                 /** Mettre page de fin ici */
 
@@ -160,18 +158,19 @@ class SignatureController extends Controller
 
 
 
-
         // Aplatir le PDF en l'empêchant d'être modifié
         $pdf->Output($outputPath, 'F');
 
-
+        
         // On va signer électroniquement le devis
         $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '_signe.pdf'); // PDF du devis avec signature client
         $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '_certifie.pdf'); // PDF du devis avec signature client
         $scriptPath = storage_path('app/signature/sign.py');
-        $pythonPath = "py"; //trim(shell_exec("which python3"));
+        
+        $pythonPath = "python"; //trim(shell_exec("which python3"));
         $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath]);
         $process->run();
+        
 
         // 📌 Vérifier si le script a échoué
         if (!$process->isSuccessful()) {
@@ -181,33 +180,8 @@ class SignatureController extends Controller
         // Suppression des fichiers temporaires
         unlink($outputPath);
         unlink($signaturePath);
+
     }
 
 
-    public function devis(Request $request, $token){
-
-        $tokenEntry = Token::where("token", $token)->first();
-        Log::info("Token : " . $tokenEntry);
-
-        $filePath = storage_path( $tokenEntry['paths']);
-
-        if (!file_exists($filePath)) {
-            return abort(404, "Fichier JSON introuvable : $filePath");
-        }
-
-        // Lire le contenu existant
-        $data = json_decode(file_get_contents($filePath), true);
-        $document = $data['dataToken']['document'];
-        $client = $data['dataToken']['client'];
-        $uid = $data['dataToken']['uid'];
-
-        $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid . '.pdf');
-        if (!file_exists($filePath)) {
-            abort(404);
-        }
-
-        return \Response::file($filePath, headers: [
-            'Content-Type' => 'application/pdf',
-        ]);
-    }
 }

@@ -62,7 +62,7 @@
 
     <script>
         document.getElementById("viewPdfBtn").addEventListener("click", function() {
-            let pdfUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
+            let pdfUrl = "{{ url('devis/download-devis-certifie/' . $token ) }}";
             let link = document.createElement("a");
             link.href = pdfUrl;
             link.download = "{{ $devis_id }}.pdf";  // 📌 Nom du fichier à télécharger

@@ -22,9 +22,7 @@ Route::prefix('rapport-cerfa')->group(function () {
     
         // Data d'un document
         Route::get('/open/{token}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
-    
-        // Suppression d'un document
-        Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('HeaderVerifToken');
+
         
     });
     
@@ -34,9 +32,11 @@ Route::prefix('rapport-cerfa')->group(function () {
 
     // Téléchargement du document d'intervention réalisé
     Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken');
+
     // Fonction de vérification de l'état du document d'intervention
-    Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check']);
+    Route::get('/check/{token}', [BiController::class, 'check'])->middleware('HeaderVerifToken');
+
     // Listing de tous les documents enregistrés pour un client
-    Route::get('/list/{client}', [BiController::class, 'listSavedDocs']);
+    Route::get('/list/{client}', [BiController::class, 'listSavedDocs'])->middleware('VerifHeaderPassword');
     
 });

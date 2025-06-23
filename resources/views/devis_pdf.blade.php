@@ -46,12 +46,12 @@
     <body>
         <?php
             $isAndroid = stripos($_SERVER['HTTP_USER_AGENT'], 'Android') !== false;
-            $nomDir = $nomDevis . '_' .$token;
+            $nomDir = $nomDevis;
             if($isCertified){
                 $pdfUrl = "storage/" . $client . "/devis/" . $nomDir . '/' .  $nomDir . "_certifie.pdf";
             }
             else{
-                $pdfUrl = "storage/" . $client . "/devis/" . $nomDir . '/' .  $nomDir . ".pdf"; 
+                $pdfUrl = "storage/" . $client . "/devis/" . $nomDir . '/' .  $nomDir . "_signe.pdf"; 
             }
             
         ?>

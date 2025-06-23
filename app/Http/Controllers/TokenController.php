@@ -11,6 +11,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 
 /*
@@ -57,6 +58,7 @@ class TokenController extends Controller
         $client = $data['organisation_id'];
         $folderPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid);
         $coords = json_decode($data['coords'], true);
+        Log::info("Folder : " . $folderPath);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json(['error' => 'Invalid JSON in coords'], 400);
@@ -88,7 +90,7 @@ class TokenController extends Controller
                 'montant_HT' => $data["montant_HT"],
                 'montant_TVA' => $data["montant_TVA"],
                 'montant_TTC' => $data["montant_TTC"],
-                'coords' => $data["coords"],
+                $coords,
                 'nb_pages' => $data["nb_pages"],
             ];
             
@@ -256,10 +258,7 @@ class TokenController extends Controller
             return response()->json(['message' => 'Token invalide ou expiré'], Response::HTTP_FORBIDDEN);
         }
 
-        if ($tokenRecord->used === 1) {
-            return response()->json(['message' => 'used']);
-        }
-
+        /*
         $expiresAt = Carbon::parse($tokenRecord->expires_at);
 
         if ($expiresAt->lessThan(now())) {
@@ -267,9 +266,17 @@ class TokenController extends Controller
 
             $tokenRecord->delete();
             return response()->json(['message' => 'Token invalide, date dépassée']);
-        }
+        }*/
 
-        return response()->json(['message' => 'Valide', 'token' => $tokenRecord->token]);
+        return response()->json(['message' => 'Valide', 'token' => $tokenRecord->token], 200);
+    }
+
+
+    public function getToken(Request $request, $client, $document, $uid){
+
+        $tokenEntry = Token::where('paths', 'app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json')->first();
+
+        return response()->json(['message' => 'token valide', 'token' => $tokenEntry->token,]);
     }
 
 }
