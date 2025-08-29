@@ -30,16 +30,6 @@ RateLimiter::for('anti-bruteforce', function (Request $request) {
     return Limit::perMinute(20)->by($request->ip()); // 15 requêtes par minute par IP
 });
 
-
-//Route sans protection pour test
-Route::get('/test', function() {
-    return view('fake-create-json');
-});
-
-Route::get('/68', function () {
-    return redirect()->away('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-});
-
 // Redirection en cas de demande de la route racine
 Route::get('/', function () {
     return redirect()->away('https://www.el2i.fr');

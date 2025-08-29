@@ -17,7 +17,10 @@ class AntiSpamMiddleware
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      * @param  int  $maxAttempts  Le nombre maximum de tentatives de spam autorisées pour cette route.
      * @param  int  $decayMinutes Le nombre de minutes avant que le compteur de tentatives ne soit réinitialisé.
+     * 
+     * Middlware non utilisé mais créé, il a le mérite d'exister
      */
+
     public function handle(Request $request, Closure $next, int $maxAttempts = 5, int $decayMinutes = 1): Response
     {
         // On utilise l'URL de la route et l'adresse IP de l'utilisateur.

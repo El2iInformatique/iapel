@@ -15,6 +15,28 @@ use Illuminate\Support\Facades\Log;
 
 class BiController extends Controller
 {
+
+    // Évite les répétitions // récupère les données des fichiers JSON via le token
+    public function getJSONDataFromToken($dataToken){
+
+
+        
+        
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $dataToken['paths']);
+
+        // Vérifier si le fichier existe
+        if (!file_exists($filePath)) {
+            abort(404, 'Fichier JSON introuvable');
+        }
+
+        // Lire et décoder le fichier JSON
+        $data = json_decode(file_get_contents($filePath), true);
+
+        return $data;
+    }
+
+    // Renvoie en JSON le document "documents.json"
     public function getDocuments($client)
     {
         // Récupération du fichier JSON
@@ -32,27 +54,22 @@ class BiController extends Controller
         return response()->json($data);
     }
 
-
+    // Renvoie un téléchargement d'un document demandé via un token
     public function download($token)
     {
+        // Récupère les données du token
         $dataToken = Token::where('token', $token)->get()->first();
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
+        // Appel de la fonction qui récupère les données du token
+        $data = self::getJSONDataFromToken($dataToken);
 
-        // Vérifier si le fichier existe
-        if (!file_exists($filePath)) {
-            abort(404, 'Fichier JSON introuvable');
-        }
-
-        // Lire et décoder le fichier JSON
-        $data = json_decode(file_get_contents($filePath), true);
-
+        // Créer les données utilisées après
         $client = $data["dataToken"]["client"];
         $document = $data["dataToken"]["document"];
         $uid = $data["dataToken"]["uid"];
         $token = $dataToken->token;
 
+        // Créer le chemin vers le fichier
         $filePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
         if (!file_exists($filePath)) {
@@ -62,26 +79,22 @@ class BiController extends Controller
         return response()->download($filePath, "{$uid}.pdf");
     }
 
+    // Renvoie si un document existe ou pas
     public function check($token, Request $request)
     {
+        // Récupère les données du token
         $dataToken = Token::where('token', $token)->get()->first();
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
+        // Appel de la fonction qui récupère les données du token
+        $data = self::getJSONDataFromToken($dataToken);
 
-        // Vérifier si le fichier existe
-        if (!file_exists($filePath)) {
-            abort(404, 'Fichier JSON introuvable');
-        }
-
-        // Lire et décoder le fichier JSON
-        $data = json_decode(file_get_contents($filePath), true);
-
+        // Créer les données utilisées après
         $client = $data["dataToken"]["client"];
         $document = $data["dataToken"]["document"];
         $uid = $data["dataToken"]["uid"];
         $token = $dataToken->token;
 
+        // Créer les chemins vers les fichiers
         $jsonPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json');
         $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
@@ -91,36 +104,36 @@ class BiController extends Controller
         ]);
     }
 
+    // Renvoie une vue via le type du document : rapport d'intervention / cerfa
     public function show($token)
     {
         $dataToken = Token::where('token', $token)->get()->first();
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
+        // Appel de la fonction qui récupère les données du token
+        $data = self::getJSONDataFromToken($dataToken);
 
-        // Vérifier si le fichier existe
-        if (!file_exists($filePath)) {
-            abort(404, 'Fichier JSON introuvable');
-        }
-
-        // Lire et décoder le fichier JSON
-        $data = json_decode(file_get_contents($filePath), true);
-
+        // Créer les données utilisées après
         $client = $data["dataToken"]["client"];
         $document = $data["dataToken"]["document"];
         $uid = $data["dataToken"]["uid"];
         $token = $dataToken->token;
 
-        if (str_starts_with($document, 'cerfa_15497_')) {
+        
+        if (str_starts_with($document, 'cerfa_15497_')) { // Test si le document est un cerfa 15497 pour afficher la vue du cerfa_15497
             return view('cerfa_15497', compact('data', 'token', 'uid', 'client', 'document'));
         }
-        else if (str_starts_with($document, 'cerfa')) {
-            return view($document, compact('data', 'token', 'uid', 'client', 'document'));
-        } else {
 
+        else if (str_starts_with($document, 'cerfa')) { // Test si le document est un cerfa pour afficher la vue du cerfa
+            return view($document, compact('data', 'token', 'uid', 'client', 'document'));
+        } 
+        
+        else { // Sinon renvoie la vue des bi donc des rapports d'intervention
+
+            // Recupere le layout du client
             $client_layout = layou_client::where('nom_client', $client)->first();
             Log::info("Token : " . $token . ", client : " . $client . ", document" . $document . ", uid : " . $uid);
 
+            // Test si le layout existe
             if (!$client_layout) {
                 return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
             }
@@ -131,6 +144,7 @@ class BiController extends Controller
         }
     }
 
+    // Enregistre les données dans un fichier JSON par rapport à son nom
     public function submit(Request $request, $token)
     {
         $dataToken = Token::where('token', $token)->get()->first();
@@ -145,6 +159,7 @@ class BiController extends Controller
 
         // Lire le contenu existant
         $data = json_decode(file_get_contents($filePath), true);
+
         $document = $data['dataToken']['document'];
         $client = $data['dataToken']['client'];
         $uid = $data['dataToken']['uid'];
@@ -347,12 +362,15 @@ class BiController extends Controller
             //     return response()->json(['message' => "Le dossier '$basePath' n'existe pas."], 404);
             // }
 
+            // Récupère tous les fichiers de l'entreprise / client
             $files = Storage::disk('public')->allFiles($basePath);
 
+            // Récupère tous les devis de l'entreprise / client grâce au fichier récupéré avant
             $lesDevis = array_filter($files, function ($file) {
                 return explode('/', $file)[1] === 'devis';
             });
 
+            // Récupère tous les autre documents de l'entreprise / client grâce au fichier récupéré avant
             $lesDocuments = array_filter($files, function ($file) {
                 return explode('/', $file)[1] !== 'devis';
             });
@@ -366,6 +384,7 @@ class BiController extends Controller
                 $formatRules = json_decode($formatContent, true);
             }
 
+            // Format de JSON pour qu'il soit lisible côté client et rajoute le token du document
             $documents = [];
             $devisTraites = [];
             foreach ($lesDevis as $file) {
@@ -469,9 +488,8 @@ class BiController extends Controller
                     }
                 }
             }
-            //\Log::info(''. json_encode($documents));
+
             $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
-            //\Log::info(''. json_encode($filteredDocs));
             return response()->json($filteredDocs);
         } catch (\Exception $e) {
             \Log::error('Erreur dans listSavedDocs: ' . $e->getMessage());
@@ -480,23 +498,17 @@ class BiController extends Controller
     }
 
 
-
+    // Renvoie le fichiers JSON d'un documents
     public function open(Request $request, $token): JsonResponse
     {
 
         $dataToken = Token::where('token', $token)->get()->first();
-
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
-
-        // Vérifier si le fichier JSON existe
-        if (!file_exists($filePath)) {
-            abort(404, "Fichier JSON introuvable : $filePath");
-        }
+        $data = null;
 
         try {
-            // Lire le contenu existant
-            $data = json_decode(file_get_contents($filePath), true);
+            // Appel de la fonction qui récupère les données du token
+            $data = self::getJSONDataFromToken($dataToken);
+
             $document = $data['dataToken']['document'];
             $client = $data['dataToken']['client'];
             $uid = $data['dataToken']['uid'];
@@ -504,7 +516,7 @@ class BiController extends Controller
             abort('500', "erreur interne");
         }
 
-
+        // Chemin vers le fichier JSON (toutes les données du document)
         $jsonpath = "$client/$document/$uid/$uid.json";
 
         if (!Storage::disk('public')->exists($jsonpath)) {
@@ -522,22 +534,17 @@ class BiController extends Controller
     }
 
 
-
+    // Permet de supprimer un document
     public function delete(Request $request, $token): JsonResponse
     {
         $dataToken = Token::where('token', $token)->get()->first();
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
-
-        // Vérifier si le fichier JSON existe
-        if (!file_exists($filePath)) {
-            abort(404, "Fichier JSON introuvable : $filePath");
-        }
+        $data = null;
 
         try {
-            // Lire le contenu existant
-            $data = json_decode(file_get_contents($filePath), true);
+            // Appel de la fonction qui récupère les données du token
+            $data = self::getJSONDataFromToken($dataToken);
+
             $document = $data['dataToken']['document'];
             $client = $data['dataToken']['client'];
             $uid = $data['dataToken']['uid'];

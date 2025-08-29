@@ -14,9 +14,7 @@ Route::prefix('devis')->group(function () {
 
         //Supprime un devis
         Route::get('/delete-devis/{token}', [DevisController::class,'delete'])->middleware('HeaderVerifToken');
-        // A faire ^
-        //         |
-        
+
         // Affichage d'un PDF de devis
         Route::get('/pdf-devis/{token}',[PdfController::class,'viewDevis'])->middleware('VerifToken');
     });
