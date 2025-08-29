@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Log;
 
 class PdfController extends Controller
 {
-    
+
     public function show($client,$document,$uid)
     {
-        return view('pdf', compact('client','document','uid'));        
+        return view('pdf', compact('client','document', 'uid'));        
     }
 
     public function generateDownloadPDF(Request $request)
@@ -343,24 +343,24 @@ class PdfController extends Controller
         $pdf->useTemplate($tplIdx);
 
         
-        $pdf->SetFont('helvetica', 'b', 9);
-        $pdf->SetXY(42, 43.2);
-        $pdf->Write(10, ($data['uid'] ?? ''));    
-        $pdf->SetXY(22, 48.5);
+        $pdf->SetFont('helvetica', 'b', 8);
+        $pdf->SetXY(23, 36.70);
+        $pdf->Write(10, ($data['uid'] ?? 'TEST'));    
+        $pdf->SetXY(31, y: 44);
         $pdf->Write(10, ($data['date_intervention'] ?? date('d/m/Y')));    
-        $pdf->SetXY(30, 53.5);
+        $pdf->SetXY(32, 54);
         $pdf->Write(10, ($data['intervenant'] ?? ''));    
-        $pdf->SetXY(30, 57.5);
+        $pdf->SetXY(29, 59.5);
         $pdf->Write(10, ($data['equipier'] ?? ''));    
 
         
-        $pdf->SetXY(40, 66);
+        $pdf->SetXY(37.25, 66);
         $pdf->Write(10, ($data['code_client'] ?? ''));  
-        $pdf->SetXY(40, 71);
+        $pdf->SetXY(29, 71);
         $pdf->Write(10, ($data['email_client'] ?? ''));  
-        $pdf->SetXY(145, 66);
+        $pdf->SetXY(142, 66.25);
         $pdf->Write(10, ($data['telephone_client'] ?? ''));  
-        $pdf->SetXY(145, 71);
+        $pdf->SetXY(139, 71.5);
         $pdf->Write(10, ($data['portable_client'] ?? ''));  
         
         $pdf->SetFont('helvetica', 'b', 11);
@@ -379,7 +379,7 @@ class PdfController extends Controller
 
         
 
-        $pdf->SetFont('helvetica', '', 12);
+        $pdf->SetFont('helvetica', '', 9);
 
         $pdf->SetXY(70, 45);
         $pdf->Write(10, ($data['lieu_intervention'] ?? ''));    
@@ -393,7 +393,7 @@ class PdfController extends Controller
         $pdf->SetXY(15, 108);
         $pdf->MultiCell(180, 10, ($data['compte_rendu']."\n" ?? ''));
 
-        $pdf->SetXY(14, 194);
+        $pdf->SetXY(88, 194);
         $pdf->MultiCell(70, 10, ($data['materiel']."\n" ?? ''));
 
         $pdf->SetFont('helvetica', '', 11);
@@ -418,6 +418,11 @@ class PdfController extends Controller
             $pdf->Write(10, 'X');
         }
 
+        if (isset($data['absent']) && ($data['absent'] == 'oui')) {            
+            $pdf->SetXY(14.6, 160); 
+            $pdf->Write(10, 'X');
+        }
+
         $pdf->SetFont('helvetica', '', 9);
 
         if (isset($data['photo_avant'])) {
@@ -435,7 +440,7 @@ class PdfController extends Controller
                     $newWidth = ($width / $height) * $maxHeight;
                 }
                 // Calcul des positions pour centrer dans le carré
-                $x = 63 + ($maxWidth - $newWidth) / 2;
+                $x = 68.5 + ($maxWidth - $newWidth) / 2;
                 $y = 134 + ($maxHeight - $newHeight) / 2;
 
                 // Affichage de l'image redimensionnée
@@ -459,7 +464,7 @@ class PdfController extends Controller
                     $newWidth = ($width / $height) * $maxHeight;
                 }
                 // Calcul des positions pour centrer dans le carré
-                $x = 130 + ($maxWidth - $newWidth) / 2;
+                $x = 139 + ($maxWidth - $newWidth) / 2;
                 $y = 134 + ($maxHeight - $newHeight) / 2;
 
                 // Affichage de l'image redimensionnée
@@ -506,30 +511,99 @@ class PdfController extends Controller
                     $x = $x + 58.5;
                 }
             }
+        }
 
-            if (isset($data['signature'])) {
-                $signatureBase64 = $data['signature'];
-                $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
-                $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
-                file_put_contents($signaturePath, $signatureData);
-                
-                list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
-                $maxWidth = 69;
-                $maxHeight = 28;
-                // Calcul du redimensionnement en conservant le ratio
-                if ($width > $height) {
-                    $newWidth = $maxWidth;
-                    $newHeight = ($height / $width) * $maxWidth;
-                } else {
-                    $newHeight = $maxHeight;
-                    $newWidth = ($width / $height) * $maxHeight;
-                }
-                // Calcul des positions pour centrer dans le carré
-                $xImage = 14 + ($maxWidth - $newWidth) / 2;
-                $yImage = 230 + ($maxHeight - $newHeight) / 2;
-                $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
-                                      
+        if (isset($data['signature'])) {
+            $signatureBase64 = $data['signature'];
+            $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
+            $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
+            file_put_contents($signaturePath, $signatureData);
+            
+            list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
+            $maxWidth = 64;
+            $maxHeight = 20;
+            // Calcul du redimensionnement en conservant le ratio
+            if ($width > $height) {
+                $newWidth = $maxWidth;
+                $newHeight = ($height / $width) * $maxWidth;
+            } else {
+                $newHeight = $maxHeight;
+                $newWidth = ($width / $height) * $maxHeight;
             }
+            // Calcul des positions pour centrer dans le carré
+            $xImage = 14 + ($maxWidth - $newWidth) / 2;
+            $yImage = 195 + ($maxHeight - $newHeight) / 2;
+            $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
+                                  
+        }
+
+        $pdf->SetFont('helvetica', 'i', 12);
+        $pdf->SetXY( 57, 213);
+        $pdf->Write(12, $data['fait-le']);
+
+        $pdf->SetFont('helvetica', 'i', 14);
+        $pdf->SetXY( 15, 232);
+        $pdf->Write(12, $data['intervenant']);
+
+
+        $x_complement_client = 10; //alignement x des complement client 
+        $y_complement_client = 20; //alignement y des complement client 
+
+        if ($data['complement_client'] && count($data['complement_client']) > 0) {
+            $complement_client = $data['complement_client'];
+
+            $pdf->AddPage(); 
+            $pdf->SetFont('helvetica', 'b', 9);
+
+            // boucle sur les complement client 
+            foreach ($data['complement_client'] as $item) { // Donne a $item un tableau avec item et question
+                
+                if ($item['type'] === 'text') {
+                    $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
+                    $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
+
+                    $texteFormaterArray = $this->formatTexte($item['value']);
+
+                    foreach ($texteFormaterArray as $key => $value) {
+                        if ($key === 0) $pdf->Text($x_complement_client + 100, $y_complement_client, $value);
+                        else $pdf->Text($x_complement_client + 5, $y_complement_client, $value);
+
+                        $y_complement_client += 8;
+                    }
+                    
+                }
+                else  {
+                    $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
+                    $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
+
+                    $imagePath = storage_path('app/public/'.$item['value']);
+                    if ($imagePath && file_exists($imagePath)) {
+                        list($width, $height) = getimagesize($imagePath); // Récupère la taille originale
+                        $maxWidth = 55;
+                        $maxHeight = 50;
+                        // Calcul du redimensionnement en conservant le ratio
+                        if ($width > $height) {
+                            $newWidth = $maxWidth;
+                            $newHeight = ($height / $width) * $maxWidth;
+                        } else {
+                            $newHeight = $maxHeight;
+                            $newWidth = ($width / $height) * $maxHeight;
+                        }
+                        // Calcul des positions pour centrer dans le carré
+                        $xImage = $x_complement_client + ($maxWidth - $newWidth) / 2;
+                        $yImage = $y_complement_client + 5 + ($maxHeight - $newHeight) / 2;
+
+                        // Affichage de l'image redimensionnée
+                        $pdf->Image($imagePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);  
+                        
+                        $y_complement_client = $yImage + $newHeight + 8;
+                    }
+                }
+                
+            }
+
+            $pdf->Text($x_complement_client, $y_complement_client, 'Test');
+
         }
 
         // Aplatir le PDF en l'empêchant d'être modifié
@@ -539,6 +613,29 @@ class PdfController extends Controller
             'Content-Disposition' => 'inline; filename="' . $uid . '"'
         ]);
     }
+
+    private function formatTexte($texte) {
+        $texte = trim($texte);
+        $resultat = [];
+    
+        // Première ligne : max 40 caractères
+        if (strlen($texte) <= 52) {
+            $resultat[] = $texte;
+        } else {
+            $resultat[] = substr($texte, 0, 52);
+            $reste = substr($texte, offset: 50);
+    
+            // Lignes suivantes : max 100 caractères
+            while (strlen($reste) > 0) {
+                $resultat[] = substr($reste, 0, 108);
+                $reste = substr($reste, 108);
+            }
+        }
+    
+        // Retourne le texte avec des retours à la ligne
+        return $resultat;
+    }
+    
 
     public function generateCerfa(Request $request)
     {

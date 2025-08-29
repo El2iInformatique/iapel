@@ -65,7 +65,7 @@
                                                     </div>
                                                     <div class="mb-3">    
                                                         Intervenant : <strong>{{ $data['intervenant'] }}</strong><br>
-                                                        Date d'intervention' : <strong>{{ $data['date_intervention'] ?? date('d/m/Y') }}</strong>
+                                                        Date d'intervention' :  <strong> {{ $data['date_intervention'] ?? date('d/m/Y') }} </strong>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
@@ -178,6 +178,15 @@
                                                 </div>
                                             </div>  
 
+                                            <div class="row"> 
+                                                <div class="col-md-6 mb-3">                                        
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="absent" value="oui" id="absent">
+                                                        <label class="form-check-label" for="absent">Client absent</label>
+                                                    </div>   
+                                                </div>
+                                            </div>  
+
                                         </div>
                                     </div>
                                 </div>
@@ -203,6 +212,27 @@
                                     </div>
                                 </div>
 
+                                <!-- Test si le client a une partie supplémentaire -->
+                                @if (isset($client_layout))
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="accordion_header_customisation">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_customisation" aria-expanded="false" aria-controls="accordion_collapse_customisation">
+                                            4 - Complement d'intervention rajouter
+                                        </button>
+                                    </h2>
+                                    <div id="accordion_collapse_customisation" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
+                                        <div class="accordion-body">
+                                            <!-- Layout modifier du client-->
+
+                                            @include('custom/'. $client_layout['nom_layout'])
+
+                                            <div id="complements_apercu" class="mt-3 row"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+
                             </diV>
 
                             <hr>
@@ -212,6 +242,12 @@
                                 <canvas id="signature-pad" class="border" style="width: 100%; height: 300px;"></canvas>
                                 <input type="hidden" name="signature" id="signature">
                                 <button type="button" class="btn btn-secondary mt-2" id="clear-signature">Effacer</button>
+
+                                <hr>
+                                <div class="col" data-provide="datepicker">
+                                    <label class="form-label" for="fait-le">Fait le :</label>
+                                    <input min="{{ date("y-m-d") }}" type="date" class="form-control" name="fait-le" id="fait-le">
+                                </div>
                             </div>
                             
                             <hr>
@@ -229,6 +265,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+
+
         document.getElementById("complement").addEventListener("change", function(event) {
             const files = event.target.files;
             const previewContainer = document.getElementById("complements_apercu");
