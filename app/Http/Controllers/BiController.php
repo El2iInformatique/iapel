@@ -377,26 +377,25 @@ class BiController extends Controller
                 $token = Token::where('token', explode('.', $exploded[1])[0])->first();
 
                 if (!isset($devisTraites[$devisName])) {
+                    $tiers = $token ? $token->tiers : null;
+
                     if (count($exploded) === 2) {
                         $devisTraites[$devisName] = [
                             'nom' => explode('_', $devisName)[0],
                             'status' => '',
-                            'tiers' => $token->tiers,
-                            'token' => $token->token,
+                            'tiers' => $tiers,
+                            'token' => $token->token ?? null,
                         ];
                     } elseif (count($exploded) === 3) {
                         $devisTraites[$devisName] = [
                             'nom' => $devisName,
                             'status' => 'certifie',
-                            'tiers' => $token->tiers,
-                            'token' => $token->token,
+                            'tiers' => $tiers,
+                            'token' => $token->token ?? null,
                         ];
                     }
-                } else {
-                    if (count($exploded) === 3) {
-                        $devisTraites[$devisName]['status'] = 'certifie';
-                    }
                 }
+
             }
             \Log::info('Devis : ' . json_encode($devisTraites));
             foreach ($devisTraites as $devis) {
