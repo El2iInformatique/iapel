@@ -353,150 +353,159 @@ class BiController extends Controller
 
 
     public function listSavedDocs($entreprise, Request $request): JsonResponse
-    {
-        try {
+{
+    try {
+        $basePath = "$entreprise";
 
-            $basePath = "$entreprise";
+        // Récupère tous les fichiers de l'entreprise / client
+        $files = Storage::disk('public')->allFiles($basePath);
 
-            // if (!Storage::disk('public')->exists($basePath)) {
-            //     return response()->json(['message' => "Le dossier '$basePath' n'existe pas."], 404);
-            // }
+        // Récupère tous les devis de l'entreprise / client grâce au fichier récupéré avant
+        $lesDevis = array_filter($files, function ($file) {
+            return explode('/', $file)[1] === 'devis';
+        });
 
-            // Récupère tous les fichiers de l'entreprise / client
-            $files = Storage::disk('public')->allFiles($basePath);
+        // Récupère tous les autre documents de l'entreprise / client grâce au fichier récupéré avant
+        $lesDocuments = array_filter($files, function ($file) {
+            return explode('/', $file)[1] !== 'devis';
+        });
 
-            // Récupère tous les devis de l'entreprise / client grâce au fichier récupéré avant
-            $lesDevis = array_filter($files, function ($file) {
-                return explode('/', $file)[1] === 'devis';
-            });
+        \Log::info($lesDevis);
 
-            // Récupère tous les autre documents de l'entreprise / client grâce au fichier récupéré avant
-            $lesDocuments = array_filter($files, function ($file) {
-                return explode('/', $file)[1] !== 'devis';
-            });
+        $formatPath = 'format.json';
+        $formatRules = [];
+        if (Storage::disk('public')->exists($formatPath)) {
+            $formatContent = Storage::disk('public')->get($formatPath);
+            $formatRules = json_decode($formatContent, true);
+        }
 
-            \Log::info($lesDevis);
+        // Format de JSON pour qu'il soit lisible côté client et rajoute le token du document
+        $documents = [];
+        $devisTraites = [];
+        
+        foreach ($lesDevis as $file) {
+            $fileName = explode('/', $file)[3];
+            $exploded = explode('_', $fileName);
+            $devisName = explode('.', $exploded[0] . '_' . $exploded[1])[0];
 
-            $formatPath = 'format.json';
-            $formatRules = [];
-            if (Storage::disk('public')->exists($formatPath)) {
-                $formatContent = Storage::disk('public')->get($formatPath);
-                $formatRules = json_decode($formatContent, true);
+            // Récupération du token avec vérification
+            $tokenValue = explode('.', $exploded[1])[0];
+            $token = Token::where('token', $tokenValue)->first();
+            
+            // Si le token n'existe pas, on log l'erreur et on passe au suivant
+            if (!$token) {
+                \Log::warning("Token non trouvé pour le devis: $fileName avec token: $tokenValue");
+                continue; // On passe au devis suivant
             }
 
-            // Format de JSON pour qu'il soit lisible côté client et rajoute le token du document
-            $documents = [];
-            $devisTraites = [];
-            foreach ($lesDevis as $file) {
-                $fileName = explode('/',$file)[3];
-
-                $exploded = explode('_', $fileName);
-                $devisName = explode('.', $exploded[0] . '_' . $exploded[1])[0];
-
-                $token = Token::where('token', explode('.', $exploded[1])[0])->first();
-
-                if (!isset($devisTraites[$devisName])) {
-                    if (count($exploded) === 2) {
-                        $devisTraites[$devisName] = [
-                            'nom' => explode('_', $devisName)[0],
-                            'status' => '',
-                            'tiers' => $token->tiers,
-                            'token' => $token->token,
-                        ];
-                    } elseif (count($exploded) === 3) {
-                        $devisTraites[$devisName] = [
-                            'nom' => $devisName,
-                            'status' => 'certifie',
-                            'tiers' => $token->tiers,
-                            'token' => $token->token,
-                        ];
-                    }
-                } else {
-                    if (count($exploded) === 3) {
-                        $devisTraites[$devisName]['status'] = 'certifie';
-                    }
+            if (!isset($devisTraites[$devisName])) {
+                if (count($exploded) === 2) {
+                    $devisTraites[$devisName] = [
+                        'nom' => explode('_', $devisName)[0],
+                        'status' => '',
+                        'tiers' => $token->tiers,
+                        'token' => $token->token,
+                    ];
+                } elseif (count($exploded) === 3) {
+                    $devisTraites[$devisName] = [
+                        'nom' => $devisName,
+                        'status' => 'certifie',
+                        'tiers' => $token->tiers,
+                        'token' => $token->token,
+                    ];
+                }
+            } else {
+                if (count($exploded) === 3) {
+                    $devisTraites[$devisName]['status'] = 'certifie';
                 }
             }
-            \Log::info('Devis : ' . json_encode($devisTraites));
-            foreach ($devisTraites as $devis) {
-                $devisNom = 'devis/' . $devis['nom'] . '_' . $devis['token'] . '_' . ($devis['status'] === 'certifie' ? 'certifie' : '');
-                $documents[$devisNom] = [
-                    'path' => $devisNom,
-                    'status' => $devis['status'],
-                    'data' => [
-                        "nom" => $devis['nom'],
-                        "tiers" => $devis['tiers'],
-                        'token' => $devis['token'],
-                        "date_traitement" => null,
-                        "date_confirmation" => null,
-                        "par" => null
-                    ]
+        }
+        
+        \Log::info('Devis : ' . json_encode($devisTraites));
+        
+        foreach ($devisTraites as $devis) {
+            $devisNom = 'devis/' . $devis['nom'] . '_' . $devis['token'] . '_' . ($devis['status'] === 'certifie' ? 'certifie' : '');
+            $documents[$devisNom] = [
+                'path' => $devisNom,
+                'status' => $devis['status'],
+                'data' => [
+                    "nom" => $devis['nom'],
+                    "tiers" => $devis['tiers'],
+                    'token' => $devis['token'],
+                    "date_traitement" => null,
+                    "date_confirmation" => null,
+                    "par" => null
+                ]
+            ];
+        }
+
+        foreach ($lesDocuments as $file) {
+            $relativePath = str_replace("$basePath/", '', $file);
+            $dirPath = dirname($relativePath);
+            $docType = explode('/', $relativePath)[0];
+
+            if ($dirPath === '.' || $dirPath === $basePath) {
+                continue;
+            }
+
+            if (!isset($documents[$dirPath])) {
+                $documents[$dirPath] = [
+                    'path' => $dirPath,
+                    'token_rapport' => null,
+                    'status' => 'À traiter',
+                    'data' => null
                 ];
             }
 
-            foreach ($lesDocuments as $file) {
-                $relativePath = str_replace("$basePath/", '', $file);
-                $dirPath = dirname($relativePath);
-                $docType = explode('/', $relativePath)[0];
-
-
-
-                if ($dirPath === '.' || $dirPath === $basePath) {
-                    continue;
-                }
-
-                if (!isset($documents[$dirPath])) {
-                    $documents[$dirPath] = [
-                        'path' => $dirPath,
-                        'token_rapport' => null,
-                        'status' => 'À traiter',
-                        'data' => null
-                    ];
-                }
-
-                if (str_ends_with($file, '.pdf')) {
-                    $documents[$dirPath]['status'] = 'Valide';
-                }
-
-                if (str_ends_with($file, '.json')) {
-                    try {
-                        $jsonContent = Storage::disk('public')->get($file);
-                        $jsonData = json_decode($jsonContent, true);
-
-                        $pathToken = "app/public/" . $file;
-                        $token = Token::where('paths', $pathToken)->first()["token"];
-                        $documents[$dirPath]["token_rapport"] = $token;
-
-                        if (isset($formatRules[$docType])) {
-                            $rules = $formatRules[$docType];
-                            $formattedData = [];
-
-                            foreach ($rules as $key => $rule) {
-                                if (is_array($rule)) {
-                                    $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
-                                } elseif (is_string($rule)) {
-                                    $formattedData[$key] = $jsonData[$rule] ?? null;
-                                } else {
-                                    $formattedData[$key] = null;
-                                }
-                            }
-
-                            $documents[$dirPath]['data'] = $formattedData;
-                        }
-                    } catch (\Exception $e) {
-                        $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
-                    }
-                }
+            if (str_ends_with($file, '.pdf')) {
+                $documents[$dirPath]['status'] = 'Valide';
             }
 
-            $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
-            return response()->json($filteredDocs);
-        } catch (\Exception $e) {
-            \Log::error('Erreur dans listSavedDocs: ' . $e->getMessage());
-            return response()->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
-        }
-    }
+            if (str_ends_with($file, '.json')) {
+                try {
+                    $jsonContent = Storage::disk('public')->get($file);
+                    $jsonData = json_decode($jsonContent, true);
 
+                    $pathToken = "app/public/" . $file;
+                    $token = Token::where('paths', $pathToken)->first();
+                    
+                    // Vérification de l'existence du token avant d'accéder à sa propriété
+                    if ($token) {
+                        $documents[$dirPath]["token_rapport"] = $token->token;
+                    } else {
+                        \Log::warning("Token non trouvé pour le fichier JSON: $file");
+                    }
+
+                    if (isset($formatRules[$docType])) {
+                        $rules = $formatRules[$docType];
+                        $formattedData = [];
+
+                        foreach ($rules as $key => $rule) {
+                            if (is_array($rule)) {
+                                $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
+                            } elseif (is_string($rule)) {
+                                $formattedData[$key] = $jsonData[$rule] ?? null;
+                            } else {
+                                $formattedData[$key] = null;
+                            }
+                        }
+
+                        $documents[$dirPath]['data'] = $formattedData;
+                    }
+                } catch (\Exception $e) {
+                    $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
+                }
+            }
+        }
+
+        $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
+        return response()->json($filteredDocs);
+        
+    } catch (\Exception $e) {
+        \Log::error('Erreur dans listSavedDocs: ' . $e->getMessage());
+        return response()->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
+    }
+}
 
     // Renvoie le fichiers JSON d'un documents
     public function open(Request $request, $token): JsonResponse
