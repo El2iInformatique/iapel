@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
  <div class="mb-3">
 
@@ -37,6 +38,8 @@
     </div>
     
 =======
+=======
+>>>>>>> Stashed changes
 <div class="mb-3">
         <label for="item1" class="form-label">N° magasin ?</label>
         <input type="text" class="form-control" name="item1">
@@ -92,4 +95,7 @@
 
       </div>
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
