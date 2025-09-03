@@ -11,7 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-       //
+
+        $middleware->alias([
+            'VerifToken' => \App\Http\Middleware\VerifTokenMiddleware::class,
+            'anti-spam' => \App\Http\Middleware\AntiSpamMiddleware::class,
+            'HeaderVerifToken' => \App\Http\Middleware\VerifTokenWithHeaderMiddleware::class,
+        ]);
+
+
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

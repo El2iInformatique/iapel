@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Token;
+use App\Models\TokenLinksRapport;
+
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -14,8 +15,25 @@ use Illuminate\Support\Facades\Log;
 class PdfController extends Controller
 {
 
-    public function show($client,$document,$uid)
+    public function show($token)
     {
+
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+
+        // Construire le chemin du fichier JSON
+        $filePath = storage_path( $dataToken['paths']);
+
+        if (!file_exists($filePath)) {
+            return abort(404, "Fichier JSON introuvable : $filePath");
+        }
+
+        // Lire le contenu existant
+        $data = json_decode(file_get_contents($filePath), true);
+        $document = $data['dataToken']['document'];
+        $client = $data['dataToken']['client'];
+        $uid = $data['dataToken']['uid'];
+        
+
         return view('pdf', compact('client','document', 'uid'));        
     }
 
@@ -322,6 +340,10 @@ class PdfController extends Controller
         $uid = $request->query('uid');
         $document = $request->query('document');
         $client = $request->query('client');
+        $isAndroid = $request->query('isAndroid');
+
+        Log::info("Test : " . $isAndroid);
+
         $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
 
@@ -341,6 +363,15 @@ class PdfController extends Controller
         $pdf->setSourceFile($pdfPath);
         $tplIdx = $pdf->importPage(1);
         $pdf->useTemplate($tplIdx);
+
+        // Affichage logo de l'entreprise / client en haut de la page
+        $logoPath = storage_path('app/public/'.$client.'/logo.png');
+
+        if ($logoPath && file_exists($logoPath)) {
+
+            $pdf->Image($logoPath, 10, 12, 118, 25, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+            
+        }
 
         
         $pdf->SetFont('helvetica', 'b', 8);
@@ -475,7 +506,7 @@ class PdfController extends Controller
 
         //Gestion des infos complémentaires
         $countComplement = 0;
-        $x = 85;
+        $x = 88;
         $y = 194;
         if (isset($data['complements']) && count($data['complements']) > 0) {
             foreach ($data['complements'] as $complement) {
@@ -483,7 +514,7 @@ class PdfController extends Controller
                 if ($countComplement <= 2) {
                     // Affichage des infos complémentaires
                     if (isset($complement['comment'])) {
-                        $pdf->setXY($x,$y);
+                        $pdf->setXY($x,$y + 71.5);
                         $pdf->MultiCell(55,10,$complement['comment']. "\n");   
                     }
                     if (isset($complement['image'])) {
@@ -502,7 +533,7 @@ class PdfController extends Controller
                             }
                             // Calcul des positions pour centrer dans le carré
                             $xImage = $x + ($maxWidth - $newWidth) / 2;
-                            $yImage = $y + 14.5 + ($maxHeight - $newHeight) / 2;
+                            $yImage = $y + 28.2 + ($maxHeight - $newHeight) / 2;
 
                             // Affichage de l'image redimensionnée
                             $pdf->Image($imagePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
@@ -519,9 +550,11 @@ class PdfController extends Controller
             $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
             file_put_contents($signaturePath, $signatureData);
             
-            list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
-            $maxWidth = 64;
-            $maxHeight = 20;
+            list($width, $height) = getimagesize($signaturePath); // Récupère la taille 
+
+            $maxWidth = 60;
+            $maxHeight = 18;
+
             // Calcul du redimensionnement en conservant le ratio
             if ($width > $height) {
                 $newWidth = $maxWidth;
@@ -531,9 +564,22 @@ class PdfController extends Controller
                 $newWidth = ($width / $height) * $maxHeight;
             }
             // Calcul des positions pour centrer dans le carré
-            $xImage = 14 + ($maxWidth - $newWidth) / 2;
-            $yImage = 195 + ($maxHeight - $newHeight) / 2;
-            $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
+            $xImage = 14 + ($maxWidth - $newWidth) ;
+            $yImage = 197 + ($maxHeight - $newHeight);
+
+            if ($isAndroid === "1") {
+                $newWidth /= 1.5;
+                $newHeight /= 1.5;
+
+                $yImage += 10;
+            }
+            else {
+                $newWidth /= 1.3;
+                $newHeight /= 1.3;
+            }
+            
+            $pdf->Image($signaturePath, $xImage + 2, $yImage + 3, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
+
                                   
         }
 
@@ -550,7 +596,6 @@ class PdfController extends Controller
         $y_complement_client = 20; //alignement y des complement client 
 
         if ($data['complement_client'] && count($data['complement_client']) > 0) {
-            $complement_client = $data['complement_client'];
 
             $pdf->AddPage(); 
             $pdf->SetFont('helvetica', 'b', 9);
@@ -562,14 +607,8 @@ class PdfController extends Controller
                     $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
                     $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
 
-                    $texteFormaterArray = $this->formatTexte($item['value']);
-
-                    foreach ($texteFormaterArray as $key => $value) {
-                        if ($key === 0) $pdf->Text($x_complement_client + 100, $y_complement_client, $value);
-                        else $pdf->Text($x_complement_client + 5, $y_complement_client, $value);
-
-                        $y_complement_client += 8;
-                    }
+                    $pdf->SetXY( $x_complement_client + 85, $y_complement_client);
+                    $pdf->MultiCell(100,10,$item['value'] . "\n");  
                     
                 }
                 else  {
@@ -599,10 +638,12 @@ class PdfController extends Controller
                         $y_complement_client = $yImage + $newHeight + 8;
                     }
                 }
+
+                $y_complement_client += 8;
                 
             }
 
-            $pdf->Text($x_complement_client, $y_complement_client, 'Test');
+            //$pdf->Text($x_complement_client, $y_complement_client, 'Test');
 
         }
 

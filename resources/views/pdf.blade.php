@@ -54,25 +54,19 @@
                 <div class="alert alert-success" id="pdf-message">
                     ✅ Le document <strong>{{ $document }}</strong> n°<strong>{{ $uid }}</strong> est en cours de génération...
                 </div>
-                <a href="#" id="download-button" class="btn btn-primary btn-lg" style="display: none;">
-                    📥 Télécharger le document au format PDF
-                </a>
             </div>
 
             <script>
                 // Lancer la génération du PDF via une requête AJAX
-                fetch("/{{ $route }}?client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}")
+                
+                fetch("/{{ $route }}?client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}&isAndroid={{ urlencode($isAndroid) }}")
                     .then(response => {
                         if (response.ok) {
+                            
                             // Modifier le message pour indiquer que le PDF est prêt
                             document.getElementById('pdf-message').innerHTML = 
                                 "✅ Le document <strong>{{ $document }}</strong> n°<strong>{{ $uid }}</strong> a été généré avec succès !";
 
-                            // Afficher le bouton de téléchargement
-                            let downloadButton = document.getElementById('download-button');
-                            downloadButton.href = "{{ $pdfUrl }}";
-                            downloadButton.style.display = 'block';
-                            downloadButton.setAttribute('download', '');
                         } else {
                             document.getElementById('pdf-message').innerHTML = "❌ Une erreur est survenue lors de la génération du PDF.";
                         }
