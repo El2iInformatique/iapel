@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\layou_client;
 use App\Http\Controllers\TokenController;
+use App\Models\Token;
+use App\Models\TokenLinksRapport;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,8 +14,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
-
-use App\Models\TokenLinksRapport;
 
 
 class BiController extends Controller
