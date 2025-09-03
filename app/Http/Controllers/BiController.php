@@ -469,6 +469,7 @@ class BiController extends Controller
                 if (!isset($documents[$dirPath])) {
                     $documents[$dirPath] = [
                         'path' => $dirPath,
+                        'token_rapport' => null,
                         'status' => 'À traiter',
                         'data' => null
                     ];
@@ -482,6 +483,7 @@ class BiController extends Controller
                     try {
                         $jsonContent = Storage::disk('public')->get($file);
                         $jsonData = json_decode($jsonContent, true);
+                        $documents[$dirPath]["token_rapport"] = $token;
 
                         if (isset($formatRules[$docType])) {
                             $rules = $formatRules[$docType];
