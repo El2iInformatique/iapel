@@ -478,15 +478,15 @@ class BiController extends Controller
                         $devisTraites[$devisName] = [
                             'nom' => explode('_', $devisName)[0],
                             'status' => '',
-                            'tiers' => $token->tiers,
-                            'token' => $token->token,
+                            'tiers' => $token->tiers ?? null,
+                            'token' => $token->token ?? null,
                         ];
                     } elseif (count($exploded) === 3) {
                         $devisTraites[$devisName] = [
                             'nom' => $devisName,
                             'status' => 'certifie',
-                            'tiers' => $token->tiers,
-                            'token' => $token->token,
+                            'tiers' => $token->tiers ?? null,
+                            'token' => $token->token ?? null,
                         ];
                     }
                 } else {
