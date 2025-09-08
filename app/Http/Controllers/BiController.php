@@ -480,6 +480,8 @@ class BiController extends Controller
                             'status' => '',
                             'tiers' => $token->tiers ?? null,
                             'token' => $token->token ?? null,
+                            'date_traitement' => $token->date_traitement ?? null,
+                            'date_confirmation' => $token->date_confirmation ?? null,
                         ];
                     } elseif (count($exploded) === 3) {
                         $devisTraites[$devisName] = [
@@ -487,8 +489,10 @@ class BiController extends Controller
                             'status' => 'certifie',
                             'tiers' => $token->tiers ?? null,
                             'token' => $token->token ?? null,
+                            'date_traitement' => $token->date_traitement ?? null,
+                            'date_confirmation' => $token->date_confirmation ?? null,
                         ];
-                    }
+                    }                    
                 } else {
                     if (count($exploded) === 3) {
                         $devisTraites[$devisName]['status'] = 'certifie';
@@ -505,8 +509,8 @@ class BiController extends Controller
                         "nom" => $devis['nom'],
                         "tiers" => $devis['tiers'],
                         'token' => $devis['token'],
-                        "date_traitement" => null,
-                        "date_confirmation" => null,
+                        "date_traitement" => $devis['date_traitement'],
+                        "date_confirmation" => $devis['date_confirmation'],
                         "par" => null
                     ]
                 ];
