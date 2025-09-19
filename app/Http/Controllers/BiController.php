@@ -426,163 +426,112 @@ class BiController extends Controller
             if (!$request->hasHeader('secret-token')) {
                 return response()->json(['error' => 'No token provided.'], 403);
             }
-
-
-
+    
             $secretToken = config("secrets.$entreprise");
             $adminToken = config('secrets.admin');
-
             $providedToken = $request->header('secret-token');
-
+    
             if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
                 return response()->json(['error' => 'Not authorized.'], 403);
             }
-
+    
             $basePath = "$entreprise";
-
-            // if (!Storage::disk('public')->exists($basePath)) {
-            //     return response()->json(['message' => "Le dossier '$basePath' n'existe pas."], 404);
-            // }
-
             $files = Storage::disk('public')->allFiles($basePath);
-
+    
             $lesDevis = array_filter($files, function ($file) {
-                return explode('/', $file)[1] === 'devis';
+                $parts = explode('/', $file);
+                return isset($parts[1]) && $parts[1] === 'devis';
             });
-
+    
             $lesDocuments = array_filter($files, function ($file) {
-                return explode('/', $file)[1] !== 'devis';
+                $parts = explode('/', $file);
+                return isset($parts[1]) && $parts[1] !== 'devis';
             });
-
-            \Log::info($lesDevis);
-
+    
+            // Charger format rules si existant
             $formatPath = 'format.json';
             $formatRules = [];
             if (Storage::disk('public')->exists($formatPath)) {
                 $formatContent = Storage::disk('public')->get($formatPath);
-                $formatRules = json_decode($formatContent, true);
+                $formatRules = json_decode($formatContent, true) ?: [];
             }
-
+    
             $documents = [];
             $devisTraites = [];
+    
             foreach ($lesDevis as $file) {
-                $fileName = explode('/',$file)[3];
-
-                $exploded = explode('_', $fileName);
-                $devisName = explode('.', $exploded[0] . '_' . $exploded[1])[0];
-
-                $token = Token::where('token', explode('.', $exploded[1])[0])->first();
-
-                if (!isset($devisTraites[$devisName])) {
-                    if (count($exploded) === 2) {
-                        $devisTraites[$devisName] = [
-                            'nom' => explode('_', $devisName)[0],
-                            'status' => '',
-                            'tiers' => $token->tiers ?? null,
-                            'token' => $token->token ?? null,
-                        ];
-                    } elseif (count($exploded) === 3) {
-                        $devisTraites[$devisName] = [
-                            'nom' => $devisName,
-                            'status' => 'certifie',
-                            'tiers' => $token->tiers ?? null,
-                            'token' => $token->token ?? null,
-                        ];
-                    }
-                } else {
-                    if (count($exploded) === 3) {
-                        $devisTraites[$devisName]['status'] = 'certifie';
-                    }
-                }
-            }
-            \Log::info('Devis : ' . json_encode($devisTraites));
-            foreach ($devisTraites as $devis) {
-                $devisNom = 'devis/' . $devis['nom'] . '_' . $devis['token'] . '_' . ($devis['status'] === 'certifie' ? 'certifie' : '');
-                $documents[$devisNom] = [
-                    'path' => $devisNom,
-                    'status' => $devis['status'],
-                    'data' => [
-                        "nom" => $devis['nom'],
-                        "tiers" => $devis['tiers'],
-                        'token' => $devis['token'],
-                        "date_traitement" => $devis['date_traitement'] ?? null,
-                        "date_confirmation" => $devis['date_confirmation'] ?? null,
-                        "par" => null
-                    ]
-                ];
-                
-            }
-
-            foreach ($lesDevis as $file) {
-                // fichier plus robuste
+                // Nom du fichier plus robuste
                 $fileName = pathinfo($file, PATHINFO_BASENAME);
-            
-                // on sépare en prenant le dernier underscore comme séparateur token (plus robuste si nom contient '_')
+    
+                // On cherche le dernier underscore pour séparer le token éventuel
                 $lastUnderscorePos = strrpos($fileName, '_');
                 if ($lastUnderscorePos !== false) {
                     $maybeTokenPart = substr($fileName, $lastUnderscorePos + 1);
                     $devisName = substr($fileName, 0, $lastUnderscorePos);
-                    $maybeToken = pathinfo($maybeTokenPart, PATHINFO_FILENAME); // retire extension
+                    $maybeToken = pathinfo($maybeTokenPart, PATHINFO_FILENAME);
                 } else {
                     $maybeToken = null;
                     $devisName = pathinfo($fileName, PATHINFO_FILENAME);
                 }
-            
-                // recherche du token en base (null-safe)
+    
+                // normaliser nom (si le fichier contient une extension multiple ou suffixe)
+                $devisName = preg_replace('/\.(pdf|json|txt)$/i', '', $devisName);
+    
+                // récupération modèle token (null-safe)
                 $tokenModel = $maybeToken ? Token::where('token', $maybeToken)->first() : null;
                 $tokenValue = $tokenModel->token ?? null;
                 $tiers = $tokenModel->tiers ?? null;
-            
-                // déterminer le status : si le nom de fichier contient 'certifie' (ou selon ta logique)
-                $isCertifie = str_contains($fileName, 'certifie');
+    
+                // status : si le nom du fichier contient 'certifie' (ou si le token indique certif), on le marque
+                $isCertifie = str_contains(strtolower($fileName), 'certifie');
                 $status = $isCertifie ? 'certifie' : '';
-            
-                // obtenir lastModified du fichier (fallback utile)
+    
+                // dernier modified du fichier (fallback)
                 try {
-                    $fileTimestamp = Storage::disk('public')->lastModified($file); // int timestamp
+                    $fileTimestamp = Storage::disk('public')->lastModified($file);
                 } catch (\Exception $e) {
                     $fileTimestamp = null;
                 }
-            
-                // Récupérer dates depuis le modèle Token si disponibles (processed_at/confirmed_at/created_at)
+    
+                // dates à remplir : priorité au tokenModel (processed_at/created_at, confirmed_at/updated_at)
                 $dateTraitement = null;
                 $dateConfirmation = null;
-            
+    
                 if ($tokenModel) {
-                    // utiliser processed_at si défini, sinon created_at, sinon lastModified
+                    // processed_at / created_at pour traitement (format YYYY-MM-DD)
                     if (!empty($tokenModel->processed_at)) {
                         $dateTraitement = $tokenModel->processed_at instanceof \DateTime
-                            ? $tokenModel->processed_at->format('c')
-                            : (string) $tokenModel->processed_at;
+                            ? $tokenModel->processed_at->format('Y-m-d')
+                            : substr((string)$tokenModel->processed_at, 0, 10);
                     } elseif (!empty($tokenModel->created_at)) {
                         $dateTraitement = $tokenModel->created_at instanceof \DateTime
-                            ? $tokenModel->created_at->format('c')
-                            : (string) $tokenModel->created_at;
+                            ? $tokenModel->created_at->format('Y-m-d')
+                            : substr((string)$tokenModel->created_at, 0, 10);
                     }
+    
+                    // confirmed_at / updated_at pour confirmation (si certifié)
                     if ($isCertifie) {
                         if (!empty($tokenModel->confirmed_at)) {
                             $dateConfirmation = $tokenModel->confirmed_at instanceof \DateTime
-                                ? $tokenModel->confirmed_at->format('c')
-                                : (string) $tokenModel->confirmed_at;
+                                ? $tokenModel->confirmed_at->format('Y-m-d')
+                                : substr((string)$tokenModel->confirmed_at, 0, 10);
                         } elseif (!empty($tokenModel->updated_at)) {
                             $dateConfirmation = $tokenModel->updated_at instanceof \DateTime
-                                ? $tokenModel->updated_at->format('c')
-                                : (string) $tokenModel->updated_at;
+                                ? $tokenModel->updated_at->format('Y-m-d')
+                                : substr((string)$tokenModel->updated_at, 0, 10);
                         }
                     }
                 }
-            
-                // fallback sur le timestamp du fichier
+    
+                // fallback sur lastModified si pas trouvé
                 if (!$dateTraitement && $fileTimestamp) {
-                    $dateTraitement = date('c', $fileTimestamp);
+                    $dateTraitement = date('Y-m-d', $fileTimestamp);
                 }
                 if (!$dateConfirmation && $isCertifie && $fileTimestamp) {
-                    $dateConfirmation = date('c', $fileTimestamp);
+                    $dateConfirmation = date('Y-m-d', $fileTimestamp);
                 }
-            
-                // Construction de l'entrée finale
-                $devisKey = $devisName . '_' . ($tokenValue ?? '');
-                // si tu veux forcer la clef identique à l'ancienne logique (avec slash), adapte ici
+    
+                // Construire l'entrée dans devisTraites (on stocke les dates)
                 if (!isset($devisTraites[$devisName])) {
                     $devisTraites[$devisName] = [
                         'nom' => $devisName,
@@ -593,11 +542,11 @@ class BiController extends Controller
                         'date_confirmation' => $dateConfirmation,
                     ];
                 } else {
-                    // mettre à jour status si nécessaire (ex: certifié)
+                    // mise à jour status si on trouve certifie
                     if ($status === 'certifie') {
                         $devisTraites[$devisName]['status'] = 'certifie';
                     }
-                    // mettre à jour dates si on a des valeurs plus précises
+                    // préférer les dates trouvées
                     if ($dateTraitement) {
                         $devisTraites[$devisName]['date_traitement'] = $devisTraites[$devisName]['date_traitement'] ?? $dateTraitement;
                     }
@@ -606,10 +555,90 @@ class BiController extends Controller
                     }
                 }
             }
-            
-            //\Log::info(''. json_encode($documents));
+    
+            // Logger résumé sécurisé (pas de tokens complets)
+            \Log::info('Devis count: ' . count($devisTraites));
+            // afficher quelques clefs pour debug (sans token)
+            \Log::info('Devis sample keys: ' . implode(', ', array_slice(array_keys($devisTraites), 0, 10)));
+    
+            // transformer devisTraites en entrées documents (même structure que précédemment)
+            foreach ($devisTraites as $devis) {
+                
+                $suffix = ($devis['status'] === 'certifie') ? 'certifie' : '';
+                $tokenPart = $devis['token'] ? '_' . $devis['token'] : '';
+                $devisNom = 'devis/' . $devis['nom'] . $tokenPart . ($suffix ? '_' . $suffix : '');
+    
+                $documents[$devisNom] = [
+                    'path' => $devisNom,
+                    'status' => $devis['status'],
+                    'data' => [
+                        "nom" => $devis['nom'],
+                        "tiers" => $devis['tiers'] ?? null,
+                        'token' => $devis['token'] ?? null,
+                        "date_traitement" => $devis['date_traitement'] ?? null,
+                        "date_confirmation" => $devis['date_confirmation'] ?? null,
+                        "par" => null
+                    ]
+                ];
+            }
+    
+            // Traitement des autres documents (pdf/json)
+            foreach ($lesDocuments as $file) {
+                $relativePath = Str::after($file, "$basePath/");
+                $dirPath = dirname($relativePath);
+                $docType = explode('/', $relativePath)[0] ?? null;
+    
+                if ($dirPath === '.' || $dirPath === $basePath) {
+                    continue;
+                }
+    
+                if (!isset($documents[$dirPath])) {
+                    $documents[$dirPath] = [
+                        'path' => $dirPath,
+                        'token_rapport' => null,
+                        'status' => 'À traiter',
+                        'data' => null
+                    ];
+                }
+    
+                if (str_ends_with($file, '.pdf')) {
+                    $documents[$dirPath]['status'] = 'Validé';
+                }
+    
+                if (str_ends_with($file, '.json')) {
+                    try {
+                        $jsonContent = Storage::disk('public')->get($file);
+                        $jsonData = json_decode($jsonContent, true);
+    
+                        $pathToken = "app/public/" . $file;
+                        $token = TokenLinksRapport::where('paths', $pathToken)->value('token'); // null-safe
+                        $documents[$dirPath]["token_rapport"] = $token;
+    
+                        if (isset($formatRules[$docType])) {
+                            $rules = $formatRules[$docType];
+                            $formattedData = [];
+    
+                            foreach ($rules as $key => $rule) {
+                                if (is_array($rule)) {
+                                    $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
+                                } elseif (is_string($rule)) {
+                                    $formattedData[$key] = $jsonData[$rule] ?? null;
+                                } else {
+                                    $formattedData[$key] = null;
+                                }
+                            }
+    
+                            $documents[$dirPath]['data'] = $formattedData;
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('JSON not readable for file: ' . $file . ' | ' . $e->getMessage());
+                        $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
+                    }
+                }
+            }
+    
             $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
-            //\Log::info(''. json_encode($filteredDocs));
+    
             return response()->json($filteredDocs);
         } catch (\Exception $e) {
             \Log::error('Erreur dans listSavedDocs: ' . $e->getMessage());
