@@ -505,11 +505,12 @@ class BiController extends Controller
                         "nom" => $devis['nom'],
                         "tiers" => $devis['tiers'],
                         'token' => $devis['token'],
-                        "date_traitement" => null,
-                        "date_confirmation" => null,
+                        "date_traitement" => $devis['date_traitement'] ?? null,
+                        "date_confirmation" => $devis['date_confirmation'] ?? null,
                         "par" => null
                     ]
                 ];
+                
             }
 
             foreach ($lesDevis as $file) {
