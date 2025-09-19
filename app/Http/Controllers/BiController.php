@@ -512,60 +512,100 @@ class BiController extends Controller
                 ];
             }
 
-            foreach ($lesDocuments as $file) {
-                $relativePath = str_replace("$basePath/", '', $file);
-                $dirPath = dirname($relativePath);
-                $docType = explode('/', $relativePath)[0];
-
-
-
-                if ($dirPath === '.' || $dirPath === $basePath) {
-                    continue;
+            foreach ($lesDevis as $file) {
+                // fichier plus robuste
+                $fileName = pathinfo($file, PATHINFO_BASENAME);
+            
+                // on sépare en prenant le dernier underscore comme séparateur token (plus robuste si nom contient '_')
+                $lastUnderscorePos = strrpos($fileName, '_');
+                if ($lastUnderscorePos !== false) {
+                    $maybeTokenPart = substr($fileName, $lastUnderscorePos + 1);
+                    $devisName = substr($fileName, 0, $lastUnderscorePos);
+                    $maybeToken = pathinfo($maybeTokenPart, PATHINFO_FILENAME); // retire extension
+                } else {
+                    $maybeToken = null;
+                    $devisName = pathinfo($fileName, PATHINFO_FILENAME);
                 }
-
-                if (!isset($documents[$dirPath])) {
-                    $documents[$dirPath] = [
-                        'path' => $dirPath,
-                        'token_rapport' => null,
-                        'status' => 'À traiter',
-                        'data' => null
-                    ];
+            
+                // recherche du token en base (null-safe)
+                $tokenModel = $maybeToken ? Token::where('token', $maybeToken)->first() : null;
+                $tokenValue = $tokenModel->token ?? null;
+                $tiers = $tokenModel->tiers ?? null;
+            
+                // déterminer le status : si le nom de fichier contient 'certifie' (ou selon ta logique)
+                $isCertifie = str_contains($fileName, 'certifie');
+                $status = $isCertifie ? 'certifie' : '';
+            
+                // obtenir lastModified du fichier (fallback utile)
+                try {
+                    $fileTimestamp = Storage::disk('public')->lastModified($file); // int timestamp
+                } catch (\Exception $e) {
+                    $fileTimestamp = null;
                 }
-
-                if (str_ends_with($file, '.pdf')) {
-                    $documents[$dirPath]['status'] = 'Validé';
-                }
-
-                if (str_ends_with($file, '.json')) {
-                    try {
-                        $jsonContent = Storage::disk('public')->get($file);
-                        $jsonData = json_decode($jsonContent, true);
-
-                        $pathToken = "app/public/" . $file;
-                        $token = TokenLinksRapport::where('paths', $pathToken)->first()["token"];
-                        $documents[$dirPath]["token_rapport"] = $token;
-
-                        if (isset($formatRules[$docType])) {
-                            $rules = $formatRules[$docType];
-                            $formattedData = [];
-
-                            foreach ($rules as $key => $rule) {
-                                if (is_array($rule)) {
-                                    $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
-                                } elseif (is_string($rule)) {
-                                    $formattedData[$key] = $jsonData[$rule] ?? null;
-                                } else {
-                                    $formattedData[$key] = null;
-                                }
-                            }
-
-                            $documents[$dirPath]['data'] = $formattedData;
+            
+                // Récupérer dates depuis le modèle Token si disponibles (processed_at/confirmed_at/created_at)
+                $dateTraitement = null;
+                $dateConfirmation = null;
+            
+                if ($tokenModel) {
+                    // utiliser processed_at si défini, sinon created_at, sinon lastModified
+                    if (!empty($tokenModel->processed_at)) {
+                        $dateTraitement = $tokenModel->processed_at instanceof \DateTime
+                            ? $tokenModel->processed_at->format('c')
+                            : (string) $tokenModel->processed_at;
+                    } elseif (!empty($tokenModel->created_at)) {
+                        $dateTraitement = $tokenModel->created_at instanceof \DateTime
+                            ? $tokenModel->created_at->format('c')
+                            : (string) $tokenModel->created_at;
+                    }
+                    if ($isCertifie) {
+                        if (!empty($tokenModel->confirmed_at)) {
+                            $dateConfirmation = $tokenModel->confirmed_at instanceof \DateTime
+                                ? $tokenModel->confirmed_at->format('c')
+                                : (string) $tokenModel->confirmed_at;
+                        } elseif (!empty($tokenModel->updated_at)) {
+                            $dateConfirmation = $tokenModel->updated_at instanceof \DateTime
+                                ? $tokenModel->updated_at->format('c')
+                                : (string) $tokenModel->updated_at;
                         }
-                    } catch (\Exception $e) {
-                        $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
+                    }
+                }
+            
+                // fallback sur le timestamp du fichier
+                if (!$dateTraitement && $fileTimestamp) {
+                    $dateTraitement = date('c', $fileTimestamp);
+                }
+                if (!$dateConfirmation && $isCertifie && $fileTimestamp) {
+                    $dateConfirmation = date('c', $fileTimestamp);
+                }
+            
+                // Construction de l'entrée finale
+                $devisKey = $devisName . '_' . ($tokenValue ?? '');
+                // si tu veux forcer la clef identique à l'ancienne logique (avec slash), adapte ici
+                if (!isset($devisTraites[$devisName])) {
+                    $devisTraites[$devisName] = [
+                        'nom' => $devisName,
+                        'status' => $status,
+                        'tiers' => $tiers,
+                        'token' => $tokenValue,
+                        'date_traitement' => $dateTraitement,
+                        'date_confirmation' => $dateConfirmation,
+                    ];
+                } else {
+                    // mettre à jour status si nécessaire (ex: certifié)
+                    if ($status === 'certifie') {
+                        $devisTraites[$devisName]['status'] = 'certifie';
+                    }
+                    // mettre à jour dates si on a des valeurs plus précises
+                    if ($dateTraitement) {
+                        $devisTraites[$devisName]['date_traitement'] = $devisTraites[$devisName]['date_traitement'] ?? $dateTraitement;
+                    }
+                    if ($dateConfirmation) {
+                        $devisTraites[$devisName]['date_confirmation'] = $devisTraites[$devisName]['date_confirmation'] ?? $dateConfirmation;
                     }
                 }
             }
+            
             //\Log::info(''. json_encode($documents));
             $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
             //\Log::info(''. json_encode($filteredDocs));
@@ -579,6 +619,7 @@ class BiController extends Controller
 
 
     public function open(Request $request, $token): JsonResponse
+
     {
 
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
