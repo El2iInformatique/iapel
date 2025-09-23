@@ -505,8 +505,8 @@ class BiController extends Controller
                         "nom" => $devis['nom'],
                         "tiers" => $devis['tiers'],
                         'token' => $devis['token'],
-                        "date_traitement" => null,
-                        "date_confirmation" => null,
+                        "date_traitement" => \Carbon\Carbon::createFromTimestamp(Storage::disk('public')->lastModified($file))->toDateTimeString(),
+                        "date_confirmation" => $devis['status'] === 'certifie' ? \Carbon\Carbon::createFromTimestamp(Storage::disk('public')->lastModified($file))->toDateTimeString() : null,
                         "par" => null
                     ]
                 ];
