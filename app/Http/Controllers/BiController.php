@@ -497,7 +497,16 @@ class BiController extends Controller
             }
             \Log::info('Devis : ' . json_encode($devisTraites));
             foreach ($devisTraites as $devis) {
-                $devisNom = 'devis/' . $devis['nom'] . '_' . $devis['token'] . '_' . ($devis['status'] === 'certifie' ? 'certifie' : '');
+                $devisNom = 'devis/' . $devis['nom'] . '_' . $devis['token'] . ($devis['status'] === 'certifie' ? '_certifie' : '');
+                $fileName = $devis['nom'] . '_' . $devis['token'] . ($devis['status'] === 'certifie' ? '_certifie' : '') . '.pdf';
+                $filePath = $basePath . '/devis/' . $fileName;
+            
+                if (Storage::disk('public')->exists($filePath)) {
+                    $lastModified = Storage::disk('public')->lastModified($filePath);
+                } else {
+                    $lastModified = null;
+                }
+            
                 $documents[$devisNom] = [
                     'path' => $devisNom,
                     'status' => $devis['status'],
@@ -505,12 +514,15 @@ class BiController extends Controller
                         "nom" => $devis['nom'],
                         "tiers" => $devis['tiers'],
                         'token' => $devis['token'],
-                        "date_traitement" => \Carbon\Carbon::createFromTimestamp(Storage::disk('public')->lastModified($file))->toDateTimeString(),
-                        "date_confirmation" => $devis['status'] === 'certifie' ? \Carbon\Carbon::createFromTimestamp(Storage::disk('public')->lastModified($file))->toDateTimeString() : null,
+                        "date_traitement" => $lastModified ? \Carbon\Carbon::createFromTimestamp($lastModified)->toDateTimeString() : null,
+                        "date_confirmation" => ($devis['status'] === 'certifie' && $lastModified)
+                            ? \Carbon\Carbon::createFromTimestamp($lastModified)->toDateTimeString()
+                            : null,
                         "par" => null
                     ]
                 ];
             }
+            
 
             foreach ($lesDocuments as $file) {
                 $relativePath = str_replace("$basePath/", '', $file);
