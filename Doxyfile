@@ -1,0 +1,65 @@
+# -----------------------------------------------------------------------------
+# Doxygen configuration pour le projet Laravel iapel API (Windows, sans Graphviz)
+# -----------------------------------------------------------------------------
+
+# --- Informations du projet ---
+PROJECT_NAME           = "iapel API - Laravel"
+PROJECT_BRIEF          = "API de signature et gestion documentaire"
+PROJECT_NUMBER         = 1.0
+OUTPUT_LANGUAGE        = French
+INPUT_ENCODING         = UTF-8
+
+# --- Répertoires du projet à analyser ---
+INPUT                  = app/ routes/ config/ database/
+FILE_PATTERNS          = *.php
+RECURSIVE              = YES
+
+# --- Sortie de la documentation ---
+OUTPUT_DIRECTORY       = docs
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = app/
+
+# --- Apparence et thème ---
+HTML_EXTRA_STYLESHEET  = doxygen-awesome.css
+HTML_EXTRA_STYLESHEET  += doxygen-awesome-sidebar-only.css
+HTML_EXTRA_STYLESHEET  += doxygen-awesome-darkmode-toggle.css
+HTML_COLORSTYLE_HUE    = 210
+GENERATE_TREEVIEW      = YES
+SEARCHENGINE           = YES
+USE_MDFILE_AS_MAINPAGE = mainpage.md
+
+# --- Extraction du code et documentation ---
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+OPTIMIZE_OUTPUT_JAVA   = NO
+OPTIMIZE_OUTPUT_FOR_C  = NO
+MARKDOWN_SUPPORT       = YES
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = YES
+JAVADOC_AUTOBRIEF      = YES
+HIDE_UNDOC_RELATIONS   = NO
+
+# --- Graphviz (désactivé) ---
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = NO
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+
+# --- Avertissements et affichage ---
+QUIET                  = NO
+WARN_IF_UNDOCUMENTED   = YES
+TAB_SIZE               = 4
+
+# --- Divers ---
+ALPHABETICAL_INDEX     = YES
+SHOW_USED_FILES        = YES
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
