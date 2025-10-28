@@ -14,9 +14,30 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
-
+/**
+ * @class BiController
+ * @brief Contrôleur principal de gestion des documents et rapports d’intervention.
+ *
+ * Cette classe gère :
+ * - La création, lecture, et suppression des fichiers JSON liés aux documents.
+ * - La génération et vérification des tokens.
+ * - Le téléchargement et la soumission des rapports d’intervention.
+ * - La liste et le statut des documents sauvegardés.
+ *
+ * @package App\Http\Controllers
+ * @version 1.0
+ */
 class BiController extends Controller
 {
+     /**
+     * @brief Récupère la liste des documents d’un client.
+     *
+     * Cette méthode lit le fichier JSON correspondant au client spécifié
+     * et renvoie la liste de ses documents.
+     *
+     * @param string $client Nom du client.
+     * @return JsonResponse Liste des documents ou message d’erreur.
+     */
     public function getDocuments($client)
     {
         // Récupération du fichier JSON
@@ -34,6 +55,15 @@ class BiController extends Controller
         return response()->json($data);
     }
 
+    /**
+     * @brief Crée un fichier JSON et un token associé pour un document client.
+     *
+     * Génère un identifiant unique (UID), crée la structure du document,
+     * et associe un token pour l’accès sécurisé à ce document.
+     *
+     * @param Request $request Requête HTTP contenant les données du document.
+     * @return JsonResponse Contient le token et l’URL d’accès BI.
+     */
     // fonction de création du JSON et du TOKEN d'identification du fichier
     public function createJson(Request $request)
     {
@@ -121,7 +151,15 @@ class BiController extends Controller
         }
     }
 
-
+    /**
+     * @brief Télécharge le fichier PDF correspondant à un token donné.
+     *
+     * Permet à l’utilisateur de récupérer le document PDF associé
+     * à un token d’accès valide.
+     *
+     * @param string $token Token du document.
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse Fichier PDF téléchargé.
+     */
     public function download($token)
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
@@ -151,6 +189,18 @@ class BiController extends Controller
         return response()->download($filePath, "{$uid}.pdf");
     }
 
+    /**
+     * @brief Vérifie la présence des fichiers JSON et PDF d’un document.
+     *
+     * Vérifie si un document (identifié par client, document, UID)
+     * possède les fichiers nécessaires dans le stockage.
+     *
+     * @param string $client Nom du client.
+     * @param string $document Nom du document.
+     * @param string $uid Identifiant unique.
+     * @param Request $request Requête contenant le token secret d’accès.
+     * @return JsonResponse Statut de la présence des fichiers.
+     */
     public function check($client, $document, $uid, Request $request)
     {
         if (!$request->hasHeader('secret-token')) {
@@ -175,6 +225,15 @@ class BiController extends Controller
         ]);
     }
 
+    /**
+     * @brief Affiche la vue HTML d’un document en fonction de son token.
+     *
+     * Charge et affiche la vue correspondant au document stocké
+     * à partir des données associées au token fourni.
+     *
+     * @param string $token Token du document.
+     * @return \Illuminate\View\View Vue HTML du document.
+     */
     public function show($token)
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
@@ -214,6 +273,15 @@ class BiController extends Controller
         }
     }
 
+    /**
+     * @brief Soumet un rapport d’intervention au serveur.
+     *
+     * Enregistre le fichier PDF envoyé par le front-end, le lie
+     * au token correspondant et met à jour le statut du document.
+     *
+     * @param Request $request Contient les fichiers et les métadonnées du rapport.
+     * @return JsonResponse Résultat de la soumission.
+     */
     public function submit(Request $request, $token)
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
@@ -419,7 +487,15 @@ class BiController extends Controller
     }
 
 
-
+    /**
+     * @brief Liste les documents sauvegardés pour un client.
+     *
+     * Retourne la liste des rapports et documents disponibles
+     * dans le répertoire du client spécifié.
+     *
+     * @param string $client Nom du client.
+     * @return JsonResponse Liste des fichiers enregistrés.
+     */
     public function listSavedDocs($entreprise, Request $request): JsonResponse
 {
     try {
@@ -591,9 +667,15 @@ class BiController extends Controller
     }
 }
 
-
-
-
+    /**
+     * @brief Supprime un document spécifique.
+     *
+     * Supprime les fichiers JSON et PDF correspondant à un document donné
+     * et nettoie les métadonnées associées.
+     *
+     * @param Request $request Contient les informations du document à supprimer.
+     * @return JsonResponse Confirmation de la suppression.
+     */
     public function delete(Request $request, $token): JsonResponse
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();

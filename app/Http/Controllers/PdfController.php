@@ -12,9 +12,46 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 
+/**
+ * @class PdfController
+ * @brief Gère la génération, le remplissage et l'affichage des documents PDF liés aux rapports et attestations.
+ *
+ * Ce contrôleur centralise toutes les opérations relatives aux fichiers PDF :
+ * - Génération dynamique à partir de modèles prédéfinis.
+ * - Remplissage automatique de formulaires (Cerfa, attestations TVA, bulletins d'intervention...).
+ * - Téléchargement et affichage sécurisés des documents liés à un token.
+ * - Upload et gestion des devis PDF certifiés.
+ *
+ * @package App\Http\Controllers
+ * @version 2.0
+ * @author Équipe de développement IAPEL
+ * @since 1.0
+ * @note Ce contrôleur utilise la librairie TCPDF/FPDI pour manipuler les fichiers PDF.
+ * @warning Les méthodes de génération nécessitent des modèles PDF préexistants dans le storage.
+ */
 class PdfController extends Controller
 {
-
+    /**
+     * @brief Affiche un document PDF à partir d'un token d'accès.
+     *
+     * Cette méthode :
+     * - Recherche le fichier PDF correspondant au token fourni dans TokenLinksRapport.
+     * - Vérifie l'existence du fichier JSON associé contenant les métadonnées.
+     * - Extrait les informations du client, document et UID.
+     * - Retourne la vue d'affichage PDF avec les données nécessaires.
+     *
+     * @param string $token Jeton unique associé au document PDF pour l'identification sécurisée.
+     *
+     * @return mixed Vue d'affichage du PDF ou erreur 404.
+     *
+     * @throws Exception Si aucun token valide n'est trouvé dans la base.
+     * @throws Exception Si le fichier JSON associé n'existe pas.
+     *
+     * @note Cette méthode est utilisée pour l'affichage dans le navigateur, pas pour le téléchargement direct.
+     * @see TokenLinksRapport Pour la gestion des tokens et leurs liens.
+     * @par Exemple:
+     * GET /pdf/show/abc123 pour afficher le PDF associé au token "abc123".
+     */
     public function show($token)
     {
 
@@ -37,6 +74,32 @@ class PdfController extends Controller
         return view('pdf', compact('client','document', 'uid'));        
     }
 
+    /**
+     * @brief Génère et télécharge un PDF personnalisé à partir de données JSON.
+     *
+     * Cette méthode traite les requêtes de génération de PDF pour différents types de documents :
+     * - Crée le répertoire de stockage si nécessaire.
+     * - Sauvegarde les données sous forme de fichier JSON.
+     * - Génère le PDF en remplissant les champs du modèle avec les données fournies.
+     * - Retourne le fichier PDF généré en téléchargement.
+     *
+     * Types de documents supportés :
+     * - cerfa_15497-03 : Formulaire CERFA pour fluides frigorigènes
+     * - 1301-SD : Attestation TVA pour travaux
+     *
+     * @param Request $request Requête HTTP contenant les données JSON du formulaire.
+     *                        Doit contenir : uid, document, et les champs spécifiques au type.
+     *
+     * @return mixed Téléchargement du PDF généré ou erreur JSON si le fichier source n'existe pas.
+     *
+     * @throws Exception Si une erreur survient lors de la création du fichier JSON.
+     * @throws Exception Si le modèle PDF source est introuvable.
+     *
+     * @note Le PDF généré est "aplati" pour empêcher les modifications ultérieures.
+     * @warning Cette méthode nécessite que les modèles PDF soient présents dans storage/app/public/.
+     * @par Exemple:
+     * POST avec JSON : {"uid": "12345", "document": "1301-SD", "nom": "Dupont", ...}
+     */
     public function generateDownloadPDF(Request $request)
     {
         $data = json_decode($request->getContent(), true);
@@ -127,6 +190,32 @@ class PdfController extends Controller
         return response()->download($outputPath, "{$uid}.pdf");
     }
 
+    /**
+     * @brief Génère une attestation TVA personnalisée pour les travaux de rénovation.
+     *
+     * Cette méthode gère la génération d'attestations TVA avec des fonctionnalités avancées :
+     * - Support des requêtes JSON (POST) et paramètres URL (GET).
+     * - Remplissage automatique des champs d'identité (nom, prénom, adresse).
+     * - Gestion des cases à cocher pour le type de logement et l'affectation.
+     * - Traitement des différents types de travaux avec leurs détails.
+     * - Intégration de signatures numériques en base64.
+     * - Formatage des dates au format français (d/m/Y).
+     *
+     * @param \Illuminate\Http\Request $request Requête HTTP contenant soit :
+     *                                         - JSON (POST) : uid, document, client + données du formulaire
+     *                                         - Query params (GET) : uid, document, client
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse
+     *         Fichier PDF généré en affichage inline ou erreur JSON.
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException Si le fichier JSON de données n'existe pas.
+     * @throws \InvalidArgumentException Si les paramètres requis sont manquants.
+     *
+     * @note La signature est automatiquement convertie de base64 vers PNG et intégrée au PDF.
+     * @note Les coordonnées de positionnement sont spécifiquement calibrées pour le modèle d'attestation TVA.
+     * @warning Nécessite un fichier JSON préalablement créé contenant toutes les données du formulaire.
+     * @see generateDownloadPDF() Pour la création initiale du fichier JSON de données.
+     */
     public function generateAttestationTVA(Request $request)
     {
         if ($request->isJson()) {
@@ -335,6 +424,36 @@ class PdfController extends Controller
         ]);
     }
 
+    /**
+     * @brief Génère un bulletin d'intervention (BI) détaillé avec gestion multi-plateforme.
+     *
+     * Cette méthode produit des bulletins d'intervention complets incluant :
+     * - Logo personnalisé de l'entreprise cliente.
+     * - Informations complètes sur l'intervention et les intervenants.
+     * - Gestion des photos avant/après avec redimensionnement automatique.
+     * - Cases à cocher pour le statut de l'intervention.
+     * - Compléments d'information avec textes et images.
+     * - Signature numérique avec adaptation selon la plateforme (Android/autres).
+     * - Page supplémentaire pour les compléments clients si nécessaire.
+     *
+     * @param \Illuminate\Http\Request $request Requête GET avec paramètres :
+     *                                         - uid : Identifiant unique du bulletin
+     *                                         - document : Type de document (BI)
+     *                                         - client : Identifiant du client
+     *                                         - isAndroid : "1" si généré depuis Android, autre sinon
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse
+     *         Fichier PDF du bulletin en affichage inline ou erreur JSON.
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException Si le fichier JSON de données n'existe pas.
+     * @throws \RuntimeException Si une erreur survient lors du traitement des images.
+     *
+     * @note Les images sont automatiquement redimensionnées tout en conservant leur ratio d'aspect.
+     * @note La signature est adaptée selon la plateforme pour un rendu optimal.
+     * @note Une page supplémentaire est créée automatiquement si des compléments clients existent.
+     * @warning Les chemins d'images doivent être valides et les fichiers accessibles dans le storage.
+     * @example GET /generateBi?uid=12345&document=BI&client=CLIENT001&isAndroid=0
+     */
     public function generateBi(Request $request)
     {
         $uid = $request->query('uid');
@@ -655,6 +774,22 @@ class PdfController extends Controller
         ]);
     }
 
+    /**
+     * @brief Formate un texte long en respectant les contraintes de longueur par ligne.
+     *
+     * Cette méthode utilitaire découpe intelligemment les textes longs :
+     * - Première ligne limitée à 52 caractères.
+     * - Lignes suivantes limitées à 108 caractères chacune.
+     * - Préservation de l'intégrité du texte sans coupure de mots.
+     *
+     * @param string $texte Le texte à formater et découper.
+     *
+     * @return array Tableau contenant les lignes formatées prêtes pour l'affichage PDF.
+     *
+     * @note Méthode privée utilisée pour optimiser l'affichage des textes longs dans les PDF.
+     * @note Les limites de caractères sont calibrées pour l'affichage optimal dans les modèles PDF.
+     * @example formatTexte("Un très long texte...") retourne ["Un très long...", "...suite du texte"]
+     */
     private function formatTexte($texte) {
         $texte = trim($texte);
         $resultat = [];
@@ -678,6 +813,36 @@ class PdfController extends Controller
     }
     
 
+    /**
+     * @brief Génère un formulaire CERFA 15497-03 pour les interventions sur équipements frigorifiques.
+     *
+     * Cette méthode spécialisée traite les formulaires CERFA complexes avec :
+     * - Remplissage automatique des champs d'identification (opérateur, détenteur).
+     * - Gestion des types d'intervention (assemblage, maintenance, contrôle...).
+     * - Traitement des différents types de fluides frigorigènes (HCFC, HFC, HFO).
+     * - Gestion des périodicités de contrôle selon la réglementation.
+     * - Traitement des fuites détectées avec localisation et réparations.
+     * - Calcul des quantités de fluides chargés et récupérés.
+     * - Double signature numérique (opérateur et détenteur).
+     * - Formatage automatique des dates.
+     *
+     * @param \Illuminate\Http\Request $request Requête GET avec paramètres :
+     *                                         - uid : Identifiant unique du formulaire
+     *                                         - document : Type de document (cerfa_15497-03)
+     *                                         - client : Identifiant du client
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse
+     *         Fichier PDF CERFA complété en affichage inline ou erreur JSON.
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException Si le fichier JSON de données n'existe pas.
+     * @throws \InvalidArgumentException Si le format de date est incorrect.
+     *
+     * @note Conforme à la réglementation française sur les fluides frigorigènes.
+     * @note Les coordonnées de positionnement sont précisément calibrées pour le formulaire CERFA officiel.
+     * @note Deux signatures distinctes sont gérées : opérateur et détenteur d'équipement.
+     * @warning Les données doivent respecter le format attendu par l'administration française.
+     * @see https://www.service-public.fr/professionnels-entreprises/vosdroits/R14311 Documentation officielle CERFA.
+     */
     public function generateCerfa(Request $request)
     {
         $uid = $request->query('uid');
@@ -1029,6 +1194,35 @@ class PdfController extends Controller
     }
 
 
+    /**
+     * @brief Upload et traitement sécurisé de fichiers PDF pour les devis certifiés.
+     *
+     * Cette méthode gère l'upload de fichiers PDF avec validation et organisation :
+     * - Validation stricte du format PDF uniquement.
+     * - Extraction et vérification du token depuis le nom de fichier.
+     * - Vérification de l'existence du token en base de données.
+     * - Organisation automatique des fichiers par organisation et devis.
+     * - Création automatique de l'arborescence de stockage.
+     * - Logging détaillé de toutes les opérations d'upload.
+     *
+     * @param Request $request Requête POST avec fichier :
+     *                        - pdf_file : Fichier PDF à uploader (obligatoire)
+     *                        Le nom du fichier doit contenir le token valide.
+     *
+     * @return mixed Réponse JSON avec :
+     *              - Succès : message, path, original_filename
+     *              - Erreur : message d'erreur et code HTTP approprié
+     *
+     * @throws Exception Si le fichier n'est pas un PDF valide.
+     * @throws Exception Si le token n'existe pas en base.
+     * @throws Exception Si la création du répertoire ou le déplacement du fichier échoue.
+     *
+     * @note L'arborescence créée suit le pattern : {organisation_id}/devis/{devis_id}_{token}/
+     * @note Tous les uploads sont tracés dans les logs pour audit et sécurité.
+     * @warning Seuls les fichiers PDF sont acceptés pour des raisons de sécurité.
+     * @par Exemple:
+     * POST /upload avec un fichier "ABC123.pdf" crée le chemin ORG001/devis/DEV456_ABC123/DEV456_ABC123.pdf
+     */
     public function upload(Request $request)
     {
         $request->validate([
@@ -1078,6 +1272,28 @@ class PdfController extends Controller
         ], 200);
     }
 
+    /**
+     * @brief Affiche la vue d'un devis PDF avec vérification du statut de certification.
+     *
+     * Cette méthode de consultation sécurisée :
+     * - Vérifie l'existence et la validité du token de devis.
+     * - Détermine si une version certifiée du devis existe.
+     * - Prépare les données nécessaires pour l'affichage dans la vue.
+     * - Gère les accès non autorisés avec des erreurs 404 appropriées.
+     *
+     * @param Request $request Requête HTTP (généralement GET).
+     * @param string $token Token unique d'identification du devis à consulter.
+     *
+     * @return mixed Vue 'devis_pdf' avec les données du devis ou erreur 404.
+     *
+     * @throws Exception Si le token n'existe pas en base.
+     *
+     * @note La vue reçoit : client, token, nomDevis, isCertified pour l'affichage conditionnel.
+     * @note La vérification de certification recherche un fichier avec suffixe '_certifie.pdf'.
+     * @warning Aucune vérification d'autorisation supplémentaire n'est effectuée au-delà de l'existence du token.
+     * @par Exemple:
+     * GET /devis/ABC123 affiche le devis associé au token "ABC123" avec son statut de certification.
+     */
     public function viewDevis(Request $request, $token){
         $leToken = Token::where('token', $token)->first();
 

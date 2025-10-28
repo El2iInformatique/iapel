@@ -1,65 +1,333 @@
-# -----------------------------------------------------------------------------
-# Doxygen configuration pour le projet Laravel iapel API (Windows, sans Graphviz)
-# -----------------------------------------------------------------------------
+# ==============================================================================
+# IAPEL API - Documentation Configuration (Doxygen)
+# ==============================================================================
+# Version: 1.0.0
+# Générée pour: Laravel API - Gestion de documents et signatures
+# ==============================================================================
 
-# --- Informations du projet ---
-PROJECT_NAME           = "iapel API - Laravel"
-PROJECT_BRIEF          = "API de signature et gestion documentaire"
-PROJECT_NUMBER         = 1.0
-OUTPUT_LANGUAGE        = French
-INPUT_ENCODING         = UTF-8
+# ------------------------------------------------------------------------------
+# INFORMATIONS DU PROJET
+# ------------------------------------------------------------------------------
 
-# --- Répertoires du projet à analyser ---
-INPUT                  = app/ routes/ config/ database/
-FILE_PATTERNS          = *.php
-RECURSIVE              = YES
+PROJECT_NAME           = "IAPEL API"
+PROJECT_NUMBER         = "v1.0.0"
+PROJECT_BRIEF          = "API Laravel moderne pour la gestion intelligente des documents et signatures électroniques"
+PROJECT_LOGO           = public/images/favicon.ico
 
-# --- Sortie de la documentation ---
+# ------------------------------------------------------------------------------
+# CONFIGURATION DE SORTIE
+# ------------------------------------------------------------------------------
+
 OUTPUT_DIRECTORY       = docs
+CREATE_SUBDIRS         = YES
+OUTPUT_LANGUAGE        = French
+
+# Formats de documentation
 GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
-HTML_OUTPUT            = html
-HTML_FILE_EXTENSION    = .html
-FULL_PATH_NAMES        = NO
-STRIP_FROM_PATH        = app/
+GENERATE_RTF           = NO
+GENERATE_MAN           = NO
+GENERATE_XML           = NO
+GENERATE_DOCBOOK       = NO
+GENERATE_AUTOGEN_DEF   = NO
+GENERATE_PERLMOD       = NO
 
-# --- Apparence et thème ---
-HTML_EXTRA_STYLESHEET  = doxygen-awesome.css
-HTML_EXTRA_STYLESHEET  += doxygen-awesome-sidebar-only.css
-HTML_EXTRA_STYLESHEET  += doxygen-awesome-darkmode-toggle.css
-HTML_COLORSTYLE_HUE    = 210
-GENERATE_TREEVIEW      = YES
-SEARCHENGINE           = YES
-USE_MDFILE_AS_MAINPAGE = mainpage.md
+# ------------------------------------------------------------------------------
+# CONFIGURATION DES SOURCES
+# ------------------------------------------------------------------------------
 
-# --- Extraction du code et documentation ---
+INPUT                  = app \
+                         routes \
+                         config \
+                         README.md
+
+RECURSIVE              = YES
+FILE_PATTERNS          = *.php \
+                         *.blade.php \
+                         *.js \
+                         *.ts \
+                         *.vue \
+                         *.md
+
+# Exclusions spécifiques à Laravel
+EXCLUDE                = vendor \
+                         node_modules \
+                         storage \
+                         bootstrap/cache \
+                         tests \
+                         database/migrations \
+                         public/build
+
+EXCLUDE_PATTERNS       = */vendor/* \
+                         */node_modules/* \
+                         */storage/* \
+                         */bootstrap/cache/* \
+                         */tests/* \
+                         */.git/* \
+                         */dist/* \
+                         *.min.js
+
+EXCLUDE_SYMBOLS        = 
+
+# ------------------------------------------------------------------------------
+# EXTRACTION ET ANALYSE
+# ------------------------------------------------------------------------------
+
 EXTRACT_ALL            = YES
-EXTRACT_PRIVATE        = NO
+EXTRACT_PRIVATE        = YES
+EXTRACT_PACKAGE        = YES
 EXTRACT_STATIC         = YES
 EXTRACT_LOCAL_CLASSES  = YES
-OPTIMIZE_OUTPUT_JAVA   = NO
-OPTIMIZE_OUTPUT_FOR_C  = NO
-MARKDOWN_SUPPORT       = YES
-SOURCE_BROWSER         = YES
-INLINE_SOURCES         = YES
+EXTRACT_LOCAL_METHODS  = YES
+EXTRACT_ANON_NSPACES   = YES
+
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+HIDE_FRIEND_COMPOUNDS  = NO
+HIDE_IN_BODY_DOCS      = NO
+
+INTERNAL_DOCS          = YES
+CASE_SENSE_NAMES       = YES
+HIDE_SCOPE_NAMES       = NO
+HIDE_COMPOUND_REFERENCE= NO
+SHOW_INCLUDE_FILES     = YES
+SHOW_GROUPED_MEMB_INC  = YES
+FORCE_LOCAL_INCLUDES   = NO
+INLINE_INFO            = YES
 SORT_MEMBER_DOCS       = YES
 SORT_BRIEF_DOCS        = YES
-JAVADOC_AUTOBRIEF      = YES
-HIDE_UNDOC_RELATIONS   = NO
+SORT_MEMBERS_CTORS_1ST = YES
+SORT_GROUP_NAMES       = YES
 
-# --- Graphviz (désactivé) ---
-HAVE_DOT               = NO
-CLASS_DIAGRAMS         = NO
+# ------------------------------------------------------------------------------
+# CONFIGURATION PHP/LARAVEL
+# ------------------------------------------------------------------------------
+
+EXTENSION_MAPPING      = php=C++ \
+                         blade.php=C++
+
+OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_JAVA   = NO
+OPTIMIZE_FOR_FORTRAN   = NO
+OPTIMIZE_OUTPUT_VHDL   = NO
+OPTIMIZE_OUTPUT_SLICE  = NO
+
+# Support des namespaces PHP
+CPP_CLI_SUPPORT        = NO
+SIP_SUPPORT            = NO
+IDL_PROPERTY_SUPPORT   = YES
+DISTRIBUTE_GROUP_DOC   = YES
+GROUP_NESTED_COMPOUNDS = YES
+SUBGROUPING            = YES
+INLINE_GROUPED_CLASSES = YES
+INLINE_SIMPLE_STRUCTS  = YES
+
+# ------------------------------------------------------------------------------
+# CONFIGURATION HTML MODERNE
+# ------------------------------------------------------------------------------
+
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+
+# Thème et apparence moderne
+HTML_COLORSTYLE        = LIGHT
+HTML_COLORSTYLE_HUE    = 209
+HTML_COLORSTYLE_SAT    = 255
+HTML_COLORSTYLE_GAMMA  = 113
+
+# Feuilles de style personnalisées (Doxygen Awesome)
+HTML_EXTRA_STYLESHEET  = doxygen-awesome.css \
+                         doxygen-awesome-sidebar-only.css \
+                         doxygen-awesome-sidebar-only-darkmode-toggle.css
+
+HTML_EXTRA_FILES       = doxygen-awesome-darkmode-toggle.js \
+                         doxygen-awesome-fragment-copy-button.js \
+                         doxygen-awesome-paragraph-link.js
+
+# En-tête et pied de page personnalisés
+HTML_HEADER            = 
+HTML_FOOTER            = 
+HTML_STYLESHEET        = 
+
+# Fonctionnalités avancées
+HTML_TIMESTAMP         = YES
+HTML_DYNAMIC_MENUS     = YES
+HTML_DYNAMIC_SECTIONS  = YES
+HTML_INDEX_NUM_ENTRIES = 100
+
+GENERATE_DOCSET        = NO
+GENERATE_HTMLHELP      = NO
+GENERATE_QHP           = NO
+GENERATE_ECLIPSEHELP   = NO
+
+# Navigation et recherche
+DISABLE_INDEX          = NO
+GENERATE_TREEVIEW      = YES
+TREEVIEW_WIDTH         = 300
+ENUM_VALUES_PER_LINE   = 1
+USE_INLINE_TREES       = YES
+FULL_SIDEBAR           = NO
+
+SEARCHENGINE           = YES
+SERVER_BASED_SEARCH    = NO
+EXTERNAL_SEARCH        = NO
+
+# ------------------------------------------------------------------------------
+# PAGE D'ACCUEIL
+# ------------------------------------------------------------------------------
+
+USE_MDFILE_AS_MAINPAGE = README.md
+MARKDOWN_SUPPORT       = YES
+TOC_INCLUDE_HEADINGS   = 5
+AUTOLINK_SUPPORT       = YES
+
+# ------------------------------------------------------------------------------
+# AVERTISSEMENTS ET LOGS
+# ------------------------------------------------------------------------------
+
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+WARN_AS_ERROR          = NO
+WARN_FORMAT            = "$file:$line: $text"
+WARN_LOGFILE           = doxygen_warnings.log
+
+# ------------------------------------------------------------------------------
+# GRAPHIQUES ET DIAGRAMMES (Graphviz)
+# ------------------------------------------------------------------------------
+
+HAVE_DOT               = YES
+DOT_NUM_THREADS        = 0
+DOT_FONTNAME           = Helvetica
+DOT_FONTSIZE           = 10
+DOT_FONTPATH           = 
+
+CLASS_DIAGRAMS         = YES
+HIDE_UNDOC_RELATIONS   = NO
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+UML_LOOK               = YES
+UML_LIMIT_NUM_FIELDS   = 10
+TEMPLATE_RELATIONS     = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
 CALL_GRAPH             = NO
 CALLER_GRAPH           = NO
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
 
-# --- Avertissements et affichage ---
-QUIET                  = NO
-WARN_IF_UNDOCUMENTED   = YES
-TAB_SIZE               = 4
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+DOT_PATH               = 
+DOTFILE_DIRS           = 
+MSCFILE_DIRS           = 
+DIAFILE_DIRS           = 
 
-# --- Divers ---
+DOT_GRAPH_MAX_NODES    = 100
+MAX_DOT_GRAPH_DEPTH    = 0
+DOT_TRANSPARENT        = YES
+DOT_MULTI_TARGETS      = YES
+GENERATE_LEGEND        = YES
+DOT_CLEANUP            = YES
+
+# ------------------------------------------------------------------------------
+# CONFIGURATION AVANCÉE
+# ------------------------------------------------------------------------------
+
+# Aliases personnalisés pour Laravel
+ALIASES                = "route{1}=@par Route:\n\1" \
+                         "middleware{1}=@par Middleware:\n\1" \
+                         "apiresource=@par Type: API Resource" \
+                         "controller=@par Type: Controller" \
+                         "model=@par Type: Eloquent Model" \
+                         "migration=@par Type: Migration" \
+                         "seeder=@par Type: Seeder" \
+                         "request{1}=@par Request:\n\1" \
+                         "response{1}=@par Response:\n\1"
+
+# Préprocesseur
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO
+SEARCH_INCLUDES        = YES
+INCLUDE_PATH           = 
+INCLUDE_FILE_PATTERNS  = 
+PREDEFINED             = "Illuminate=namespace Illuminate" \
+                         "Http=namespace Http" \
+                         "Request=class Request" \
+                         "Response=class Response" \
+                         "JsonResponse=class JsonResponse" \
+                         "BinaryFileResponse=class BinaryFileResponse" \
+                         "Exception=class Exception" \
+                         "HttpResponseException=class HttpResponseException" \
+                         "NotFoundHttpException=class NotFoundHttpException" \
+                         "ModelNotFoundException=class ModelNotFoundException"
+EXPAND_AS_DEFINED      = 
+SKIP_FUNCTION_MACROS   = YES
+
+# Index et références
 ALPHABETICAL_INDEX     = YES
-SHOW_USED_FILES        = YES
-SHOW_FILES             = YES
-SHOW_NAMESPACES        = YES
+COLS_IN_ALPHA_INDEX    = 5
+IGNORE_PREFIX          = 
+
+# Source code browsing
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+REFERENCES_LINK_SOURCE = YES
+SOURCE_TOOLTIPS        = YES
+USE_HTAGS              = NO
+VERBATIM_HEADERS       = YES
+CLANG_ASSISTED_PARSING = NO
+
+# Filtres
+FILTER_PATTERNS        = 
+FILTER_SOURCE_FILES    = NO
+FILTER_SOURCE_PATTERNS = 
+
+# ------------------------------------------------------------------------------
+# CONFIGURATION LATEX (Désactivé)
+# ------------------------------------------------------------------------------
+
+LATEX_OUTPUT           = latex
+COMPACT_LATEX          = NO
+PAPER_TYPE             = a4
+EXTRA_PACKAGES         = 
+LATEX_HEADER           = 
+LATEX_FOOTER           = 
+LATEX_EXTRA_STYLESHEET = 
+LATEX_EXTRA_FILES      = 
+PDF_HYPERLINKS         = YES
+USE_PDFLATEX           = YES
+LATEX_BATCHMODE        = NO
+LATEX_HIDE_INDICES     = NO
+LATEX_SOURCE_CODE      = NO
+LATEX_BIB_STYLE        = plain
+LATEX_TIMESTAMP        = NO
+
+# ------------------------------------------------------------------------------
+# CONFIGURATION SUPPLÉMENTAIRE
+# ------------------------------------------------------------------------------
+
+ALLEXTERNALS           = NO
+EXTERNAL_GROUPS        = YES
+EXTERNAL_PAGES         = YES
+
+PERL_PATH              = /usr/bin/perl
+MSCGEN_PATH            = 
+DIA_PATH               = 
+
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+LAYOUT_FILE            = 
+
+CITE_BIB_FILES         = 
+
+# ==============================================================================
+# FIN DE CONFIGURATION
+# ==============================================================================
