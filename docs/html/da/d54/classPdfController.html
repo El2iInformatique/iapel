@@ -1,0 +1,532 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: Référence de la classe PdfController</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('da/d54/classPdfController.html','../../','d1/dca/classPdfController-members'); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">Référence de la classe PdfController</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>Gère la génération, le remplissage et l'affichage des documents PDF liés aux rapports et attestations.  
+ <a href="#details">Plus de détails...</a></p>
+<div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de PdfController:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+<div class="center"><!-- SVG 0 --></div>
+</div>
+<div id="dynsection-1" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe de collaboration de PdfController:</div>
+<div id="dynsection-1-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-1-content" class="dyncontent" style="display:none;">
+<div class="center"><!-- SVG 1 --></div>
+</div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:acd06764c782803fd71d0c230590a6dd4" id="r_acd06764c782803fd71d0c230590a6dd4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd06764c782803fd71d0c230590a6dd4">generateAttestationTVA</a> (class Request $request)</td></tr>
+<tr class="memdesc:acd06764c782803fd71d0c230590a6dd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Génère une attestation TVA personnalisée pour les travaux de rénovation.  <br /></td></tr>
+<tr class="memitem:a7ad100a333dfeb6d4e5acb77330fc0de" id="r_a7ad100a333dfeb6d4e5acb77330fc0de"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7ad100a333dfeb6d4e5acb77330fc0de">generateBi</a> (class Request $request)</td></tr>
+<tr class="memitem:ac6ce327ce2bf9fc2f7c22297828b1c23" id="r_ac6ce327ce2bf9fc2f7c22297828b1c23"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac6ce327ce2bf9fc2f7c22297828b1c23">generateCerfa</a> (class Request $request)</td></tr>
+<tr class="memdesc:ac6ce327ce2bf9fc2f7c22297828b1c23"><td class="mdescLeft">&#160;</td><td class="mdescRight">Génère un formulaire CERFA 15497-03 pour les interventions sur équipements frigorifiques.  <br /></td></tr>
+<tr class="memitem:a09812f7e2aa8e6c3804b113f02bd85b6" id="r_a09812f7e2aa8e6c3804b113f02bd85b6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a09812f7e2aa8e6c3804b113f02bd85b6">generateDownloadPDF</a> (class Request $request)</td></tr>
+<tr class="memdesc:a09812f7e2aa8e6c3804b113f02bd85b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Génère et télécharge un PDF personnalisé à partir de données JSON.  <br /></td></tr>
+<tr class="memitem:ae3d53a7637e2fce4fc01926e67b3f425" id="r_ae3d53a7637e2fce4fc01926e67b3f425"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae3d53a7637e2fce4fc01926e67b3f425">show</a> ( $token)</td></tr>
+<tr class="memdesc:ae3d53a7637e2fce4fc01926e67b3f425"><td class="mdescLeft">&#160;</td><td class="mdescRight">Affiche un document PDF à partir d'un token d'accès.  <br /></td></tr>
+<tr class="memitem:a85123e64a0a7cb3cbb1d9df6e7dcdc4e" id="r_a85123e64a0a7cb3cbb1d9df6e7dcdc4e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a85123e64a0a7cb3cbb1d9df6e7dcdc4e">upload</a> (class Request $request)</td></tr>
+<tr class="memdesc:a85123e64a0a7cb3cbb1d9df6e7dcdc4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Upload et traitement sécurisé de fichiers PDF pour les devis certifiés.  <br /></td></tr>
+<tr class="memitem:a7505e3fe5b96e8ea9759704f8f9bc991" id="r_a7505e3fe5b96e8ea9759704f8f9bc991"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7505e3fe5b96e8ea9759704f8f9bc991">viewDevis</a> (class Request $request, $token)</td></tr>
+<tr class="memdesc:a7505e3fe5b96e8ea9759704f8f9bc991"><td class="mdescLeft">&#160;</td><td class="mdescRight">Affiche la vue d'un devis PDF avec vérification du statut de certification.  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pri-methods" class="groupheader"><a id="pri-methods" name="pri-methods"></a>
+Fonctions membres privées</h2></td></tr>
+<tr class="memitem:a3dfb1d99890974c4054e3c9172ffa90b" id="r_a3dfb1d99890974c4054e3c9172ffa90b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3dfb1d99890974c4054e3c9172ffa90b">formatTexte</a> ( $texte)</td></tr>
+</table>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
+<div class="textblock"><p>Gère la génération, le remplissage et l'affichage des documents PDF liés aux rapports et attestations. </p>
+<p>Ce contrôleur centralise toutes les opérations relatives aux fichiers PDF :</p><ul>
+<li>Génération dynamique à partir de modèles prédéfinis.</li>
+<li>Remplissage automatique de formulaires (Cerfa, attestations TVA, bulletins d'intervention...).</li>
+<li>Téléchargement et affichage sécurisés des documents liés à un token.</li>
+<li>Upload et gestion des devis PDF certifiés. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l00032">32</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
+<a id="a3dfb1d99890974c4054e3c9172ffa90b" name="a3dfb1d99890974c4054e3c9172ffa90b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3dfb1d99890974c4054e3c9172ffa90b">&#9670;&#160;</a></span>formatTexte()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#a5d09be8534a32301d34ebe64e9365dd3">App::Http::Controllers::PdfController::formatTexte</a> </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$texte</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel private">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l00793">793</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<a id="acd06764c782803fd71d0c230590a6dd4" name="acd06764c782803fd71d0c230590a6dd4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd06764c782803fd71d0c230590a6dd4">&#9670;&#160;</a></span>generateAttestationTVA()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#acd06764c782803fd71d0c230590a6dd4">App::Http::Controllers::PdfController::generateAttestationTVA</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Génère une attestation TVA personnalisée pour les travaux de rénovation. </p>
+<p>Cette méthode gère la génération d'attestations TVA avec des fonctionnalités avancées :</p><ul>
+<li>Support des requêtes JSON (POST) et paramètres URL (GET).</li>
+<li>Remplissage automatique des champs d'identité (nom, prénom, adresse).</li>
+<li>Gestion des cases à cocher pour le type de logement et l'affectation.</li>
+<li>Traitement des différents types de travaux avec leurs détails.</li>
+<li>Intégration de signatures numériques en base64.</li>
+<li>Formatage des dates au format français (d/m/Y).</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">\Illuminate\Http\Request</td><td class="paramname">$request</td><td>Requête HTTP contenant soit :<ul>
+<li>JSON (POST) : uid, document, client + données du formulaire</li>
+<li>Query params (GET) : uid, document, client</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>\Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse Fichier PDF généré en affichage inline ou erreur JSON.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Illuminate\Http\Exceptions\HttpResponseException Si le fichier JSON de données n'existe pas. </p><dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>InvalidArgumentException Si les paramètres requis sont manquants.</p>
+<dl class="section note"><dt>Note</dt><dd>La signature est automatiquement convertie de base64 vers PNG et intégrée au PDF. </dd>
+<dd>
+Les coordonnées de positionnement sont spécifiquement calibrées pour le modèle d'attestation TVA. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Nécessite un fichier JSON préalablement créé contenant toutes les données du formulaire. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>generateDownloadPDF() Pour la création initiale du fichier JSON de données. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l00219">219</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<a id="a7ad100a333dfeb6d4e5acb77330fc0de" name="a7ad100a333dfeb6d4e5acb77330fc0de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ad100a333dfeb6d4e5acb77330fc0de">&#9670;&#160;</a></span>generateBi()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#a7ad100a333dfeb6d4e5acb77330fc0de">App::Http::Controllers::PdfController::generateBi</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l00457">457</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<a id="ac6ce327ce2bf9fc2f7c22297828b1c23" name="ac6ce327ce2bf9fc2f7c22297828b1c23"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6ce327ce2bf9fc2f7c22297828b1c23">&#9670;&#160;</a></span>generateCerfa()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#ac6ce327ce2bf9fc2f7c22297828b1c23">App::Http::Controllers::PdfController::generateCerfa</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Génère un formulaire CERFA 15497-03 pour les interventions sur équipements frigorifiques. </p>
+<p>Cette méthode spécialisée traite les formulaires CERFA complexes avec :</p><ul>
+<li>Remplissage automatique des champs d'identification (opérateur, détenteur).</li>
+<li>Gestion des types d'intervention (assemblage, maintenance, contrôle...).</li>
+<li>Traitement des différents types de fluides frigorigènes (HCFC, HFC, HFO).</li>
+<li>Gestion des périodicités de contrôle selon la réglementation.</li>
+<li>Traitement des fuites détectées avec localisation et réparations.</li>
+<li>Calcul des quantités de fluides chargés et récupérés.</li>
+<li>Double signature numérique (opérateur et détenteur).</li>
+<li>Formatage automatique des dates.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">\Illuminate\Http\Request</td><td class="paramname">$request</td><td>Requête GET avec paramètres :<ul>
+<li>uid : Identifiant unique du formulaire</li>
+<li>document : Type de document (cerfa_15497-03)</li>
+<li>client : Identifiant du client</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>\Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse Fichier PDF CERFA complété en affichage inline ou erreur JSON.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Illuminate\Http\Exceptions\HttpResponseException Si le fichier JSON de données n'existe pas. </p><dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>InvalidArgumentException Si le format de date est incorrect.</p>
+<dl class="section note"><dt>Note</dt><dd>Conforme à la réglementation française sur les fluides frigorigènes. </dd>
+<dd>
+Les coordonnées de positionnement sont précisément calibrées pour le formulaire CERFA officiel. </dd>
+<dd>
+Deux signatures distinctes sont gérées : opérateur et détenteur d'équipement. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les données doivent respecter le format attendu par l'administration française. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd><a href="https://www.service-public.fr/professionnels-entreprises/vosdroits/R14311">https://www.service-public.fr/professionnels-entreprises/vosdroits/R14311</a> Documentation officielle CERFA. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l00846">846</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<a id="a09812f7e2aa8e6c3804b113f02bd85b6" name="a09812f7e2aa8e6c3804b113f02bd85b6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09812f7e2aa8e6c3804b113f02bd85b6">&#9670;&#160;</a></span>generateDownloadPDF()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#a09812f7e2aa8e6c3804b113f02bd85b6">App::Http::Controllers::PdfController::generateDownloadPDF</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Génère et télécharge un PDF personnalisé à partir de données JSON. </p>
+<p>Cette méthode traite les requêtes de génération de PDF pour différents types de documents :</p><ul>
+<li>Crée le répertoire de stockage si nécessaire.</li>
+<li>Sauvegarde les données sous forme de fichier JSON.</li>
+<li>Génère le PDF en remplissant les champs du modèle avec les données fournies.</li>
+<li>Retourne le fichier PDF généré en téléchargement.</li>
+</ul>
+<p>Types de documents supportés :</p><ul>
+<li>cerfa_15497-03 : Formulaire CERFA pour fluides frigorigènes</li>
+<li>1301-SD : Attestation TVA pour travaux</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête HTTP contenant les données JSON du formulaire. Doit contenir : uid, document, et les champs spécifiques au type.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Téléchargement du PDF généré ou erreur JSON si le fichier source n'existe pas.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si une erreur survient lors de la création du fichier JSON. </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si le modèle PDF source est introuvable.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>Le PDF généré est "aplati" pour empêcher les modifications ultérieures. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Cette méthode nécessite que les modèles PDF soient présents dans storage/app/public/. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>POST avec JSON : {"uid": "12345", "document": "1301-SD", "nom": "Dupont", ...} </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l00103">103</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<a id="ae3d53a7637e2fce4fc01926e67b3f425" name="ae3d53a7637e2fce4fc01926e67b3f425"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3d53a7637e2fce4fc01926e67b3f425">&#9670;&#160;</a></span>show()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#aaa935e64a181fcabb07797d007cd4ff5">App::Http::Controllers::PdfController::show</a> </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$token</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Affiche un document PDF à partir d'un token d'accès. </p>
+<p>Cette méthode :</p><ul>
+<li>Recherche le fichier PDF correspondant au token fourni dans TokenLinksRapport.</li>
+<li>Vérifie l'existence du fichier JSON associé contenant les métadonnées.</li>
+<li>Extrait les informations du client, document et UID.</li>
+<li>Retourne la vue d'affichage PDF avec les données nécessaires.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td>Jeton unique associé au document PDF pour l'identification sécurisée.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Vue d'affichage du PDF ou erreur 404.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si aucun token valide n'est trouvé dans la base. </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si le fichier JSON associé n'existe pas.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>Cette méthode est utilisée pour l'affichage dans le navigateur, pas pour le téléchargement direct. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>TokenLinksRapport Pour la gestion des tokens et leurs liens. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>GET /pdf/show/abc123 pour afficher le PDF associé au token "abc123". </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l00055">55</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<a id="a85123e64a0a7cb3cbb1d9df6e7dcdc4e" name="a85123e64a0a7cb3cbb1d9df6e7dcdc4e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85123e64a0a7cb3cbb1d9df6e7dcdc4e">&#9670;&#160;</a></span>upload()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#a85123e64a0a7cb3cbb1d9df6e7dcdc4e">App::Http::Controllers::PdfController::upload</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Upload et traitement sécurisé de fichiers PDF pour les devis certifiés. </p>
+<p>Cette méthode gère l'upload de fichiers PDF avec validation et organisation :</p><ul>
+<li>Validation stricte du format PDF uniquement.</li>
+<li>Extraction et vérification du token depuis le nom de fichier.</li>
+<li>Vérification de l'existence du token en base de données.</li>
+<li>Organisation automatique des fichiers par organisation et devis.</li>
+<li>Création automatique de l'arborescence de stockage.</li>
+<li>Logging détaillé de toutes les opérations d'upload.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête POST avec fichier :<ul>
+<li>pdf_file : Fichier PDF à uploader (obligatoire) Le nom du fichier doit contenir le token valide.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Réponse JSON avec :<ul>
+<li>Succès : message, path, original_filename</li>
+<li>Erreur : message d'erreur et code HTTP approprié</li>
+</ul>
+</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si le fichier n'est pas un PDF valide. </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si le token n'existe pas en base. </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si la création du répertoire ou le déplacement du fichier échoue.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>L'arborescence créée suit le pattern : {organisation_id}/devis/{devis_id}_{token}/ </dd>
+<dd>
+Tous les uploads sont tracés dans les logs pour audit et sécurité. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Seuls les fichiers PDF sont acceptés pour des raisons de sécurité. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>POST /upload avec un fichier "ABC123.pdf" crée le chemin ORG001/devis/DEV456_ABC123/DEV456_ABC123.pdf </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l01226">1226</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<a id="a7505e3fe5b96e8ea9759704f8f9bc991" name="a7505e3fe5b96e8ea9759704f8f9bc991"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7505e3fe5b96e8ea9759704f8f9bc991">&#9670;&#160;</a></span>viewDevis()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/d5f/classApp_1_1Http_1_1Controllers_1_1PdfController.html#a7505e3fe5b96e8ea9759704f8f9bc991">App::Http::Controllers::PdfController::viewDevis</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$token</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Affiche la vue d'un devis PDF avec vérification du statut de certification. </p>
+<p>Cette méthode de consultation sécurisée :</p><ul>
+<li>Vérifie l'existence et la validité du token de devis.</li>
+<li>Détermine si une version certifiée du devis existe.</li>
+<li>Prépare les données nécessaires pour l'affichage dans la vue.</li>
+<li>Gère les accès non autorisés avec des erreurs 404 appropriées.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête HTTP (généralement GET). </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html">Token</a> unique d'identification du devis à consulter.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Vue 'devis_pdf' avec les données du devis ou erreur 404.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si le token n'existe pas en base.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>La vue reçoit : client, token, nomDevis, isCertified pour l'affichage conditionnel. </dd>
+<dd>
+La vérification de certification recherche un fichier avec suffixe '_certifie.pdf'. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Aucune vérification d'autorisation supplémentaire n'est effectuée au-delà de l'existence du token. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>GET /devis/ABC123 affiche le devis associé au token "ABC123" avec son statut de certification. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/d3d/PdfController_8php_source.html#l01297">1297</a> du fichier <a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a>.</p>
+
+</div>
+</div>
+<hr/>La documentation de cette classe a été générée à partir du fichier suivant :<ul>
+<li>app/Http/Controllers/<a class="el" href="../../d2/d3d/PdfController_8php_source.html">PdfController.php</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<div id="page-nav" class="page-nav-panel">
+<div id="page-nav-resize-handle"></div>
+<div id="page-nav-tree">
+<div id="page-nav-contents">
+</div><!-- page-nav-contents -->
+</div><!-- page-nav-tree -->
+</div><!-- page-nav -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../da/d54/classPdfController.html">PdfController</a></li>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>

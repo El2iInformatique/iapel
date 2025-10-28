@@ -1,0 +1,427 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: Référence de la classe BiController</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('df/d98/classBiController.html','../../','d9/d50/classBiController-members'); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">Référence de la classe BiController</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>Contrôleur principal de gestion des documents et rapports d’intervention.  
+ <a href="#details">Plus de détails...</a></p>
+<div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de BiController:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+<div class="center"><!-- SVG 0 --></div>
+</div>
+<div id="dynsection-1" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe de collaboration de BiController:</div>
+<div id="dynsection-1-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-1-content" class="dyncontent" style="display:none;">
+<div class="center"><!-- SVG 1 --></div>
+</div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:ad10af972a494c2383825ed030992c3de" id="r_ad10af972a494c2383825ed030992c3de"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad10af972a494c2383825ed030992c3de">check</a> ( $client, $document, $uid, class Request $request)</td></tr>
+<tr class="memdesc:ad10af972a494c2383825ed030992c3de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vérifie la présence des fichiers JSON et PDF d’un document.  <br /></td></tr>
+<tr class="memitem:affc089078695383d91778ad0f8a44213" id="r_affc089078695383d91778ad0f8a44213"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#affc089078695383d91778ad0f8a44213">createJson</a> (class Request $request)</td></tr>
+<tr class="memdesc:affc089078695383d91778ad0f8a44213"><td class="mdescLeft">&#160;</td><td class="mdescRight">Crée un fichier JSON et un token associé pour un document client.  <br /></td></tr>
+<tr class="memitem:aee697cab5a6d1a13a43f4c945356588b" id="r_aee697cab5a6d1a13a43f4c945356588b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aee697cab5a6d1a13a43f4c945356588b">delete</a> (class Request $request, $token)</td></tr>
+<tr class="memdesc:aee697cab5a6d1a13a43f4c945356588b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Supprime un document spécifique.  <br /></td></tr>
+<tr class="memitem:ab9da1a30d9b5d57fc69bcd45a046ab7f" id="r_ab9da1a30d9b5d57fc69bcd45a046ab7f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab9da1a30d9b5d57fc69bcd45a046ab7f">download</a> ( $token)</td></tr>
+<tr class="memdesc:ab9da1a30d9b5d57fc69bcd45a046ab7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Télécharge le fichier PDF correspondant à un token donné.  <br /></td></tr>
+<tr class="memitem:a13231ff7179936b0717fa2f2bbbe93b3" id="r_a13231ff7179936b0717fa2f2bbbe93b3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a13231ff7179936b0717fa2f2bbbe93b3">getDocuments</a> ( $client)</td></tr>
+<tr class="memdesc:a13231ff7179936b0717fa2f2bbbe93b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Récupère la liste des documents d’un client.  <br /></td></tr>
+<tr class="memitem:a02cb99d094ac04c7970b7c318e330aad" id="r_a02cb99d094ac04c7970b7c318e330aad"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a02cb99d094ac04c7970b7c318e330aad">listSavedDocs</a> ( $entreprise, class Request $request)</td></tr>
+<tr class="memdesc:a02cb99d094ac04c7970b7c318e330aad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Liste les documents sauvegardés pour un client.  <br /></td></tr>
+<tr class="memitem:a4aa636a889a524b818cf194e7457ca77" id="r_a4aa636a889a524b818cf194e7457ca77"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4aa636a889a524b818cf194e7457ca77">show</a> ( $token)</td></tr>
+<tr class="memdesc:a4aa636a889a524b818cf194e7457ca77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Affiche la vue HTML d’un document en fonction de son token.  <br /></td></tr>
+<tr class="memitem:a4cd4af227550ff0311a427a860477d3e" id="r_a4cd4af227550ff0311a427a860477d3e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4cd4af227550ff0311a427a860477d3e">submit</a> (class Request $request, $token)</td></tr>
+<tr class="memdesc:a4cd4af227550ff0311a427a860477d3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Soumet un rapport d’intervention au serveur.  <br /></td></tr>
+</table>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
+<div class="textblock"><p>Contrôleur principal de gestion des documents et rapports d’intervention. </p>
+<p>Cette classe gère :</p><ul>
+<li>La création, lecture, et suppression des fichiers JSON liés aux documents.</li>
+<li>La génération et vérification des tokens.</li>
+<li>Le téléchargement et la soumission des rapports d’intervention.</li>
+<li>La liste et le statut des documents sauvegardés. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00030">30</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
+<a id="ad10af972a494c2383825ed030992c3de" name="ad10af972a494c2383825ed030992c3de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad10af972a494c2383825ed030992c3de">&#9670;&#160;</a></span>check()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#a81c840016184f5450e481f4b7ae95a77">App::Http::Controllers::BiController::check</a> </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$client</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$document</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$uid</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Vérifie la présence des fichiers JSON et PDF d’un document. </p>
+<p>Vérifie si un document (identifié par client, document, UID) possède les fichiers nécessaires dans le stockage.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$client</td><td>Nom du client. </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$document</td><td>Nom du document. </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$uid</td><td>Identifiant unique. </td></tr>
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête contenant le token secret d’accès. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Statut de la présence des fichiers. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00204">204</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<a id="affc089078695383d91778ad0f8a44213" name="affc089078695383d91778ad0f8a44213"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affc089078695383d91778ad0f8a44213">&#9670;&#160;</a></span>createJson()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#affc089078695383d91778ad0f8a44213">App::Http::Controllers::BiController::createJson</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Crée un fichier JSON et un token associé pour un document client. </p>
+<p>Génère un identifiant unique (UID), crée la structure du document, et associe un token pour l’accès sécurisé à ce document.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête HTTP contenant les données du document. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Contient le token et l’URL d’accès BI. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00068">68</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<a id="aee697cab5a6d1a13a43f4c945356588b" name="aee697cab5a6d1a13a43f4c945356588b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee697cab5a6d1a13a43f4c945356588b">&#9670;&#160;</a></span>delete()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#aee697cab5a6d1a13a43f4c945356588b">App::Http::Controllers::BiController::delete</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$token</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Supprime un document spécifique. </p>
+<p>Supprime les fichiers JSON et PDF correspondant à un document donné et nettoie les métadonnées associées.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Contient les informations du document à supprimer. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Confirmation de la suppression. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00679">679</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<a id="ab9da1a30d9b5d57fc69bcd45a046ab7f" name="ab9da1a30d9b5d57fc69bcd45a046ab7f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9da1a30d9b5d57fc69bcd45a046ab7f">&#9670;&#160;</a></span>download()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#a9181c67de0da8e35482fedd18feca705">App::Http::Controllers::BiController::download</a> </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$token</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Télécharge le fichier PDF correspondant à un token donné. </p>
+<p>Permet à l’utilisateur de récupérer le document PDF associé à un token d’accès valide.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html">Token</a> du document. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>\Symfony\Component\HttpFoundation\BinaryFileResponse Fichier PDF téléchargé. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00163">163</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<a id="a13231ff7179936b0717fa2f2bbbe93b3" name="a13231ff7179936b0717fa2f2bbbe93b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13231ff7179936b0717fa2f2bbbe93b3">&#9670;&#160;</a></span>getDocuments()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#a089137830e64ad9a59f202724dad6cb9">App::Http::Controllers::BiController::getDocuments</a> </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$client</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Récupère la liste des documents d’un client. </p>
+<p>Cette méthode lit le fichier JSON correspondant au client spécifié et renvoie la liste de ses documents.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$client</td><td>Nom du client. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Liste des documents ou message d’erreur. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00041">41</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<a id="a02cb99d094ac04c7970b7c318e330aad" name="a02cb99d094ac04c7970b7c318e330aad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a02cb99d094ac04c7970b7c318e330aad">&#9670;&#160;</a></span>listSavedDocs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#a1ed62fb4d43832be68cd47a14f3f297b">App::Http::Controllers::BiController::listSavedDocs</a> </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$entreprise</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Liste les documents sauvegardés pour un client. </p>
+<p>Retourne la liste des rapports et documents disponibles dans le répertoire du client spécifié.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$client</td><td>Nom du client. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Liste des fichiers enregistrés. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00499">499</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<a id="a4aa636a889a524b818cf194e7457ca77" name="a4aa636a889a524b818cf194e7457ca77"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4aa636a889a524b818cf194e7457ca77">&#9670;&#160;</a></span>show()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#a07e3020bd02ae82ca3afef2e7f06cd4d">App::Http::Controllers::BiController::show</a> </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$token</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Affiche la vue HTML d’un document en fonction de son token. </p>
+<p>Charge et affiche la vue correspondant au document stocké à partir des données associées au token fourni.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html">Token</a> du document. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>\Illuminate\View\View Vue HTML du document. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00237">237</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<a id="a4cd4af227550ff0311a427a860477d3e" name="a4cd4af227550ff0311a427a860477d3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cd4af227550ff0311a427a860477d3e">&#9670;&#160;</a></span>submit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController.html#a4cd4af227550ff0311a427a860477d3e">App::Http::Controllers::BiController::submit</a> </td>
+          <td>(</td>
+          <td class="paramtype">class Request</td>          <td class="paramname"><span class="paramname"><em>$request</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$token</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Soumet un rapport d’intervention au serveur. </p>
+<p>Enregistre le fichier PDF envoyé par le front-end, le lie au token correspondant et met à jour le statut du document.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Contient les fichiers et les métadonnées du rapport. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Résultat de la soumission. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00285">285</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+
+</div>
+</div>
+<hr/>La documentation de cette classe a été générée à partir du fichier suivant :<ul>
+<li>app/Http/Controllers/<a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<div id="page-nav" class="page-nav-panel">
+<div id="page-nav-resize-handle"></div>
+<div id="page-nav-tree">
+<div id="page-nav-contents">
+</div><!-- page-nav-contents -->
+</div><!-- page-nav-tree -->
+</div><!-- page-nav -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../df/d98/classBiController.html">BiController</a></li>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>

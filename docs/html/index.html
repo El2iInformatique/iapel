@@ -1,0 +1,461 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: IApel</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('index.html','',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="header">
+  <div class="headertitle"><div class="title">IApel </div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p><a class="anchor" id="md_README"></a></p>
+<p>Application web principalement en PHP avec des vues Blade — très probablement un projet Laravel — destinée à être déployée dans un environnement serveur classique (PHP + base de données). Ce dépôt contient majoritairement du code PHP et Blade, avec un peu de JavaScript/CSS pour l’interface, et quelques scripts Python éventuels d’outillage.</p>
+<ul>
+<li>Dépôt: <a href="https://github.com/El2iInformatique/iapel">El2iInformatique/iapel</a></li>
+<li>Branche par défaut: <span class="tt">main</span></li>
+<li>Langages détectés:<ul>
+<li>PHP (code serveur, logique métier, Artisan, migrations…)</li>
+<li>Blade (templates côté serveur)</li>
+<li>JavaScript et CSS (front minimal)</li>
+<li>Python (scripts d’outillage éventuels)</li>
+</ul>
+</li>
+</ul>
+<blockquote class="doxtable">
+<p>Remarque: Cette documentation est structurée pour un projet Laravel standard. Adaptez les sections marquées “optionnel/si présent” selon le contenu exact du dépôt (services, policies, jobs, etc.). </p>
+</blockquote>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Sommaire</h1>
+<ul>
+<li>Aperçu</li>
+<li>Architecture et organisation du code</li>
+<li>Prérequis</li>
+<li>Installation et démarrage rapide</li>
+<li>Configuration (.env)</li>
+<li>Bases de données et migrations</li>
+<li>Développement</li>
+<li>Tests</li>
+<li>Qualité, style et sécurité</li>
+<li>Build front (optionnel)</li>
+<li>Tâches planifiées et files (optionnel)</li>
+<li>Journalisation et observabilité</li>
+<li>Performance et cache</li>
+<li>Déploiement</li>
+<li>Dépannage (FAQ)</li>
+<li>Contribuer</li>
+<li>Licence</li>
+<li>Crédits</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+Aperçu</h1>
+<p>iapel est une application web écrite principalement en PHP, avec des templates Blade et un front léger. L’empilement technique est cohérent avec un framework Laravel moderne:</p>
+<ul>
+<li>Contrôleurs HTTP et/ou API</li>
+<li>Modèles Eloquent (ORM)</li>
+<li>Vues Blade (<span class="tt">resources/views</span>)</li>
+<li>Routage dans <span class="tt"><a class="el" href="d0/dc1/web_8php.html">routes/web.php</a></span> (et éventuellement <span class="tt"><a class="el" href="dd/d15/api_8php.html">routes/api.php</a></span>)</li>
+<li>Configuration centralisée dans <span class="tt">config/</span></li>
+<li>Migrations et seeding dans <span class="tt">database/</span></li>
+</ul>
+<p>Architecture logique (schéma simplifié):</p>
+<div class="fragment"><div class="line">Client (navigateur)</div>
+<div class="line">   |</div>
+<div class="line">   v</div>
+<div class="line">Routes HTTP (web/api) --&gt; Middleware --&gt; Contrôleurs</div>
+<div class="line">                                          | </div>
+<div class="line">                                          v</div>
+<div class="line">                                   Services (optionnel)</div>
+<div class="line">                                          |</div>
+<div class="line">                                          v</div>
+<div class="line">                                       Modèles (Eloquent) &lt;--&gt; Base de données</div>
+<div class="line">                                          |</div>
+<div class="line">                                          v</div>
+<div class="line">                                      Vues Blade (si web)</div>
+</div><!-- fragment --><hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
+Architecture et organisation du code</h1>
+<p>Arborescence Laravel typique (adaptée au projet):</p>
+<div class="fragment"><div class="line">app/</div>
+<div class="line">  Http/</div>
+<div class="line">    Controllers/         # Contrôleurs (web/API)</div>
+<div class="line">    Middleware/          # Middleware HTTP</div>
+<div class="line">    Requests/            # Form Requests (validation)</div>
+<div class="line">  Models/                # Modèles Eloquent</div>
+<div class="line">  Policies/              # Politiques d&#39;autorisation (optionnel)</div>
+<div class="line">  Services/              # Services applicatifs (optionnel)</div>
+<div class="line">  Jobs/                  # Tâches asynchrones (optionnel)</div>
+<div class="line">  Events/, Listeners/    # Événements/Déclencheurs (optionnel)</div>
+<div class="line"> </div>
+<div class="line">bootstrap/               # Initialisation du framework</div>
+<div class="line">config/                  # Fichiers de configuration</div>
+<div class="line">database/</div>
+<div class="line">  migrations/            # Migrations</div>
+<div class="line">  seeders/               # Seeders</div>
+<div class="line">  factories/             # Factories pour tests/seeding</div>
+<div class="line">public/                  # Document root serveur web (assets, index.php)</div>
+<div class="line">resources/</div>
+<div class="line">  views/                 # Templates Blade</div>
+<div class="line">  js/, css/              # Front-end (si Vite/Laravel Mix)</div>
+<div class="line">routes/</div>
+<div class="line">  web.php                # Routes web</div>
+<div class="line">  api.php                # Routes API (optionnel)</div>
+<div class="line">storage/</div>
+<div class="line">  app/, logs/, framework/ # Fichiers générés et logs</div>
+<div class="line">tests/                   # Tests (Feature/Unit)</div>
+<div class="line">artisan                  # CLI Laravel</div>
+<div class="line">composer.json            # Dépendances PHP</div>
+<div class="line">package.json             # Dépendances front (si présent)</div>
+</div><!-- fragment --><p>Principes clés:</p><ul>
+<li>Validation via Form Requests dans <span class="tt">app/Http/Requests</span>.</li>
+<li>Autorisation via Policies/Gates dans <span class="tt">app/Policies</span>/<span class="tt">AuthServiceProvider</span>.</li>
+<li>Requêtes BD via Eloquent (relations, scopes).</li>
+<li>Séparation de la logique métier dans <span class="tt">app/Services</span> (si présente) pour garder des contrôleurs fins.</li>
+<li>Tâches asynchrones via <span class="tt">Jobs</span> et <span class="tt">Queues</span> (si présent).</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
+Prérequis</h1>
+<ul>
+<li>PHP (version selon <span class="tt">composer.json</span>; pour les versions Laravel récentes, PHP &gt;= 8.1/8.2)</li>
+<li>Composer</li>
+<li>Base de données: MySQL/MariaDB ou PostgreSQL</li>
+<li>Node.js + npm/yarn (si build front)</li>
+<li>Redis (optionnel: sessions, cache, queues)</li>
+<li>Git</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
+Installation et démarrage rapide</h1>
+<p>1) Cloner le dépôt </p><div class="fragment"><div class="line">git clone https://github.com/El2iInformatique/iapel.git</div>
+<div class="line">cd iapel</div>
+</div><!-- fragment --><p>2) Dépendances PHP </p><div class="fragment"><div class="line">composer install</div>
+</div><!-- fragment --><p>3) Variables d’environnement </p><div class="fragment"><div class="line">cp .env.example .env</div>
+<div class="line">php artisan key:generate</div>
+</div><!-- fragment --><p>4) Configurer la base de données dans <span class="tt">.env</span> </p><div class="fragment"><div class="line">DB_CONNECTION=mysql</div>
+<div class="line">DB_HOST=127.0.0.1</div>
+<div class="line">DB_PORT=3306</div>
+<div class="line">DB_DATABASE=iapel</div>
+<div class="line">DB_USERNAME=your_user</div>
+<div class="line">DB_PASSWORD=your_password</div>
+</div><!-- fragment --><p>5) Migrations + Seeders (si disponibles) </p><div class="fragment"><div class="line">php artisan migrate --seed</div>
+</div><!-- fragment --><p>6) Lier le stockage (pour les uploads) </p><div class="fragment"><div class="line">php artisan storage:link</div>
+</div><!-- fragment --><p>7) (Optionnel) Dépendances front + build </p><div class="fragment"><div class="line">npm install</div>
+<div class="line">npm run build   # ou: npm run dev</div>
+</div><!-- fragment --><p>8) Lancer le serveur de dev </p><div class="fragment"><div class="line">php artisan serve</div>
+<div class="line"># → http://127.0.0.1:8000</div>
+</div><!-- fragment --><hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
+Configuration (.env)</h1>
+<p>Variables communes (adaptez selon vos besoins):</p>
+<div class="fragment"><div class="line">APP_NAME=iapel</div>
+<div class="line">APP_ENV=local</div>
+<div class="line">APP_KEY=base64:...</div>
+<div class="line">APP_DEBUG=true</div>
+<div class="line">APP_URL=http://localhost</div>
+<div class="line"> </div>
+<div class="line">LOG_CHANNEL=stack</div>
+<div class="line">LOG_LEVEL=debug</div>
+<div class="line"> </div>
+<div class="line">DB_CONNECTION=mysql</div>
+<div class="line">DB_HOST=127.0.0.1</div>
+<div class="line">DB_PORT=3306</div>
+<div class="line">DB_DATABASE=iapel</div>
+<div class="line">DB_USERNAME=root</div>
+<div class="line">DB_PASSWORD=</div>
+<div class="line"> </div>
+<div class="line">BROADCAST_DRIVER=log</div>
+<div class="line">CACHE_DRIVER=file</div>
+<div class="line">FILESYSTEM_DISK=public</div>
+<div class="line">QUEUE_CONNECTION=sync</div>
+<div class="line">SESSION_DRIVER=file</div>
+<div class="line">SESSION_LIFETIME=120</div>
+<div class="line"> </div>
+<div class="line">REDIS_HOST=127.0.0.1</div>
+<div class="line">REDIS_PASSWORD=null</div>
+<div class="line">REDIS_PORT=6379</div>
+<div class="line"> </div>
+<div class="line">MAIL_MAILER=smtp</div>
+<div class="line">MAIL_HOST=smtp.example.com</div>
+<div class="line">MAIL_PORT=587</div>
+<div class="line">MAIL_USERNAME=null</div>
+<div class="line">MAIL_PASSWORD=null</div>
+<div class="line">MAIL_ENCRYPTION=tls</div>
+<div class="line">MAIL_FROM_ADDRESS=no-reply@example.com</div>
+<div class="line">MAIL_FROM_NAME=&quot;${APP_NAME}&quot;</div>
+</div><!-- fragment --><ul>
+<li>Si stockage S3: configurez <span class="tt">AWS_ACCESS_KEY_ID</span>, <span class="tt">AWS_SECRET_ACCESS_KEY</span>, <span class="tt">AWS_DEFAULT_REGION</span>, <span class="tt">AWS_BUCKET</span>.</li>
+<li>Si queues asynchrones: <span class="tt">QUEUE_CONNECTION=redis</span> et Redis configuré.</li>
+<li>Si vous exposez une API: ajoutez les clés d’authentification (JWT, Sanctum/Passport, etc.).</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
+Bases de données et migrations</h1>
+<ul>
+<li>Créez la base.</li>
+<li>Exécutez les migrations: <span class="tt">php artisan migrate</span>.</li>
+<li>Seeders de données de démo: <span class="tt">php artisan db:seed</span>.</li>
+<li>Réinitialiser en dev: <span class="tt">php artisan migrate:fresh --seed</span>.</li>
+</ul>
+<p>Conventions:</p><ul>
+<li>Clés primaires auto-incrémentées, timestamps <span class="tt">created_at/updated_at</span>.</li>
+<li>Contrainte d’intégrité via migrations (foreign keys), index sur colonnes fréquemment filtrées.</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
+Développement</h1>
+<p>Routage:</p><ul>
+<li>Web: <span class="tt"><a class="el" href="d0/dc1/web_8php.html">routes/web.php</a></span></li>
+<li>API (si présent): <span class="tt"><a class="el" href="dd/d15/api_8php.html">routes/api.php</a></span> (pensez aux middlewares <span class="tt">auth:sanctum</span> ou <span class="tt">throttle</span>)</li>
+</ul>
+<p>Contrôleurs:</p><ul>
+<li>Regroupez les actions CRUD par ressource.</li>
+<li>Utilisez l’injection de dépendance et le route-model binding.</li>
+</ul>
+<p>Validation:</p><ul>
+<li>Créez des Form Requests dans <span class="tt">app/Http/Requests</span> pour centraliser les règles.</li>
+<li>Normalisez les messages d’erreur (localisation <span class="tt">resources/lang</span> si nécessaire).</li>
+</ul>
+<p>Vues:</p><ul>
+<li>Blade dans <span class="tt">resources/views</span>.</li>
+<li>Layouts partagés (<span class="tt">layouts/app.blade.php</span>), composants Blade pour réutilisables.</li>
+</ul>
+<p>Services (optionnel):</p><ul>
+<li>Encapsulez les règles métier complexes dans <span class="tt">app/Services</span>.</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
+Tests</h1>
+<ul>
+<li>Cadre de test: PHPUnit (par défaut Laravel). Si Pest est utilisé, adaptez les commandes.</li>
+<li>Lancer tous les tests: <div class="fragment"><div class="line">php artisan test</div>
+<div class="line"># ou</div>
+<div class="line">./vendor/bin/phpunit</div>
+</div><!-- fragment --></li>
+<li>Tests de base de données avec transactions ou en mémoire (SQLite) pour la rapidité.</li>
+<li>Factories et seeders pour préparer les données.</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md20"></a>
+Qualité, style et sécurité</h1>
+<ul>
+<li>Style PHP: PSR-12</li>
+<li>Outils (optionnels selon le projet):<ul>
+<li>Laravel Pint ou PHP-CS-Fixer: formatage</li>
+<li>PHPStan/Psalm: analyse statique</li>
+<li>Rector: refactoring</li>
+</ul>
+</li>
+<li>Sécurité:<ul>
+<li>CSRF pour formulaires web (middleware par défaut).</li>
+<li>XSS: échapper les données dans Blade (<span class="tt">{{ }}</span>).</li>
+<li>Validation stricte des entrées (Form Requests).</li>
+<li>Rôles/permissions via Policies ou packages dédiés (si présent).</li>
+<li>Entêtes de sécurité (via config serveur et middleware).</li>
+</ul>
+</li>
+<li>Secrets:<ul>
+<li>Jamais commiter de secrets. Utilisez <span class="tt">.env</span> et un gestionnaire de secrets en prod.</li>
+</ul>
+</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md22"></a>
+Build front (optionnel)</h1>
+<p>Si le projet utilise Vite/Laravel Mix:</p><ul>
+<li>Dev: <div class="fragment"><div class="line">npm run dev</div>
+</div><!-- fragment --></li>
+<li>Production: <div class="fragment"><div class="line">npm run build</div>
+</div><!-- fragment --></li>
+<li>Référence des assets dans Blade via les helpers Vite/Laravel (<span class="tt">@vite</span>, <span class="tt">mix()</span>).</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md24"></a>
+Tâches planifiées et files (optionnel)</h1>
+<ul>
+<li>Cron Laravel:<ul>
+<li>Créez une tâche cron pour exécuter <span class="tt">php artisan schedule:run</span> chaque minute.</li>
+</ul>
+</li>
+<li>Queues:<ul>
+<li>Démarrez un worker: <span class="tt">php artisan queue:work</span></li>
+<li>Superviser en prod via Supervisor ou systemd.</li>
+</ul>
+</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md26"></a>
+Journalisation et observabilité</h1>
+<ul>
+<li>Logs dans <span class="tt">storage/logs/laravel.log</span> (ou via <span class="tt">stack</span> vers syslog/Cloud).</li>
+<li>Niveaux de log par environnement (DEBUG en local, INFO/WARNING/ERROR en prod).</li>
+<li>Observabilité (optionnel):<ul>
+<li>Sentry/Bugsnag pour les erreurs</li>
+<li>Laravel Telescope pour le dev (à restreindre hors local)</li>
+</ul>
+</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md28"></a>
+Performance et cache</h1>
+<ul>
+<li>Cache de configuration: <div class="fragment"><div class="line">php artisan config:cache</div>
+</div><!-- fragment --></li>
+<li>Cache des routes: <div class="fragment"><div class="line">php artisan route:cache</div>
+</div><!-- fragment --></li>
+<li>Cache des vues: <div class="fragment"><div class="line">php artisan view:cache</div>
+</div><!-- fragment --></li>
+<li>OPcache activé en production.</li>
+<li>Utilisez Redis pour sessions/cache si charge élevée.</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md30"></a>
+Déploiement</h1>
+<p>Check-list production: 1) Synchroniser le code (git pull/CI CD) 2) Dépendances PHP: </p><div class="fragment"><div class="line">composer install --no-dev --prefer-dist --optimize-autoloader</div>
+</div><!-- fragment --><p> 3) Build front (si nécessaire): </p><div class="fragment"><div class="line">npm ci</div>
+<div class="line">npm run build</div>
+</div><!-- fragment --><p> 4) Migrations: </p><div class="fragment"><div class="line">php artisan migrate --force</div>
+</div><!-- fragment --><p> 5) Caches: </p><div class="fragment"><div class="line">php artisan config:cache</div>
+<div class="line">php artisan route:cache</div>
+<div class="line">php artisan view:cache</div>
+</div><!-- fragment --><p> 6) Lier le stockage: </p><div class="fragment"><div class="line">php artisan storage:link</div>
+</div><!-- fragment --><p> 7) Droits d’accès:</p><ul>
+<li>Le user du serveur web doit pouvoir écrire dans <span class="tt">storage/</span> et <span class="tt">bootstrap/cache/</span>.</li>
+</ul>
+<p>8) Superviser:</p><ul>
+<li><span class="tt">queue:work</span>, <span class="tt">schedule:run</span>, monitoring de la santé (HTTP 200/5xx, temps de réponse, erreurs).</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md32"></a>
+Dépannage (FAQ)</h1>
+<ul>
+<li>Erreur “No application encryption key has been specified”:<ul>
+<li>Exécutez <span class="tt">php artisan key:generate</span> et vérifiez <span class="tt">APP_KEY</span> dans <span class="tt">.env</span>.</li>
+</ul>
+</li>
+<li>500 en prod mais pas en local:<ul>
+<li>Vérifiez <span class="tt">APP_DEBUG=false</span>, les logs dans <span class="tt">storage/logs</span>, les permissions et <span class="tt">config:cache</span>.</li>
+</ul>
+</li>
+<li>Problèmes de cache après déploiement:<ul>
+<li><span class="tt">php artisan optimize:clear</span> puis régénérez les caches.</li>
+</ul>
+</li>
+<li>Assets qui ne se chargent pas:<ul>
+<li>Vérifiez le build front, la publication des assets et <span class="tt">APP_URL</span>.</li>
+</ul>
+</li>
+<li>Migrations échouent:<ul>
+<li>Vérifiez l’utilisateur/les droits DB et la version du SGBD.</li>
+</ul>
+</li>
+</ul>
+<hr  />
+<h1 class="doxsection"><a class="anchor" id="autotoc_md34"></a>
+Crédits</h1>
+<ul>
+<li>Propriétaire: <a href="https://github.com/El2iInformatique">El2iInformatique</a></li>
+<li>Projet: iapel </li>
+</ul>
+</div></div><!-- PageDoc -->
+<a href="doxygen_crawl.html"></a>
+</div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>
