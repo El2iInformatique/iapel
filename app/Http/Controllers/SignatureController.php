@@ -175,8 +175,26 @@ class SignatureController extends Controller
                 // Calcul des positions pour centrer dans le carré
                 $xImage = $xSignature / $ratioConversion; 
                 $yImage = $ySignature / $ratioConversion;
-                $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-                \Log::info("DEBUG: Image signature ajoutée au PDF");
+                
+                \Log::info("DEBUG: Positions finales pour l'image", [
+                    'xImage' => $xImage,
+                    'yImage' => $yImage,
+                    'ratioConversion' => $ratioConversion
+                ]);
+                
+                \Log::info("DEBUG: Tentative d'ajout de l'image au PDF");
+                
+                try {
+                    $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+                    \Log::info("DEBUG: Image signature ajoutée au PDF avec succès");
+                } catch (\Exception $e) {
+                    \Log::error("DEBUG: Erreur lors de l'ajout de l'image", [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    throw $e;
+                }
 
                 /** Mettre page de fin ici */
 
