@@ -12,10 +12,49 @@ use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @class SignatureController
+ * @brief Gère l'affichage et le traitement des signatures électroniques pour les devis.
+ *
+ * Ce contrôleur centralise toutes les opérations liées à la signature de documents :
+ * - Affichage de l'interface de signature avec vérification des tokens.
+ * - Traitement et intégration des signatures numériques dans les PDF.
+ * - Génération de documents PDF signés et certifiés électroniquement.
+ * - Gestion des états de signature (signé/non signé) avec redirection appropriée.
+ * - Certification électronique via script Python pour la validité juridique.
+ *
+ * @package App\Http\Controllers
+ * @version 2.0
+ * @author Maxime ENTZ
+ * @since 1.0
+ * @note Ce contrôleur utilise TCPDF/FPDI pour la manipulation PDF et des scripts Python pour la certification.
+ * @warning Les tokens doivent être valides et non expirés pour accéder aux fonctionnalités de signature.
+ */
 class SignatureController extends Controller
 {
 
-    // Afficher la page de signature
+    /**
+     * @brief Affiche l'interface de signature ou de téléchargement selon l'état du devis.
+     *
+     * Cette méthode détermine l'affichage approprié en fonction du statut de signature :
+     * - Vérifie la validité et l'existence du token d'accès.
+     * - Détermine si le devis a déjà été signé en cherchant le PDF certifié.
+     * - Affiche l'interface de signature si le document n'est pas encore signé.
+     * - Affiche l'interface de téléchargement si le document est déjà certifié.
+     * - Transmet toutes les données nécessaires (montants, titres) aux vues.
+     *
+     * @param string $token Token unique d'identification du devis à signer.
+     *
+     * @return mixed Vue 'signature' pour la signature ou 'signature_download' pour le téléchargement.
+     *
+     * @throws Exception Si le token n'existe pas (erreur 403).
+     *
+     * @note La vérification de signature se base sur l'existence du fichier '_certifie.pdf'.
+     * @note Les données transmises incluent : token, devis_id, organisation_id, titre, montants.
+     * @warning Aucune vérification d'expiration de token n'est actuellement effectuée (commentée).
+     * @par Exemple:
+     * GET /signature/ABC123 affiche l'interface de signature pour le token "ABC123".
+     */
     public function show($token)
     {
         $tokenEntry = Token::where('token', $token)
@@ -57,7 +96,42 @@ class SignatureController extends Controller
         }
     }
 
-    // Gérer la signature
+    /**
+     * @brief Traite la signature électronique et génère le document PDF certifié final.
+     *
+     * Cette méthode complexe gère tout le processus de signature électronique :
+     * - Validation de la signature base64 reçue du client.
+     * - Vérification et marquage du token comme utilisé.
+     * - Intégration de la signature et de la date dans le PDF à la position calculée.
+     * - Redimensionnement automatique de la signature en conservant les proportions.
+     * - Génération d'un PDF intermédiaire avec signature visuelle.
+     * - Certification électronique du document via script Python externe.
+     * - Nettoyage automatique des fichiers temporaires après traitement.
+     *
+     * Processus de positionnement :
+     * - Utilise un ratio de conversion précis (6.98) pour le placement.
+     * - Place automatiquement la date au format français (d/m/Y).
+     * - Redimensionne la signature dans un cadre 31x13 unités maximum.
+     * - Applique les modifications sur l'avant-dernière page du document.
+     *
+     * @param Request $request Requête POST contenant :
+     *                        - signature : Signature encodée en base64 (obligatoire)
+     * @param string $token Token unique d'identification du devis à signer.
+     *
+     * @return void Cette méthode ne retourne rien mais génère des fichiers sur le système.
+     *
+     * @throws Exception Si la validation de la signature échoue.
+     * @throws ProcessFailedException Si le script de certification Python échoue.
+     * @throws Exception Si une erreur survient lors de la manipulation des fichiers.
+     *
+     * @note Le ratio de conversion 6.98 est calibré spécifiquement pour les modèles PDF utilisés.
+     * @note La signature est redimensionnée automatiquement en conservant les proportions.
+     * @note Les fichiers temporaires (signature PNG, PDF signé) sont supprimés après traitement.
+     * @warning La certification électronique nécessite Python et les dépendances appropriées.
+     * @warning Les positions de signature doivent être préalablement configurées dans le token.
+     * @par Exemple:
+     * POST /signature/ABC123 avec signature base64 génère un PDF certifié.
+     */
     public function sign(Request $request, $token)
     {
         $request->validate([

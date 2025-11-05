@@ -96,6 +96,9 @@ $(function(){initNavTree('d7/d90/classApp_1_1Http_1_1Middleware_1_1TokenControll
   <div class="headertitle"><div class="title">Référence de la classe App::Http::Middleware::TokenController</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Gère la génération, validation et gestion des tokens d'accès sécurisés.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de App::Http::Middleware::TokenController:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -112,17 +115,30 @@ $(function(){initNavTree('d7/d90/classApp_1_1Http_1_1Middleware_1_1TokenControll
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:af135de3dfc7af6b9685f6a700ef24a18" id="r_af135de3dfc7af6b9685f6a700ef24a18"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af135de3dfc7af6b9685f6a700ef24a18">generate</a> (class Request $request)</td></tr>
+<tr class="memdesc:af135de3dfc7af6b9685f6a700ef24a18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Génère un token sécurisé pour l'accès à la signature de devis.  <br /></td></tr>
 <tr class="memitem:aa66a87c0e711a9cbd80c841928e57051" id="r_aa66a87c0e711a9cbd80c841928e57051"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa66a87c0e711a9cbd80c841928e57051">getToken</a> (class Request $request, $client, $document, $uid)</td></tr>
+<tr class="memdesc:aa66a87c0e711a9cbd80c841928e57051"><td class="mdescLeft">&#160;</td><td class="mdescRight">Récupère un token existant basé sur les paramètres de document.  <br /></td></tr>
 <tr class="memitem:a0980edf648f818d3e35a91f96b2f67f3" id="r_a0980edf648f818d3e35a91f96b2f67f3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0980edf648f818d3e35a91f96b2f67f3">validateToken</a> ( $token)</td></tr>
+<tr class="memdesc:a0980edf648f818d3e35a91f96b2f67f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Valide un token d'accès avant l'affichage de l'interface de signature.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Fonctions membres publiques statiques</h2></td></tr>
 <tr class="memitem:adb9d6d5f93f99ca63eb960b52aa2210d" id="r_adb9d6d5f93f99ca63eb960b52aa2210d"><td class="memItemLeft" align="right" valign="top">static&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adb9d6d5f93f99ca63eb960b52aa2210d">generateTokenRapport</a> (class Request $request, $path)</td></tr>
+<tr class="memdesc:adb9d6d5f93f99ca63eb960b52aa2210d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Génère un token temporaire pour l'accès sécurisé aux rapports PDF.  <br /></td></tr>
 <tr class="memitem:aa507c9c2b115fd46507f4c0327037040" id="r_aa507c9c2b115fd46507f4c0327037040"><td class="memItemLeft" align="right" valign="top">static&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa507c9c2b115fd46507f4c0327037040">isValideTokenRapport</a> ( $token)</td></tr>
+<tr class="memdesc:aa507c9c2b115fd46507f4c0327037040"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vérifie la validité d'un token de rapport et gère l'expiration automatique.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00016">16</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
+<div class="textblock"><p>Gère la génération, validation et gestion des tokens d'accès sécurisés. </p>
+<p>Ce contrôleur centralise toutes les opérations liées aux tokens de sécurité :</p><ul>
+<li>Génération de tokens uniques pour l'accès aux devis et rapports.</li>
+<li>Validation d'authentification via secret tokens configurés.</li>
+<li>Gestion des expirations automatiques et nettoyage des tokens périmés.</li>
+<li>Création de liens sécurisés pour l'accès aux documents PDF.</li>
+<li>Autorisation basée sur les organisations et droits administrateur. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00032">32</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="af135de3dfc7af6b9685f6a700ef24a18" name="af135de3dfc7af6b9685f6a700ef24a18"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af135de3dfc7af6b9685f6a700ef24a18">&#9670;&#160;</a></span>generate()</h2>
@@ -139,7 +155,50 @@ Fonctions membres publiques statiques</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00019">19</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
+<p>Génère un token sécurisé pour l'accès à la signature de devis. </p>
+<p>Cette méthode crée un token d'accès unique avec toutes les informations nécessaires :</p><ul>
+<li>Authentification via secret token de l'organisation ou administrateur.</li>
+<li>Validation complète des données d'entrée (montants, coordonnées, pagination).</li>
+<li>Génération d'un token aléatoire avec date d'expiration automatique.</li>
+<li>Stockage sécurisé des coordonnées de signature au format JSON.</li>
+<li>Création automatique de l'URL de signature accessible au client.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête POST contenant :<ul>
+<li>organisation_id : Identifiant de l'organisation (obligatoire)</li>
+<li>devis_id : Identifiant unique du devis (obligatoire)</li>
+<li>tiers : Nom du tiers/client (obligatoire)</li>
+<li>client_email : Email du client (obligatoire)</li>
+<li>titre : Titre/description du devis (obligatoire)</li>
+<li>montant_HT : Montant hors taxes (numérique ≥ 0)</li>
+<li>montant_TVA : Montant de la TVA (numérique ≥ 0)</li>
+<li>montant_TTC : Montant toutes taxes comprises (numérique ≥ 0)</li>
+<li>coords : Coordonnées de signature au format JSON</li>
+<li>nb_pages : Nombre de pages du document (numérique ≥ 0)</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Réponse JSON avec le token généré et l'URL de signature ou erreur.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si l'authentification échoue (403). </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si les données JSON sont malformées (400). </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si la validation des champs obligatoires échoue.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>L'en-tête 'secret-token' est obligatoire pour l'authentification. </dd>
+<dd>
+Les coordonnées doivent être un JSON valide contenant les positions de signature. </dd>
+<dd>
+Le token généré est automatiquement loggé pour audit de sécurité. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les secret tokens doivent être configurés dans le fichier <a class="el" href="../../d6/d08/secrets_8php.html">secrets.php</a>. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>POST avec secret-token header génère un token pour signature électronique. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00070">70</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
 
 </div>
 </div>
@@ -170,7 +229,30 @@ Fonctions membres publiques statiques</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00088">88</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
+<p>Génère un token temporaire pour l'accès sécurisé aux rapports PDF. </p>
+<p>Cette méthode statique crée des liens d'accès temporaires pour les rapports :</p><ul>
+<li>Génération d'un token aléatoire de 60 caractères.</li>
+<li>Association du token au chemin du fichier de rapport.</li>
+<li>Création automatique d'une entrée dans <a class="el" href="../../d7/d6e/classApp_1_1Http_1_1Middleware_1_1TokenLinksRapport.html" title="Modèle de gestion des tokens d&#39;accès aux rapports et documents d&#39;intervention.">TokenLinksRapport</a>.</li>
+<li>Gestion de l'expiration automatique selon configuration.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête HTTP (non utilisée actuellement - code commenté). </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$path</td><td>Chemin vers le fichier de rapport à protéger.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>string <a class="el" href="../../d2/d6e/classToken.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> généré pour l'accès au rapport.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>L'authentification est actuellement désactivée (code commenté). </dd>
+<dd>
+Le token est automatiquement associé au chemin fourni. </dd>
+<dd>
+La durée de validité est configurée dans le modèle <a class="el" href="../../d7/d6e/classApp_1_1Http_1_1Middleware_1_1TokenLinksRapport.html" title="Modèle de gestion des tokens d&#39;accès aux rapports et documents d&#39;intervention.">TokenLinksRapport</a>. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Cette méthode ne vérifie pas l'existence du fichier cible. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>generateTokenRapport($request, '/path/to/report.pdf') retourne un token d'accès. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00179">179</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
 
 </div>
 </div>
@@ -203,7 +285,37 @@ Fonctions membres publiques statiques</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00139">139</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
+<p>Récupère un token existant basé sur les paramètres de document. </p>
+<p>Cette méthode d'API authentifiée :</p><ul>
+<li>Authentifie la requête via secret token de l'organisation.</li>
+<li>Construit le chemin du fichier JSON à partir des paramètres.</li>
+<li>Recherche le token correspondant dans <a class="el" href="../../d7/d6e/classApp_1_1Http_1_1Middleware_1_1TokenLinksRapport.html" title="Modèle de gestion des tokens d&#39;accès aux rapports et documents d&#39;intervention.">TokenLinksRapport</a>.</li>
+<li>Retourne le token trouvé pour utilisation externe.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête GET avec en-tête secret-token requis. </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$client</td><td>Identifiant de l'organisation cliente. </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$document</td><td>Type de document (ex: BI, devis, cerfa). </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$uid</td><td>Identifiant unique du document.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Réponse JSON avec le token trouvé ou erreur d'authentification.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si l'authentification échoue (403). </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si le token n'existe pas.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>Le chemin est construit selon le pattern : app/public/{client}/{document}/{uid}/{uid}.json </dd>
+<dd>
+L'authentification suit le même système que la génération de tokens. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Cette méthode ne vérifie pas l'expiration du token trouvé. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>GET /token/CLIENT001/BI/DOC123 retourne le token associé au document. </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00275">275</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
 
 </div>
 </div>
@@ -230,9 +342,33 @@ Fonctions membres publiques statiques</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00119">119</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
+<p>Vérifie la validité d'un token de rapport et gère l'expiration automatique. </p>
+<p>Cette méthode statique de sécurité :</p><ul>
+<li>Recherche le token dans la table <a class="el" href="../../d7/d6e/classApp_1_1Http_1_1Middleware_1_1TokenLinksRapport.html" title="Modèle de gestion des tokens d&#39;accès aux rapports et documents d&#39;intervention.">TokenLinksRapport</a>.</li>
+<li>Vérifie la date d'expiration avec comparaison précise.</li>
+<li>Supprime automatiquement les tokens expirés de la base.</li>
+<li>Journalise les tentatives d'accès avec tokens invalides.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> de rapport à vérifier.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>bool True si le token est valide, False sinon.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Les tokens expirés sont automatiquement supprimés lors de la vérification. </dd>
+<dd>
+L'expiration est vérifiée avec Carbon pour une précision maximale. </dd>
+<dd>
+Les accès avec tokens invalides sont loggés pour sécurité. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Un token supprimé pour expiration ne peut plus être récupéré. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>isValideTokenRapport('ABC123') retourne true si le token existe et n'est pas expiré. </dd></dl>
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d6/da5/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2VerifTokenMiddleware_8php-example.html#a1">C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenMiddleware.php</a>, et <a class="el" href="../../d8/d51/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2VerifTokenWithHeaderMiddleware_8php-example.html#a2">C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenWithHeaderMiddleware.php</a>.</dd>
+</dl>
 
-<p class="reference">Référencé par <a class="el" href="../../dd/dda/VerifTokenMiddleware_8php_source.html#l00021">App::Http::Middleware::VerifTokenMiddleware::handle()</a>, et <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00034">App::Http::Middleware::VerifTokenWithHeaderMiddleware::VerifTokenWithHeader()</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00230">230</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
+
+<p class="reference">Référencé par <a class="el" href="../../dd/dda/VerifTokenMiddleware_8php_source.html#l00102">App::Http::Middleware::VerifTokenMiddleware::handle()</a>, et <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00163">App::Http::Middleware::VerifTokenWithHeaderMiddleware::VerifTokenWithHeader()</a>.</p>
 
 </div>
 </div>
@@ -251,7 +387,33 @@ Fonctions membres publiques statiques</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00076">76</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
+<p>Valide un token d'accès avant l'affichage de l'interface de signature. </p>
+<p>Cette méthode de sécurité vérifie :</p><ul>
+<li>L'existence du token dans la base de données.</li>
+<li>Le statut d'utilisation (non utilisé = false).</li>
+<li>La date d'expiration (non expiré).</li>
+<li>Retourne les informations du devis si valide.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> unique à valider.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Réponse JSON avec validation et ID devis ou erreur 403.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si le token est invalide, utilisé ou expiré (403).</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>Cette méthode est appelée avant l'affichage de l'interface de signature. </dd>
+<dd>
+Un token devient invalide dès qu'il est utilisé ou expire. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les tokens expirés ne sont pas automatiquement supprimés ici. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>GET /validate/ABC123 retourne la validité du token "ABC123". </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00147">147</a> du fichier <a class="el" href="../../d1/de6/TokenController_8php_source.html">TokenController.php</a>.</p>
 
 </div>
 </div>

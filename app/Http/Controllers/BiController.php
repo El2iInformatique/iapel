@@ -16,16 +16,24 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * @class BiController
- * @brief Contrôleur principal de gestion des documents et rapports d’intervention.
+ * @brief Contrôleur principal de gestion des bulletins d'intervention et rapports techniques.
  *
- * Cette classe gère :
- * - La création, lecture, et suppression des fichiers JSON liés aux documents.
- * - La génération et vérification des tokens.
- * - Le téléchargement et la soumission des rapports d’intervention.
- * - La liste et le statut des documents sauvegardés.
+ * Ce contrôleur centralise toutes les opérations liées aux documents d'intervention :
+ * - Création et gestion des fichiers JSON de données d'intervention.
+ * - Génération de tokens sécurisés pour l'accès aux rapports.
+ * - Téléchargement et affichage des PDF générés.
+ * - Soumission et validation des rapports d'intervention complétés.
+ * - Gestion des photos, signatures et compléments d'information.
+ * - Liste et suivi des documents sauvegardés par organisation.
+ * - Support des formulaires CERFA (15497, 13948-03) et rapports d'intervention.
  *
  * @package App\Http\Controllers
- * @version 1.0
+ * @version 2.0
+ * @author Maxime ENTZ
+ * @since 1.0
+ * @note Utilise le système de tokens TokenLinksRapport pour la sécurisation des accès.
+ * @note Supporte les layouts personnalisés par client via le modèle layou_client.
+ * @warning Les uploads de fichiers sont stockés dans storage/app/public organisé par client/document/uid.
  */
 class BiController extends Controller
 {

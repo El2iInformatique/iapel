@@ -96,6 +96,9 @@ $(function(){initNavTree('dc/d13/classApp_1_1Http_1_1Middleware_1_1VerifTokenWit
   <div class="headertitle"><div class="title">Référence de la classe App::Http::Middleware::VerifTokenWithHeaderMiddleware</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p><a class="el" href="../../d8/d29/namespaceApp_1_1Http_1_1Middleware.html">Middleware</a> de vérification avancée combinant token d'URL et authentification par mot de passe.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe de collaboration de App::Http::Middleware::VerifTokenWithHeaderMiddleware:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -112,8 +115,19 @@ Fonctions membres privées</h2></td></tr>
 <tr class="memitem:a0abb10f71890b81a811f8c9033175826" id="r_a0abb10f71890b81a811f8c9033175826"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0abb10f71890b81a811f8c9033175826">VerifTokenWithHeader</a> ($token, class Request $request)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00015">15</a> du fichier <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html">VerifTokenWithHeaderMiddleware.php</a>.</p>
+<div class="textblock"><p><a class="el" href="../../d8/d29/namespaceApp_1_1Http_1_1Middleware.html">Middleware</a> de vérification avancée combinant token d'URL et authentification par mot de passe. </p>
+<p>Ce middleware implémente une double vérification de sécurité pour l'accès aux documents sensibles. Il combine la validation du token d'accès (comme <a class="el" href="../../d1/d87/classApp_1_1Http_1_1Middleware_1_1VerifTokenMiddleware.html" title="Middleware de vérification des tokens d&#39;accès aux rapports et documents.">VerifTokenMiddleware</a>) avec une authentification supplémentaire via un mot de passe transmis dans les en-têtes HTTP. Cette approche multicouche offre une protection renforcée pour les opérations critiques nécessitant une autorisation élevée.</p>
+<p>Fonctionnalités principales :</p><ul>
+<li>Double authentification : token d'URL + mot de passe dans les en-têtes.</li>
+<li>Support des mots de passe spécifiques par client et mot de passe administrateur.</li>
+<li>Validation du token de rapport via <a class="el" href="../../d7/d90/classApp_1_1Http_1_1Middleware_1_1TokenController.html" title="Gère la génération, validation et gestion des tokens d&#39;accès sécurisés.">TokenController</a>.</li>
+<li>Vérification de l'existence des fichiers JSON associés.</li>
+<li>Extraction automatique des informations client depuis les données du token.</li>
+<li>Logging détaillé des tentatives d'accès pour audit de sécurité.</li>
+<li>Comparaison sécurisée des mots de passe avec hash_equals(). </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00050">50</a> du fichier <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html">VerifTokenWithHeaderMiddleware.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="a754797141d6d84cfe00a653f37361134" name="a754797141d6d84cfe00a653f37361134"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a754797141d6d84cfe00a653f37361134">&#9670;&#160;</a></span>handle()</h2>
@@ -133,16 +147,10 @@ Fonctions membres privées</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Handle an incoming request.</p>
-<dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname"></td><td></td></tr>
-  </table>
-  </dd>
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d8/d51/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2VerifTokenWithHeaderMiddleware_8php-example.html#a0">C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenWithHeaderMiddleware.php</a>.</dd>
 </dl>
-<p>Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response) $next </p>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00022">22</a> du fichier <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html">VerifTokenWithHeaderMiddleware.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00086">86</a> du fichier <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html">VerifTokenWithHeaderMiddleware.php</a>.</p>
 
 </div>
 </div>
@@ -172,10 +180,12 @@ Fonctions membres privées</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d8/d51/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2VerifTokenWithHeaderMiddleware_8php-example.html#a1">C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenWithHeaderMiddleware.php</a>.</dd>
+</dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00034">34</a> du fichier <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html">VerifTokenWithHeaderMiddleware.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00163">163</a> du fichier <a class="el" href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html">VerifTokenWithHeaderMiddleware.php</a>.</p>
 
-<p class="reference">Références <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00119">App::Http::Middleware::TokenController::isValideTokenRapport()</a>.</p>
+<p class="reference">Références <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00230">App::Http::Middleware::TokenController::isValideTokenRapport()</a>.</p>
 
 </div>
 </div>

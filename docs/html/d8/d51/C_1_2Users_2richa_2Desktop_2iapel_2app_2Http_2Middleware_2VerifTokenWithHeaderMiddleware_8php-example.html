@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenWithHeaderMiddleware.php</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('d8/d51/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2VerifTokenWithHeaderMiddleware_8php-example.html','../../',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenWithHeaderMiddleware.php</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><span class="comment">// Utilisation dans les routes (routes/web.php)</span></div>
+<div class="line">Route::delete(<span class="stringliteral">&#39;/delete/{token}&#39;</span>, [BiController::class, <span class="stringliteral">&#39;delete&#39;</span>])</div>
+<div class="line">     -&gt;middleware(<span class="stringliteral">&#39;verify.token.header&#39;</span>);</div>
+<div class="line"> </div>
+<div class="line">Route::post(<span class="stringliteral">&#39;/admin/{token}&#39;</span>, [AdminController::class, <span class="stringliteral">&#39;manage&#39;</span>])</div>
+<div class="line">     -&gt;middleware(<span class="stringliteral">&#39;verify.token.header&#39;</span>);</div>
+</div><!-- fragment --><div class="fragment"><div class="line">&lt;?php</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">namespace </span>App\Http\Middleware;</div>
+<div class="line"> </div>
+<div class="line">use Closure;</div>
+<div class="line">use App\Http\Controllers\TokenController;</div>
+<div class="line">use App\Models\TokenLinksRapport;</div>
+<div class="line"> </div>
+<div class="line">use Illuminate\Http\Request;</div>
+<div class="line">use Symfony\Component\HttpFoundation\Response;</div>
+<div class="line">use Illuminate\Support\Facades\Log;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * @class VerifTokenWithHeaderMiddleware</span></div>
+<div class="line"><span class="comment"> * @brief Middleware de vérification avancée combinant token d&#39;URL et authentification par mot de passe.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Ce middleware implémente une double vérification de sécurité pour l&#39;accès aux documents sensibles.</span></div>
+<div class="line"><span class="comment"> * Il combine la validation du token d&#39;accès (comme VerifTokenMiddleware) avec une authentification</span></div>
+<div class="line"><span class="comment"> * supplémentaire via un mot de passe transmis dans les en-têtes HTTP. Cette approche multicouche</span></div>
+<div class="line"><span class="comment"> * offre une protection renforcée pour les opérations critiques nécessitant une autorisation élevée.</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Fonctionnalités principales :</span></div>
+<div class="line"><span class="comment"> * - Double authentification : token d&#39;URL + mot de passe dans les en-têtes.</span></div>
+<div class="line"><span class="comment"> * - Support des mots de passe spécifiques par client et mot de passe administrateur.</span></div>
+<div class="line"><span class="comment"> * - Validation du token de rapport via TokenController.</span></div>
+<div class="line"><span class="comment"> * - Vérification de l&#39;existence des fichiers JSON associés.</span></div>
+<div class="line"><span class="comment"> * - Extraction automatique des informations client depuis les données du token.</span></div>
+<div class="line"><span class="comment"> * - Logging détaillé des tentatives d&#39;accès pour audit de sécurité.</span></div>
+<div class="line"><span class="comment"> * - Comparaison sécurisée des mots de passe avec hash_equals().</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @package App\Http\Middleware</span></div>
+<div class="line"><span class="comment"> * @version 1.0</span></div>
+<div class="line"><span class="comment"> * @author Maxime ENTZ</span></div>
+<div class="line"><span class="comment"> * @since 1.0</span></div>
+<div class="line"><span class="comment"> * @note Utilisé pour les opérations sensibles nécessitant une authentification renforcée.</span></div>
+<div class="line"><span class="comment"> * @note Supporte à la fois les mots de passe clients et le mot de passe administrateur global.</span></div>
+<div class="line"><span class="comment"> * @warning Requiert la configuration des secrets clients dans config/secrets.php.</span></div>
+<div class="line"><span class="comment"> * @see TokenController::isValideTokenRapport() Pour la validation des tokens.</span></div>
+<div class="line"><span class="comment"> * @see TokenLinksRapport Pour la récupération des métadonnées des tokens.</span></div>
+<div class="line"><span class="comment"> * @example</span></div>
+<div class="line"><span class="comment"> * ```php</span></div>
+<div class="line"><span class="comment"> * // Utilisation dans les routes (routes/web.php)</span></div>
+<div class="line"><span class="comment"> * Route::delete(&#39;/delete/{token}&#39;, [BiController::class, &#39;delete&#39;])</span></div>
+<div class="line"><span class="comment"> *      -&gt;middleware(&#39;verify.token.header&#39;);</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Route::post(&#39;/admin/{token}&#39;, [AdminController::class, &#39;manage&#39;])</span></div>
+<div class="line"><span class="comment"> *      -&gt;middleware(&#39;verify.token.header&#39;);</span></div>
+<div class="line"><span class="comment"> * ```</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">class </span>VerifTokenWithHeaderMiddleware</div>
+<div class="line">{<span class="comment"></span></div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Traite une requête entrante avec double vérification token + en-tête.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Cette méthode principale du middleware effectue une validation en deux étapes :</span></div>
+<div class="line"><span class="comment">     * d&#39;abord la vérification du token d&#39;URL, puis l&#39;authentification par mot de passe</span></div>
+<div class="line"><span class="comment">     * transmis dans les en-têtes HTTP. Elle assure ainsi une sécurité renforcée pour</span></div>
+<div class="line"><span class="comment">     * les opérations critiques de l&#39;application.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Le processus de vérification suit ces étapes :</span></div>
+<div class="line"><span class="comment">     * 1. Extraction du token depuis les paramètres de route.</span></div>
+<div class="line"><span class="comment">     * 2. Logging de la tentative d&#39;accès pour audit.</span></div>
+<div class="line"><span class="comment">     * 3. Appel de la méthode privée VerifTokenWithHeader() pour validation complète.</span></div>
+<div class="line"><span class="comment">     * 4. Autorisation ou refus d&#39;accès selon le résultat de validation.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @param Request $request Requête HTTP entrante contenant token et en-têtes d&#39;authentification.</span></div>
+<div class="line"><span class="comment">     * @param Closure $next Fonction de callback pour passer au middleware suivant ou au contrôleur.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @return Response Réponse HTTP (404 si échec, sinon passage au contrôleur).</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException Si validation échoue.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Requête HTTP avec en-têtes requis</span></div>
+<div class="line"><span class="comment">     * curl -H &quot;secret-token: mot_de_passe_client&quot; \</span></div>
+<div class="line"><span class="comment">     *      -X DELETE \</span></div>
+<div class="line"><span class="comment">     *      https://app.example.com/delete/abc123def456...</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Utilise la méthode privée VerifTokenWithHeader() pour la logique de validation.</span></div>
+<div class="line"><span class="comment">     * @note Logs toutes les tentatives avec le token pour traçabilité complète.</span></div>
+<div class="line"><span class="comment">     * @warning Retourne 404 au lieu de 401/403 pour masquer l&#39;existence de la ressource.</span></div>
+<div class="line"><span class="comment">     * @see VerifTokenWithHeader() Pour la logique détaillée de validation.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> function <a id="a0" name="a0"></a><a class="code hl_function" href="../../dc/d13/classApp_1_1Http_1_1Middleware_1_1VerifTokenWithHeaderMiddleware.html#a754797141d6d84cfe00a653f37361134">handle</a>(Request $request, Closure $next): Response</div>
+<div class="line">    {</div>
+<div class="line">        $token = $request-&gt;route(<span class="stringliteral">&#39;token&#39;</span>);</div>
+<div class="line">        Log::info(<span class="stringliteral">&quot;Demande de verification du token : &quot;</span> . $token);</div>
+<div class="line"> </div>
+<div class="line">        <span class="keywordflow">if</span> (!self::VerifTokenWithHeader($token, $request)) {</div>
+<div class="line">            abort(404, <span class="stringliteral">&#39;Token invalide ou mauvais mot de passe&#39;</span>);</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="keywordflow">return</span> $next($request);</div>
+<div class="line">    }</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Effectue la validation complète du token et de l&#39;authentification par en-tête.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Cette méthode privée implémente la logique centrale de validation du middleware.</span></div>
+<div class="line"><span class="comment">     * Elle vérifie successivement la présence de l&#39;en-tête d&#39;authentification, la validité</span></div>
+<div class="line"><span class="comment">     * du token, l&#39;existence des fichiers associés, et enfin la correspondance du mot de passe</span></div>
+<div class="line"><span class="comment">     * fourni avec celui configuré pour le client ou l&#39;administrateur.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Le processus de validation suit ces étapes critiques :</span></div>
+<div class="line"><span class="comment">     * 1. Vérification de la présence de l&#39;en-tête &#39;secret-token&#39;.</span></div>
+<div class="line"><span class="comment">     * 2. Validation du token via TokenController::isValideTokenRapport().</span></div>
+<div class="line"><span class="comment">     * 3. Récupération des métadonnées du token depuis TokenLinksRapport.</span></div>
+<div class="line"><span class="comment">     * 4. Vérification de l&#39;existence du fichier JSON associé.</span></div>
+<div class="line"><span class="comment">     * 5. Extraction du nom du client depuis les données JSON.</span></div>
+<div class="line"><span class="comment">     * 6. Récupération des mots de passe configurés (client + admin).</span></div>
+<div class="line"><span class="comment">     * 7. Comparaison sécurisée des mots de passe avec hash_equals().</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @param string $token Token d&#39;accès extrait de l&#39;URL de la requête.</span></div>
+<div class="line"><span class="comment">     * @param Request $request Requête HTTP contenant les en-têtes d&#39;authentification.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @return bool True si toutes les validations passent, false sinon.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @throws \Symfony\Component\HttpKernel\Exception\HttpException Avec code 401 si en-tête manquant.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Structure attendue du fichier JSON référencé par le token</span></div>
+<div class="line"><span class="comment">     * {</span></div>
+<div class="line"><span class="comment">     *   &quot;dataToken&quot;: {</span></div>
+<div class="line"><span class="comment">     *     &quot;client&quot;: &quot;entreprise1&quot;,</span></div>
+<div class="line"><span class="comment">     *     &quot;document&quot;: &quot;rapport_intervention&quot;,</span></div>
+<div class="line"><span class="comment">     *     &quot;uid&quot;: &quot;unique_id_123&quot;</span></div>
+<div class="line"><span class="comment">     *   },</span></div>
+<div class="line"><span class="comment">     *   // ... autres données du document</span></div>
+<div class="line"><span class="comment">     * }</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * // Configuration requise dans config/secrets.php</span></div>
+<div class="line"><span class="comment">     * return [</span></div>
+<div class="line"><span class="comment">     *     &#39;admin&#39; =&gt; &#39;mot_de_passe_admin_global&#39;,</span></div>
+<div class="line"><span class="comment">     *     &#39;entreprise1&#39; =&gt; &#39;mot_de_passe_entreprise1&#39;,</span></div>
+<div class="line"><span class="comment">     *     &#39;entreprise2&#39; =&gt; &#39;mot_de_passe_entreprise2&#39;,</span></div>
+<div class="line"><span class="comment">     * ];</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Test manuel de la validation</span></div>
+<div class="line"><span class="comment">     * $request = new Request();</span></div>
+<div class="line"><span class="comment">     * $request-&gt;headers-&gt;set(&#39;secret-token&#39;, &#39;mot_de_passe_correct&#39;);</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * $isValid = VerifTokenWithHeaderMiddleware::VerifTokenWithHeader(</span></div>
+<div class="line"><span class="comment">     *     &#39;abc123def456...&#39;,</span></div>
+<div class="line"><span class="comment">     *     $request</span></div>
+<div class="line"><span class="comment">     * );</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Utilise hash_equals() pour éviter les attaques de timing sur les mots de passe.</span></div>
+<div class="line"><span class="comment">     * @note Le mot de passe administrateur permet l&#39;accès à tous les documents clients.</span></div>
+<div class="line"><span class="comment">     * @note Les mots de passe client sont récupérés via config(&#39;secrets.&#39; . $client).</span></div>
+<div class="line"><span class="comment">     * @warning Les mots de passe sont loggés en clair, attention à la sécurité des logs.</span></div>
+<div class="line"><span class="comment">     * @warning Un client sans mot de passe configuré utilisera &quot;nulls&quot; par défaut.</span></div>
+<div class="line"><span class="comment">     * @see hash_equals() Pour la comparaison sécurisée des chaînes sensibles.</span></div>
+<div class="line"><span class="comment">     * @see config() Pour l&#39;accès aux configurations de mots de passe.</span></div>
+<div class="line"><span class="comment">     * @see TokenLinksRapport::where() Pour la récupération des métadonnées des tokens.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">private</span> function <a id="a1" name="a1"></a><a class="code hl_function" href="../../dc/d13/classApp_1_1Http_1_1Middleware_1_1VerifTokenWithHeaderMiddleware.html#a0abb10f71890b81a811f8c9033175826">VerifTokenWithHeader</a>($token, Request $request): bool</div>
+<div class="line">    {</div>
+<div class="line">        </div>
+<div class="line">        <span class="keywordflow">if</span> (!$request-&gt;header(<span class="stringliteral">&#39;secret-token&#39;</span>)) {</div>
+<div class="line">            abort(401, <span class="stringliteral">&quot;Mot de passe manquant&quot;</span>);</div>
+<div class="line">        }</div>
+<div class="line">        <span class="keywordflow">if</span> (!<a id="a2" name="a2"></a><a class="code hl_function" href="../../d7/d90/classApp_1_1Http_1_1Middleware_1_1TokenController.html#aa507c9c2b115fd46507f4c0327037040">TokenController::isValideTokenRapport</a>($token)) {</div>
+<div class="line">            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        $dataToken = TokenLinksRapport::where(<span class="stringliteral">&#39;token&#39;</span>, $token)-&gt;first();</div>
+<div class="line">        $filePath = storage_path( $dataToken[<span class="stringliteral">&#39;paths&#39;</span>]);</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Vérifier si le fichier existe</span></div>
+<div class="line">        <span class="keywordflow">if</span> (!file_exists($filePath)) {</div>
+<div class="line">            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Lire et décoder le fichier JSON</span></div>
+<div class="line">        $data = json_decode(file_get_contents($filePath), <span class="keyword">true</span>);</div>
+<div class="line"> </div>
+<div class="line">        $client = $data[<span class="stringliteral">&quot;dataToken&quot;</span>][<span class="stringliteral">&quot;client&quot;</span>];</div>
+<div class="line"> </div>
+<div class="line">        $secretToken = $request-&gt;header(<span class="stringliteral">&#39;secret-token&#39;</span>);</div>
+<div class="line"> </div>
+<div class="line">        $adminPassword = config(<span class="stringliteral">&#39;secrets.admin&#39;</span>);</div>
+<div class="line">        $clientPassword = config(<span class="stringliteral">&#39;secrets.&#39;</span> . $client) ?? <span class="stringliteral">&quot;nulls&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">        Log::info(<span class="stringliteral">&quot;Secret token : &quot;</span> . $secretToken);</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">        <span class="keywordflow">if</span> (!hash_equals($clientPassword,$secretToken) &amp;&amp; !hash_equals($adminPassword, $secretToken)) {</div>
+<div class="line">            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassApp_1_1Http_1_1Middleware_1_1TokenController_html_aa507c9c2b115fd46507f4c0327037040"><div class="ttname"><a href="../../d7/d90/classApp_1_1Http_1_1Middleware_1_1TokenController.html#aa507c9c2b115fd46507f4c0327037040">App::Http::Middleware::TokenController::isValideTokenRapport</a></div><div class="ttdeci">static isValideTokenRapport($token)</div><div class="ttdoc">Vérifie la validité d&#39;un token de rapport et gère l&#39;expiration automatique.</div><div class="ttdef"><b>Definition</b> <a href="../../d1/de6/TokenController_8php_source.html#l00230">TokenController.php:230</a></div></div>
+<div class="ttc" id="aclassApp_1_1Http_1_1Middleware_1_1VerifTokenWithHeaderMiddleware_html_a0abb10f71890b81a811f8c9033175826"><div class="ttname"><a href="../../dc/d13/classApp_1_1Http_1_1Middleware_1_1VerifTokenWithHeaderMiddleware.html#a0abb10f71890b81a811f8c9033175826">App::Http::Middleware::VerifTokenWithHeaderMiddleware::VerifTokenWithHeader</a></div><div class="ttdeci">VerifTokenWithHeader($token, class Request $request)</div><div class="ttdef"><b>Definition</b> <a href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00163">VerifTokenWithHeaderMiddleware.php:163</a></div></div>
+<div class="ttc" id="aclassApp_1_1Http_1_1Middleware_1_1VerifTokenWithHeaderMiddleware_html_a754797141d6d84cfe00a653f37361134"><div class="ttname"><a href="../../dc/d13/classApp_1_1Http_1_1Middleware_1_1VerifTokenWithHeaderMiddleware.html#a754797141d6d84cfe00a653f37361134">App::Http::Middleware::VerifTokenWithHeaderMiddleware::handle</a></div><div class="ttdeci">handle(class Request $request, Closure $next)</div><div class="ttdef"><b>Definition</b> <a href="../../d2/dfe/VerifTokenWithHeaderMiddleware_8php_source.html#l00086">VerifTokenWithHeaderMiddleware.php:86</a></div></div>
+</div><!-- fragment --> </div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>

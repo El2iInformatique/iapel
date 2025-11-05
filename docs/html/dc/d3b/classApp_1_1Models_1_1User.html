@@ -96,6 +96,9 @@ $(function(){initNavTree('dc/d3b/classApp_1_1Models_1_1User.html','../../','da/d
   <div class="headertitle"><div class="title">Référence de la classe App::Models::User</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Modèle d'authentification et de gestion des utilisateurs de l'application.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de App::Models::User:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -109,6 +112,13 @@ $(function(){initNavTree('dc/d3b/classApp_1_1Models_1_1User.html','../../','da/d
 <div class="center"><!-- SVG 1 --></div>
 </div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:aa55caed3d4175c9d460dc70850f7bd2e" id="r_aa55caed3d4175c9d460dc70850f7bd2e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa55caed3d4175c9d460dc70850f7bd2e">getEmailForPasswordReset</a> ()</td></tr>
+<tr class="memdesc:aa55caed3d4175c9d460dc70850f7bd2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtient l'adresse email pour la réinitialisation de mot de passe.  <br /></td></tr>
+<tr class="memitem:af2c2ffb027715ba6a83a768307705f9c" id="r_af2c2ffb027715ba6a83a768307705f9c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af2c2ffb027715ba6a83a768307705f9c">hasVerifiedEmail</a> ()</td></tr>
+<tr class="memitem:accb0294b3e76a4d0e4cb009313dc84f1" id="r_accb0294b3e76a4d0e4cb009313dc84f1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#accb0294b3e76a4d0e4cb009313dc84f1">markEmailAsVerified</a> ()</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pro-methods" class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Fonctions membres protégées</h2></td></tr>
 <tr class="memitem:ac9545b970a624867290beb22615cebe0" id="r_ac9545b970a624867290beb22615cebe0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac9545b970a624867290beb22615cebe0">casts</a> ()</td></tr>
@@ -119,8 +129,18 @@ Attributs protégés</h2></td></tr>
 <tr class="memitem:ab0c168b8631888e590af403cd66418f8" id="r_ab0c168b8631888e590af403cd66418f8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab0c168b8631888e590af403cd66418f8">$hidden</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00011">11</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
+<div class="textblock"><p>Modèle d'authentification et de gestion des utilisateurs de l'application. </p>
+<p>Ce modèle hérite de la classe <a class="el" href="../../de/d5e/classAuthenticatable.html">Authenticatable</a> de Laravel et gère tous les aspects liés aux utilisateurs de l'application IAPEL. Il fournit les fonctionnalités d'authentification, de gestion des sessions et de notification des utilisateurs.</p>
+<p>Fonctionnalités principales :</p><ul>
+<li>Authentification des utilisateurs (login/logout).</li>
+<li>Gestion des mots de passe sécurisés avec hachage automatique.</li>
+<li>Support des notifications par email.</li>
+<li>Gestion des sessions utilisateur.</li>
+<li>Support des factories pour les tests et le seeding.</li>
+<li>Protection contre l'exposition des données sensibles. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00050">50</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="ac9545b970a624867290beb22615cebe0" name="ac9545b970a624867290beb22615cebe0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac9545b970a624867290beb22615cebe0">&#9670;&#160;</a></span>casts()</h2>
@@ -144,10 +164,80 @@ Attributs protégés</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Get the attributes that should be cast.</p>
-<dl class="section return"><dt>Renvoie</dt><dd>array&lt;string, string&gt; </dd></dl>
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d2/d80/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2User_8php-example.html#a3">C:/Users/richa/Desktop/iapel/app/Models/User.php</a>.</dd>
+</dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00042">42</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00108">108</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
+
+</div>
+</div>
+<a id="aa55caed3d4175c9d460dc70850f7bd2e" name="aa55caed3d4175c9d460dc70850f7bd2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa55caed3d4175c9d460dc70850f7bd2e">&#9670;&#160;</a></span>getEmailForPasswordReset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">App::Models::User::getEmailForPasswordReset </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Obtient l'adresse email pour la réinitialisation de mot de passe. </p>
+<p>Détermine quelle adresse email utiliser pour envoyer les liens de réinitialisation de mot de passe.</p>
+<dl class="section return"><dt>Renvoie</dt><dd>string Adresse email de l'utilisateur.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Par défaut, utilise l'attribut 'email' du modèle. </dd>
+<dd>
+Peut être surchargée pour utiliser un email différent si nécessaire. </dd></dl>
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d2/d80/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2User_8php-example.html#a6">C:/Users/richa/Desktop/iapel/app/Models/User.php</a>.</dd>
+</dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00172">172</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
+
+</div>
+</div>
+<a id="af2c2ffb027715ba6a83a768307705f9c" name="af2c2ffb027715ba6a83a768307705f9c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2c2ffb027715ba6a83a768307705f9c">&#9670;&#160;</a></span>hasVerifiedEmail()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">App::Models::User::hasVerifiedEmail </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d2/d80/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2User_8php-example.html#a4">C:/Users/richa/Desktop/iapel/app/Models/User.php</a>.</dd>
+</dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00133">133</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
+
+</div>
+</div>
+<a id="accb0294b3e76a4d0e4cb009313dc84f1" name="accb0294b3e76a4d0e4cb009313dc84f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#accb0294b3e76a4d0e4cb009313dc84f1">&#9670;&#160;</a></span>markEmailAsVerified()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">App::Models::User::markEmailAsVerified </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d2/d80/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2User_8php-example.html#a5">C:/Users/richa/Desktop/iapel/app/Models/User.php</a>.</dd>
+</dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00154">154</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
 
 </div>
 </div>
@@ -176,8 +266,10 @@ Attributs protégés</h2></td></tr>
 <div class="line">        <span class="stringliteral">&#39;email&#39;</span>,</div>
 <div class="line">        <span class="stringliteral">&#39;password&#39;</span>,</div>
 <div class="line">    ]</div>
-</div><!-- fragment -->
-<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00021">21</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
+</div><!-- fragment --><dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d2/d80/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2User_8php-example.html#a1">C:/Users/richa/Desktop/iapel/app/Models/User.php</a>.</dd>
+</dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00067">67</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
 
 </div>
 </div>
@@ -204,8 +296,10 @@ Attributs protégés</h2></td></tr>
 <div class="line">        <span class="stringliteral">&#39;password&#39;</span>,</div>
 <div class="line">        <span class="stringliteral">&#39;remember_token&#39;</span>,</div>
 <div class="line">    ]</div>
-</div><!-- fragment -->
-<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00032">32</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
+</div><!-- fragment --><dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d2/d80/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2User_8php-example.html#a2">C:/Users/richa/Desktop/iapel/app/Models/User.php</a>.</dd>
+</dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../db/da2/User_8php_source.html#l00086">86</a> du fichier <a class="el" href="../../db/da2/User_8php_source.html">User.php</a>.</p>
 
 </div>
 </div>

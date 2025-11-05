@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Log;
  *
  * @package App\Http\Controllers
  * @version 2.0
- * @author Équipe de développement IAPEL
+ * @author Maxime ENTZ
  * @since 1.0
  * @note Ce contrôleur utilise la librairie TCPDF/FPDI pour manipuler les fichiers PDF.
  * @warning Les méthodes de génération nécessitent des modèles PDF préexistants dans le storage.

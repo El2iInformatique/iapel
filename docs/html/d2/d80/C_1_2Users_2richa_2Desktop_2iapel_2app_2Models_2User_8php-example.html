@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: C:/Users/richa/Desktop/iapel/app/Models/User.php</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('d2/d80/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2User_8php-example.html','../../',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">C:/Users/richa/Desktop/iapel/app/Models/User.php</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><span class="comment">// Création d&#39;un nouvel utilisateur</span></div>
+<div class="line">$user = User::create([</div>
+<div class="line">    <span class="stringliteral">&#39;name&#39;</span> =&gt; <span class="stringliteral">&#39;Jean Dupont&#39;</span>,</div>
+<div class="line">    <span class="stringliteral">&#39;email&#39;</span> =&gt; <span class="stringliteral">&#39;jean.dupont@example.com&#39;</span>,</div>
+<div class="line">    <span class="stringliteral">&#39;password&#39;</span> =&gt; <span class="stringliteral">&#39;motdepasse123&#39;</span> <span class="comment">// Sera automatiquement haché</span></div>
+<div class="line">]);</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Authentification</span></div>
+<div class="line"><span class="keywordflow">if</span> (Auth::attempt([<span class="stringliteral">&#39;email&#39;</span> =&gt; $email, <span class="stringliteral">&#39;password&#39;</span> =&gt; $password])) {</div>
+<div class="line">    <span class="comment">// Utilisateur connecté</span></div>
+<div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">&lt;?php</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">namespace </span>App\Models;</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// use Illuminate\Contracts\Auth\MustVerifyEmail;</span></div>
+<div class="line">use Illuminate\Database\Eloquent\Factories\HasFactory;</div>
+<div class="line">use Illuminate\Foundation\Auth\User as <a id="_a0" name="_a0"></a><a class="code hl_class" href="../../de/d5e/classAuthenticatable.html">Authenticatable</a>;</div>
+<div class="line">use Illuminate\Notifications\Notifiable;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * @class User</span></div>
+<div class="line"><span class="comment"> * @brief Modèle d&#39;authentification et de gestion des utilisateurs de l&#39;application.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Ce modèle hérite de la classe Authenticatable de Laravel et gère tous les aspects</span></div>
+<div class="line"><span class="comment"> * liés aux utilisateurs de l&#39;application IAPEL. Il fournit les fonctionnalités</span></div>
+<div class="line"><span class="comment"> * d&#39;authentification, de gestion des sessions et de notification des utilisateurs.</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Fonctionnalités principales :</span></div>
+<div class="line"><span class="comment"> * - Authentification des utilisateurs (login/logout).</span></div>
+<div class="line"><span class="comment"> * - Gestion des mots de passe sécurisés avec hachage automatique.</span></div>
+<div class="line"><span class="comment"> * - Support des notifications par email.</span></div>
+<div class="line"><span class="comment"> * - Gestion des sessions utilisateur.</span></div>
+<div class="line"><span class="comment"> * - Support des factories pour les tests et le seeding.</span></div>
+<div class="line"><span class="comment"> * - Protection contre l&#39;exposition des données sensibles.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @package App\Models</span></div>
+<div class="line"><span class="comment"> * @version 1.0</span></div>
+<div class="line"><span class="comment"> * @author Maxime ENTZ</span></div>
+<div class="line"><span class="comment"> * @since 1.0</span></div>
+<div class="line"><span class="comment"> * @note Utilise la table &quot;users&quot; par défaut de Laravel.</span></div>
+<div class="line"><span class="comment"> * @note Les mots de passe sont automatiquement hachés lors de l&#39;assignation.</span></div>
+<div class="line"><span class="comment"> * @note Le token de remember_me est caché lors de la sérialisation.</span></div>
+<div class="line"><span class="comment"> * @warning Ne jamais exposer les mots de passe ou tokens dans les réponses API.</span></div>
+<div class="line"><span class="comment"> * @see \Database\Factories\UserFactory Pour la génération de données de test.</span></div>
+<div class="line"><span class="comment"> * @example</span></div>
+<div class="line"><span class="comment"> * ```php</span></div>
+<div class="line"><span class="comment"> * // Création d&#39;un nouvel utilisateur</span></div>
+<div class="line"><span class="comment"> * $user = User::create([</span></div>
+<div class="line"><span class="comment"> *     &#39;name&#39; =&gt; &#39;Jean Dupont&#39;,</span></div>
+<div class="line"><span class="comment"> *     &#39;email&#39; =&gt; &#39;jean.dupont@example.com&#39;,</span></div>
+<div class="line"><span class="comment"> *     &#39;password&#39; =&gt; &#39;motdepasse123&#39; // Sera automatiquement haché</span></div>
+<div class="line"><span class="comment"> * ]);</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * // Authentification</span></div>
+<div class="line"><span class="comment"> * if (Auth::attempt([&#39;email&#39; =&gt; $email, &#39;password&#39; =&gt; $password])) {</span></div>
+<div class="line"><span class="comment"> *     // Utilisateur connecté</span></div>
+<div class="line"><span class="comment"> * }</span></div>
+<div class="line"><span class="comment"> * ```</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">class </span>User <span class="keyword">extends</span> <a class="code hl_class" href="../../de/d5e/classAuthenticatable.html">Authenticatable</a></div>
+<div class="line">{<span class="comment"></span></div>
+<div class="line"><span class="comment">    /** @use HasFactory&lt;\Database\Factories\UserFactory&gt; */</span></div>
+<div class="line">    use HasFactory, Notifiable;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Les attributs qui peuvent être assignés en masse.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Définit les champs qui peuvent être remplis lors de la création</span></div>
+<div class="line"><span class="comment">     * ou mise à jour d&#39;un utilisateur via l&#39;assignation de masse.</span></div>
+<div class="line"><span class="comment">     * Cette protection évite les vulnérabilités de type &quot;mass assignment&quot;.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @var list&lt;string&gt; Liste des attributs mass-assignables.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Le mot de passe sera automatiquement haché grâce au cast &#39;hashed&#39;.</span></div>
+<div class="line"><span class="comment">     * @warning Ne jamais ajouter des champs sensibles comme &#39;is_admin&#39; sans validation.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">protected</span> <a id="a1" name="a1"></a><a class="code hl_variable" href="../../dc/d3b/classApp_1_1Models_1_1User.html#a1c460dfee2ba912e187f5475dc54fac3">$fillable</a> = [</div>
+<div class="line">        <span class="stringliteral">&#39;name&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;email&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;password&#39;</span>,</div>
+<div class="line">    ];</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Les attributs qui doivent être cachés lors de la sérialisation.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Ces attributs ne seront pas inclus dans les réponses JSON ou</span></div>
+<div class="line"><span class="comment">     * lors de la conversion du modèle en tableau, protégeant ainsi</span></div>
+<div class="line"><span class="comment">     * les informations sensibles.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @var list&lt;string&gt; Liste des attributs à cacher.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Le password est caché pour éviter son exposition accidentelle.</span></div>
+<div class="line"><span class="comment">     * @note Le remember_token est utilisé pour la fonctionnalité &quot;Se souvenir de moi&quot;.</span></div>
+<div class="line"><span class="comment">     * @warning Ces attributs restent accessibles via les accesseurs directs ($user-&gt;password).</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">protected</span> <a id="a2" name="a2"></a><a class="code hl_variable" href="../../dc/d3b/classApp_1_1Models_1_1User.html#ab0c168b8631888e590af403cd66418f8">$hidden</a> = [</div>
+<div class="line">        <span class="stringliteral">&#39;password&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;remember_token&#39;</span>,</div>
+<div class="line">    ];</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Obtient les attributs qui doivent être castés.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Définit comment certains attributs doivent être automatiquement</span></div>
+<div class="line"><span class="comment">     * convertis lors de la récupération ou de l&#39;assignation.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @return array&lt;string, string&gt; Tableau associatif des casts à appliquer.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note &#39;email_verified_at&#39; est casté en datetime pour faciliter la manipulation des dates.</span></div>
+<div class="line"><span class="comment">     * @note &#39;password&#39; est casté en &#39;hashed&#39; pour le hachage automatique lors de l&#39;assignation.</span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * $user = new User();</span></div>
+<div class="line"><span class="comment">     * $user-&gt;password = &#39;motdepasse123&#39;; // Sera automatiquement haché</span></div>
+<div class="line"><span class="comment">     * $user-&gt;email_verified_at = now(); // Sera converti en Carbon\Carbon</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">protected</span> function <a id="a3" name="a3"></a><a class="code hl_function" href="../../dc/d3b/classApp_1_1Models_1_1User.html#ac9545b970a624867290beb22615cebe0">casts</a>(): array</div>
+<div class="line">    {</div>
+<div class="line">        <span class="keywordflow">return</span> [</div>
+<div class="line">            <span class="stringliteral">&#39;email_verified_at&#39;</span> =&gt; <span class="stringliteral">&#39;datetime&#39;</span>,</div>
+<div class="line">            <span class="stringliteral">&#39;password&#39;</span> =&gt; <span class="stringliteral">&#39;hashed&#39;</span>,</div>
+<div class="line">        ];</div>
+<div class="line">    }</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Vérifie si l&#39;utilisateur a vérifié son email.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Méthode utilitaire pour vérifier rapidement si un utilisateur</span></div>
+<div class="line"><span class="comment">     * a confirmé son adresse email.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @return bool True si l&#39;email est vérifié, false sinon.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * if ($user-&gt;hasVerifiedEmail()) {</span></div>
+<div class="line"><span class="comment">     *     // L&#39;utilisateur peut accéder aux fonctionnalités complètes</span></div>
+<div class="line"><span class="comment">     * } else {</span></div>
+<div class="line"><span class="comment">     *     // Rediriger vers la page de vérification d&#39;email</span></div>
+<div class="line"><span class="comment">     * }</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> function <a id="a4" name="a4"></a><a class="code hl_function" href="../../dc/d3b/classApp_1_1Models_1_1User.html#af2c2ffb027715ba6a83a768307705f9c">hasVerifiedEmail</a>(): bool</div>
+<div class="line">    {</div>
+<div class="line">        <span class="keywordflow">return</span> !is_null($this-&gt;email_verified_at);</div>
+<div class="line">    }</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Marque l&#39;email de l&#39;utilisateur comme vérifié.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Met à jour le timestamp de vérification d&#39;email pour indiquer</span></div>
+<div class="line"><span class="comment">     * que l&#39;utilisateur a confirmé son adresse email.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @return bool True si la mise à jour a réussi, false sinon.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Lors de la validation d&#39;un lien de vérification d&#39;email</span></div>
+<div class="line"><span class="comment">     * if ($user-&gt;markEmailAsVerified()) {</span></div>
+<div class="line"><span class="comment">     *     return redirect()-&gt;route(&#39;dashboard&#39;)-&gt;with(&#39;success&#39;, &#39;Email vérifié avec succès&#39;);</span></div>
+<div class="line"><span class="comment">     * }</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> function <a id="a5" name="a5"></a><a class="code hl_function" href="../../dc/d3b/classApp_1_1Models_1_1User.html#accb0294b3e76a4d0e4cb009313dc84f1">markEmailAsVerified</a>(): bool</div>
+<div class="line">    {</div>
+<div class="line">        <span class="keywordflow">return</span> $this-&gt;forceFill([</div>
+<div class="line">            <span class="stringliteral">&#39;email_verified_at&#39;</span> =&gt; $this-&gt;freshTimestamp(),</div>
+<div class="line">        ])-&gt;save();</div>
+<div class="line">    }</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Obtient l&#39;adresse email pour la réinitialisation de mot de passe.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Détermine quelle adresse email utiliser pour envoyer les liens</span></div>
+<div class="line"><span class="comment">     * de réinitialisation de mot de passe.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @return string Adresse email de l&#39;utilisateur.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Par défaut, utilise l&#39;attribut &#39;email&#39; du modèle.</span></div>
+<div class="line"><span class="comment">     * @note Peut être surchargée pour utiliser un email différent si nécessaire.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> function <a id="a6" name="a6"></a><a class="code hl_function" href="../../dc/d3b/classApp_1_1Models_1_1User.html#aa55caed3d4175c9d460dc70850f7bd2e">getEmailForPasswordReset</a>(): string</div>
+<div class="line">    {</div>
+<div class="line">        <span class="keywordflow">return</span> $this-&gt;email;</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassApp_1_1Models_1_1User_html_a1c460dfee2ba912e187f5475dc54fac3"><div class="ttname"><a href="../../dc/d3b/classApp_1_1Models_1_1User.html#a1c460dfee2ba912e187f5475dc54fac3">App::Models::User::$fillable</a></div><div class="ttdeci">$fillable</div><div class="ttdef"><b>Definition</b> <a href="../../db/da2/User_8php_source.html#l00067">User.php:67</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1User_html_aa55caed3d4175c9d460dc70850f7bd2e"><div class="ttname"><a href="../../dc/d3b/classApp_1_1Models_1_1User.html#aa55caed3d4175c9d460dc70850f7bd2e">App::Models::User::getEmailForPasswordReset</a></div><div class="ttdeci">getEmailForPasswordReset()</div><div class="ttdoc">Obtient l&#39;adresse email pour la réinitialisation de mot de passe.</div><div class="ttdef"><b>Definition</b> <a href="../../db/da2/User_8php_source.html#l00172">User.php:172</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1User_html_ab0c168b8631888e590af403cd66418f8"><div class="ttname"><a href="../../dc/d3b/classApp_1_1Models_1_1User.html#ab0c168b8631888e590af403cd66418f8">App::Models::User::$hidden</a></div><div class="ttdeci">$hidden</div><div class="ttdef"><b>Definition</b> <a href="../../db/da2/User_8php_source.html#l00086">User.php:86</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1User_html_ac9545b970a624867290beb22615cebe0"><div class="ttname"><a href="../../dc/d3b/classApp_1_1Models_1_1User.html#ac9545b970a624867290beb22615cebe0">App::Models::User::casts</a></div><div class="ttdeci">casts()</div><div class="ttdef"><b>Definition</b> <a href="../../db/da2/User_8php_source.html#l00108">User.php:108</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1User_html_accb0294b3e76a4d0e4cb009313dc84f1"><div class="ttname"><a href="../../dc/d3b/classApp_1_1Models_1_1User.html#accb0294b3e76a4d0e4cb009313dc84f1">App::Models::User::markEmailAsVerified</a></div><div class="ttdeci">markEmailAsVerified()</div><div class="ttdef"><b>Definition</b> <a href="../../db/da2/User_8php_source.html#l00154">User.php:154</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1User_html_af2c2ffb027715ba6a83a768307705f9c"><div class="ttname"><a href="../../dc/d3b/classApp_1_1Models_1_1User.html#af2c2ffb027715ba6a83a768307705f9c">App::Models::User::hasVerifiedEmail</a></div><div class="ttdeci">hasVerifiedEmail()</div><div class="ttdef"><b>Definition</b> <a href="../../db/da2/User_8php_source.html#l00133">User.php:133</a></div></div>
+<div class="ttc" id="aclassAuthenticatable_html"><div class="ttname"><a href="../../de/d5e/classAuthenticatable.html">Authenticatable</a></div></div>
+</div><!-- fragment --> </div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>

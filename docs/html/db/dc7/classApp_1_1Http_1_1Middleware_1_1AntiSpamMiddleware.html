@@ -96,6 +96,9 @@ $(function(){initNavTree('db/dc7/classApp_1_1Http_1_1Middleware_1_1AntiSpamMiddl
   <div class="headertitle"><div class="title">Référence de la classe App::Http::Middleware::AntiSpamMiddleware</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p><a class="el" href="../../d8/d29/namespaceApp_1_1Http_1_1Middleware.html">Middleware</a> de protection contre les attaques par déni de service et le spam.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe de collaboration de App::Http::Middleware::AntiSpamMiddleware:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -108,8 +111,18 @@ Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:afa2ada6e7c70802b8673bb748b5a6786" id="r_afa2ada6e7c70802b8673bb748b5a6786"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afa2ada6e7c70802b8673bb748b5a6786">handle</a> (class Request $request, Closure $next, int $maxAttempts=5, int $decayMinutes=1)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html#l00012">12</a> du fichier <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html">AntiSpamMiddleware.php</a>.</p>
+<div class="textblock"><p><a class="el" href="../../d8/d29/namespaceApp_1_1Http_1_1Middleware.html">Middleware</a> de protection contre les attaques par déni de service et le spam. </p>
+<p>Ce middleware implémente un système de limitation de taux (rate limiting) pour protéger l'application contre les tentatives de spam et les attaques par déni de service (DoS). Il utilise le système de cache de Laravel pour suivre le nombre de requêtes par IP et par URL, bloquant temporairement les utilisateurs qui dépassent les limites définies.</p>
+<p>Fonctionnalités principales :</p><ul>
+<li>Limitation du nombre de requêtes par IP et par route.</li>
+<li>Configuration flexible des seuils de déclenchement et de la durée de blocage.</li>
+<li>Utilisation du cache Laravel pour un suivi efficace des tentatives.</li>
+<li>Réinitialisation automatique des compteurs après expiration.</li>
+<li>Réponse HTTP 429 (Too Many Requests) conforme aux standards.</li>
+<li>Protection granulaire par route avec paramètres personnalisables. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html#l00046">46</a> du fichier <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html">AntiSpamMiddleware.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="afa2ada6e7c70802b8673bb748b5a6786" name="afa2ada6e7c70802b8673bb748b5a6786"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afa2ada6e7c70802b8673bb748b5a6786">&#9670;&#160;</a></span>handle()</h2>
@@ -139,22 +152,10 @@ Fonctions membres publiques</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Handle an incoming request.</p>
-<dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname"></td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response) $next </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramtype">int</td><td class="paramname">$maxAttempts</td><td>Le nombre maximum de tentatives de spam autorisées pour cette route. </td></tr>
-    <tr><td class="paramtype">int</td><td class="paramname">$decayMinutes</td><td>Le nombre de minutes avant que le compteur de tentatives ne soit réinitialisé. </td></tr>
-  </table>
-  </dd>
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../df/dba/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2AntiSpamMiddleware_8php-example.html#a0">C:/Users/richa/Desktop/iapel/app/Http/Middleware/AntiSpamMiddleware.php</a>.</dd>
 </dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html#l00021">21</a> du fichier <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html">AntiSpamMiddleware.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html#l00100">100</a> du fichier <a class="el" href="../../d1/d40/AntiSpamMiddleware_8php_source.html">AntiSpamMiddleware.php</a>.</p>
 
 </div>
 </div>

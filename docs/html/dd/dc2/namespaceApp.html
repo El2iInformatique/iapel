@@ -103,7 +103,13 @@ Espaces de nommage</h2></td></tr>
 <tr class="memitem:Providers" id="r_Providers"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/dd0/namespaceApp_1_1Providers.html">Providers</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock"><p>\Http\Controllers </p><dl class="section version"><dt>Version</dt><dd>1.0</dd></dl>
+<div class="textblock"><p>\Http\Controllers </p><dl class="section version"><dt>Version</dt><dd>2.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Utilise le système de tokens TokenLinksRapport pour la sécurisation des accès. </dd>
+<dd>
+Supporte les layouts personnalisés par client via le modèle layou_client. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les uploads de fichiers sont stockés dans storage/app/public organisé par client/document/uid.</dd></dl>
 <p>\Http\Controllers </p><dl class="section version"><dt>Version</dt><dd>1.0 </dd></dl>
 <dl class="section since"><dt>Depuis</dt><dd>Laravel 11.x </dd></dl>
 <dl class="section author"><dt>Auteur</dt><dd>Équipe de développement</dd></dl>
@@ -114,13 +120,98 @@ Cette classe ne doit pas être instanciée directement car elle est abstraite.</
 <dd>
 <a class="el" href="../../dc/d5f/classDevisController.html" title="Contrôleur responsable de la gestion et de la suppression des devis signés.">DevisController</a> Exemple d'implémentation concrète </dd>
 <dd>
-<a class="el" href="../../d6/d4f/classTokenController.html">TokenController</a> Exemple d'implémentation concrète</dd></dl>
+<a class="el" href="../../d6/d4f/classTokenController.html" title="Gère la génération, validation et gestion des tokens d&#39;accès sécurisés.">TokenController</a> Exemple d'implémentation concrète</dd></dl>
 <dl class="section warning"><dt>Avertissement</dt><dd>Ne pas modifier cette classe sans comprendre l'impact sur tous les contrôleurs enfants.</dd></dl>
+<p>\Http\Controllers </p><dl class="section version"><dt>Version</dt><dd>1.0</dd></dl>
 <p>\Http\Controllers </p><dl class="section version"><dt>Version</dt><dd>2.0 </dd></dl>
-<dl class="section author"><dt>Auteur</dt><dd>Équipe de développement IAPEL </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
 <dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Ce contrôleur utilise la librairie TCPDF/FPDI pour manipuler les fichiers PDF. </dd></dl>
-<dl class="section warning"><dt>Avertissement</dt><dd>Les méthodes de génération nécessitent des modèles PDF préexistants dans le storage. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les méthodes de génération nécessitent des modèles PDF préexistants dans le storage.</dd></dl>
+<p>\Http\Controllers </p><dl class="section version"><dt>Version</dt><dd>2.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Ce contrôleur utilise TCPDF/FPDI pour la manipulation PDF et des scripts Python pour la certification. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les tokens doivent être valides et non expirés pour accéder aux fonctionnalités de signature.</dd></dl>
+<p>\Http\Controllers </p><dl class="section version"><dt>Version</dt><dd>2.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Utilise un système d'authentification par secret tokens configurés par organisation. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les tokens expirés sont automatiquement supprimés pour des raisons de sécurité.</dd></dl>
+<p>\Http\Middleware </p><dl class="section version"><dt>Version</dt><dd>1.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Middleware actuellement non utilisé selon le commentaire dans le code. </dd>
+<dd>
+Utilise le système de cache configuré dans l'application Laravel. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Peut bloquer des utilisateurs légitimes en cas de configuration trop restrictive. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>Cache Pour le stockage des compteurs de tentatives.</dd></dl>
+<p>\Http\Middleware </p><dl class="section version"><dt>Version</dt><dd>1.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Utilisé pour protéger les routes d'accès aux documents via tokens. </dd>
+<dd>
+Logs toutes les tentatives de vérification pour traçabilité. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Retourne une erreur 404 si le token est invalide pour masquer l'existence de la ressource. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>TokenController::isValideTokenRapport() Pour la logique de validation des tokens. </dd>
+<dd>
+TokenLinksRapport Pour le modèle de gestion des tokens de rapports.</dd></dl>
+<p>\Http\Middleware </p><dl class="section version"><dt>Version</dt><dd>1.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Utilisé pour les opérations sensibles nécessitant une authentification renforcée. </dd>
+<dd>
+Supporte à la fois les mots de passe clients et le mot de passe administrateur global. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Requiert la configuration des secrets clients dans <a class="el" href="../../d6/d08/secrets_8php.html">config/secrets.php</a>. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>TokenController::isValideTokenRapport() Pour la validation des tokens. </dd>
+<dd>
+TokenLinksRapport Pour la récupération des métadonnées des tokens.</dd></dl>
+<p>\Models </p><dl class="section version"><dt>Version</dt><dd>1.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Utilise la table "layout_client" en base de données. </dd>
+<dd>
+Ne surcharge pas les timestamps Laravel par défaut. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Ce modèle est utilisé pour la personnalisation visuelle et ne doit pas contenir de données sensibles. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>BiController::show() Méthode qui utilise ce modèle pour personnaliser l'affichage des rapports.</dd></dl>
+<p>\Models </p><dl class="section version"><dt>Version</dt><dd>2.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Les tokens expirent automatiquement après un mois pour des raisons de sécurité. </dd>
+<dd>
+Utilise la table "tokens" en base de données avec gestion des timestamps Laravel. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les coordonnées de signature doivent être validées côté client avant stockage. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd><a class="el" href="../../d6/d4f/classTokenController.html" title="Gère la génération, validation et gestion des tokens d&#39;accès sécurisés.">TokenController</a> Pour l'utilisation des tokens dans le processus de signature. </dd>
+<dd>
+BiController::listSavedDocs() Méthode qui utilise ce modèle pour lister les devis.</dd></dl>
+<p>\Models </p><dl class="section version"><dt>Version</dt><dd>2.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Les tokens expirent automatiquement après un mois pour des raisons de sécurité. </dd>
+<dd>
+La table utilisée est "token_links_rapport" et n'utilise pas les timestamps Laravel. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les chemins stockés doivent être relatifs au répertoire storage/app/ de Laravel. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd><a class="el" href="../../df/d98/classBiController.html" title="Contrôleur principal de gestion des bulletins d&#39;intervention et rapports techniques.">BiController</a> Pour l'utilisation des tokens dans le contexte des rapports. </dd>
+<dd>
+<a class="el" href="../../d6/d4f/classTokenController.html" title="Gère la génération, validation et gestion des tokens d&#39;accès sécurisés.">TokenController</a> Pour la génération des tokens de signature de devis.</dd></dl>
+<p>\Models </p><dl class="section version"><dt>Version</dt><dd>1.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Utilise la table "users" par défaut de Laravel. </dd>
+<dd>
+Les mots de passe sont automatiquement hachés lors de l'assignation. </dd>
+<dd>
+Le token de remember_me est caché lors de la sérialisation. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Ne jamais exposer les mots de passe ou tokens dans les réponses API. </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>\Database\Factories\UserFactory Pour la génération de données de test.</dd></dl>
+<p>\Providers </p><dl class="section version"><dt>Version</dt><dd>1.0 </dd></dl>
+<dl class="section author"><dt>Auteur</dt><dd>Maxime ENTZ </dd></dl>
+<dl class="section since"><dt>Depuis</dt><dd>1.0 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Automatiquement chargé par Laravel lors du démarrage de l'application. </dd>
+<dd>
+Enregistré dans <a class="el" href="../../db/d93/app_8php.html">config/app.php</a> dans le tableau des providers. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Les services lourds doivent être enregistrés de façon différée (deferred providers). </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>\Illuminate\Support\ServiceProvider Pour la classe parente et ses méthodes. </dd></dl>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <div id="page-nav" class="page-nav-panel">

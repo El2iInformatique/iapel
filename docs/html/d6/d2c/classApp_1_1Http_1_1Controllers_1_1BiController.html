@@ -97,7 +97,7 @@ $(function(){initNavTree('d6/d2c/classApp_1_1Http_1_1Controllers_1_1BiController
 </div><!--header-->
 <div class="contents">
 
-<p>Contrôleur principal de gestion des documents et rapports d’intervention.  
+<p>Contrôleur principal de gestion des bulletins d'intervention et rapports techniques.  
  <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de App::Http::Controllers::BiController:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
@@ -132,15 +132,18 @@ Fonctions membres publiques</h2></td></tr>
 <tr class="memdesc:a4cd4af227550ff0311a427a860477d3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Soumet un rapport d’intervention au serveur.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock"><p>Contrôleur principal de gestion des documents et rapports d’intervention. </p>
-<p>Cette classe gère :</p><ul>
-<li>La création, lecture, et suppression des fichiers JSON liés aux documents.</li>
-<li>La génération et vérification des tokens.</li>
-<li>Le téléchargement et la soumission des rapports d’intervention.</li>
-<li>La liste et le statut des documents sauvegardés. </li>
+<div class="textblock"><p>Contrôleur principal de gestion des bulletins d'intervention et rapports techniques. </p>
+<p>Ce contrôleur centralise toutes les opérations liées aux documents d'intervention :</p><ul>
+<li>Création et gestion des fichiers JSON de données d'intervention.</li>
+<li>Génération de tokens sécurisés pour l'accès aux rapports.</li>
+<li>Téléchargement et affichage des PDF générés.</li>
+<li>Soumission et validation des rapports d'intervention complétés.</li>
+<li>Gestion des photos, signatures et compléments d'information.</li>
+<li>Liste et suivi des documents sauvegardés par organisation.</li>
+<li>Support des formulaires CERFA (15497, 13948-03) et rapports d'intervention. </li>
 </ul>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00030">30</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00038">38</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="a81c840016184f5450e481f4b7ae95a77" name="a81c840016184f5450e481f4b7ae95a77"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a81c840016184f5450e481f4b7ae95a77">&#9670;&#160;</a></span>check()</h2>
@@ -184,7 +187,7 @@ Fonctions membres publiques</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Statut de la présence des fichiers. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00204">204</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00212">212</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
 </div>
 </div>
@@ -213,9 +216,9 @@ Fonctions membres publiques</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Contient le token et l’URL d’accès BI. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00068">68</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00076">76</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
-<p class="reference">Références <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00088">App::Http::Controllers::TokenController::generateTokenRapport()</a>.</p>
+<p class="reference">Références <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00179">App::Http::Controllers::TokenController::generateTokenRapport()</a>.</p>
 
 </div>
 </div>
@@ -248,7 +251,7 @@ Fonctions membres publiques</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Confirmation de la suppression. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00679">679</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00687">687</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
 </div>
 </div>
@@ -271,13 +274,13 @@ Fonctions membres publiques</h2></td></tr>
 <p>Permet à l’utilisateur de récupérer le document PDF associé à un token d’accès valide.</p>
 <dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../de/d77/classApp_1_1Http_1_1Controllers_1_1Token.html">Token</a> du document. </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../de/d77/classApp_1_1Http_1_1Controllers_1_1Token.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> du document. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>\Symfony\Component\HttpFoundation\BinaryFileResponse Fichier PDF téléchargé. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00163">163</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00171">171</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
 </div>
 </div>
@@ -306,7 +309,7 @@ Fonctions membres publiques</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Liste des documents ou message d’erreur. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00041">41</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00049">49</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
 </div>
 </div>
@@ -339,7 +342,7 @@ Fonctions membres publiques</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Liste des fichiers enregistrés. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00499">499</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00507">507</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
 </div>
 </div>
@@ -362,13 +365,13 @@ Fonctions membres publiques</h2></td></tr>
 <p>Charge et affiche la vue correspondant au document stocké à partir des données associées au token fourni.</p>
 <dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../de/d77/classApp_1_1Http_1_1Controllers_1_1Token.html">Token</a> du document. </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../de/d77/classApp_1_1Http_1_1Controllers_1_1Token.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> du document. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>\Illuminate\View\View Vue HTML du document. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00237">237</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00245">245</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
 </div>
 </div>
@@ -401,7 +404,7 @@ Fonctions membres publiques</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>JsonResponse Résultat de la soumission. </dd></dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00285">285</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../db/d05/BiController_8php_source.html#l00293">293</a> du fichier <a class="el" href="../../db/d05/BiController_8php_source.html">BiController.php</a>.</p>
 
 </div>
 </div>

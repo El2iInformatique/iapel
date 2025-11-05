@@ -8,5 +8,5 @@ digraph "Graphe hiérarchique des classes"
   rankdir="LR";
   Node0 [id="Node000000",label="ServiceProvider",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$d3/d4a/classServiceProvider.html",tooltip=" "];
   Node0 -> Node1 [id="edge10_Node000000_Node000001",dir="back",color="steelblue1",style="solid",tooltip=" "];
-  Node1 [id="Node000001",label="App::Providers::AppService\lProvider",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$da/d86/classApp_1_1Providers_1_1AppServiceProvider.html",tooltip=" "];
+  Node1 [id="Node000001",label="App::Providers::AppService\lProvider",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$da/d86/classApp_1_1Providers_1_1AppServiceProvider.html",tooltip="Fournisseur de services principal de l'application IAPEL."];
 }

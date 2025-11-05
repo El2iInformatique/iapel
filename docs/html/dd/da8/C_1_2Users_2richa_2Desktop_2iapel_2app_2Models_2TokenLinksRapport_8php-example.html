@@ -1,0 +1,260 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: C:/Users/richa/Desktop/iapel/app/Models/TokenLinksRapport.php</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('dd/da8/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2TokenLinksRapport_8php-example.html','../../',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">C:/Users/richa/Desktop/iapel/app/Models/TokenLinksRapport.php</div></div>
+</div><!--header-->
+<div class="contents">
+<p>Génère un nouveau token d'accès pour un rapport/document.</p>
+<p>Génère un nouveau token d'accès pour un rapport/document. Cette méthode statique crée un nouveau token d'accès sécurisé lié à un document spécifique. Le token permet l'accès au document via une URL sécurisée pendant une durée limitée d'un mois.</p>
+<p>Le token généré permet :</p><ul>
+<li>L'affichage du formulaire/rapport via une URL publique.</li>
+<li>La soumission des données du formulaire.</li>
+<li>Le téléchargement du PDF généré.</li>
+<li>L'accès sécurisé sans authentification utilisateur.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> unique généré (généralement par Str::random()). </td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$path</td><td>Chemin relatif vers le fichier JSON du document (depuis storage/app/).</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>TokenLinksRapport Instance du modèle créé avec les données du token.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Illuminate\Database\QueryException Si la création en base échoue.</p>
+<div class="fragment"><div class="line"><span class="comment">// Génération d&#39;un token pour un rapport d&#39;intervention</span></div>
+<div class="line">$token = Str::random(40);</div>
+<div class="line">$path = <span class="stringliteral">&quot;app/public/client1/rapport_intervention/uid123/uid123.json&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">$tokenLink = TokenLinksRapport::generateTokenRapport($token, $path);</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// URL d&#39;accès générée : /bi/{token}</span></div>
+<div class="line">$url = url(<span class="stringliteral">&#39;/bi/&#39;</span> . $token);</div>
+</div><!-- fragment --><div class="fragment"><div class="line">&lt;?php</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">namespace </span>App\Models;</div>
+<div class="line"> </div>
+<div class="line">use Illuminate\Database\Eloquent\Factories\HasFactory;</div>
+<div class="line">use Illuminate\Database\Eloquent\Model;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * @class TokenLinksRapport</span></div>
+<div class="line"><span class="comment"> * @brief Modèle de gestion des tokens d&#39;accès aux rapports et documents d&#39;intervention.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Ce modèle centralise la gestion des tokens sécurisés permettant l&#39;accès aux rapports</span></div>
+<div class="line"><span class="comment"> * d&#39;intervention, formulaires CERFA et autres documents générés par l&#39;application.</span></div>
+<div class="line"><span class="comment"> * Il établit la liaison entre un token unique et le chemin physique du document associé.</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Fonctionnalités principales :</span></div>
+<div class="line"><span class="comment"> * - Génération de tokens d&#39;accès sécurisés avec durée de validité.</span></div>
+<div class="line"><span class="comment"> * - Liaison token/chemin de fichier pour l&#39;accès aux documents.</span></div>
+<div class="line"><span class="comment"> * - Gestion de l&#39;expiration automatique des accès.</span></div>
+<div class="line"><span class="comment"> * - Support des rapports d&#39;intervention, CERFA 15497, CERFA 13948-03.</span></div>
+<div class="line"><span class="comment"> * - Traçabilité des accès aux documents sensibles.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @package App\Models</span></div>
+<div class="line"><span class="comment"> * @version 2.0</span></div>
+<div class="line"><span class="comment"> * @author Maxime ENTZ</span></div>
+<div class="line"><span class="comment"> * @since 1.0</span></div>
+<div class="line"><span class="comment"> * @note Les tokens expirent automatiquement après un mois pour des raisons de sécurité.</span></div>
+<div class="line"><span class="comment"> * @note La table utilisée est &quot;token_links_rapport&quot; et n&#39;utilise pas les timestamps Laravel.</span></div>
+<div class="line"><span class="comment"> * @warning Les chemins stockés doivent être relatifs au répertoire storage/app/ de Laravel.</span></div>
+<div class="line"><span class="comment"> * @see BiController Pour l&#39;utilisation des tokens dans le contexte des rapports.</span></div>
+<div class="line"><span class="comment"> * @see TokenController Pour la génération des tokens de signature de devis.</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">class </span>TokenLinksRapport <span class="keyword">extends</span> Model</div>
+<div class="line">{</div>
+<div class="line">    use HasFactory;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Les attributs qui peuvent être assignés en masse.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * Définit les champs de la base de données qui peuvent être remplis</span></div>
+<div class="line"><span class="comment">     * lors de la création ou mise à jour d&#39;un enregistrement.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @var array&lt;string&gt; Liste des attributs mass-assignables.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">protected</span> <a id="a0" name="a0"></a><a class="code hl_variable" href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a7b619b17167ee1347385782779259f2f">$fillable</a> = [<span class="stringliteral">&#39;token&#39;</span>, <span class="stringliteral">&#39;documents&#39;</span>, <span class="stringliteral">&#39;paths&#39;</span>, <span class="stringliteral">&#39;expires_at&#39;</span>, <span class="stringliteral">&#39;created_at&#39;</span>];</div>
+<div class="line">    <span class="comment"></span></div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Nom de la table de base de données.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @var string Nom de la table utilisée pour ce modèle.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">protected</span> <a id="a1" name="a1"></a><a class="code hl_variable" href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a7487681aeda6253be6c33e38615476bc">$table</a> = <span class="stringliteral">&quot;token_links_rapport&quot;</span>;</div>
+<div class="line">    <span class="comment"></span></div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Désactive la gestion automatique des timestamps Laravel.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @var bool False pour désactiver les colonnes created_at/updated_at automatiques.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> <a id="a2" name="a2"></a><a class="code hl_variable" href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a0bc19501a7d14126b3d3119d88549a07">$timestamps</a> = <span class="keyword">false</span>;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Génère un nouveau token d&#39;accès pour un rapport/document.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Cette méthode statique crée un nouveau token d&#39;accès sécurisé lié à un document</span></div>
+<div class="line"><span class="comment">     * spécifique. Le token permet l&#39;accès au document via une URL sécurisée pendant</span></div>
+<div class="line"><span class="comment">     * une durée limitée d&#39;un mois.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Le token généré permet :</span></div>
+<div class="line"><span class="comment">     * - L&#39;affichage du formulaire/rapport via une URL publique.</span></div>
+<div class="line"><span class="comment">     * - La soumission des données du formulaire.</span></div>
+<div class="line"><span class="comment">     * - Le téléchargement du PDF généré.</span></div>
+<div class="line"><span class="comment">     * - L&#39;accès sécurisé sans authentification utilisateur.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @param string $token Token unique généré (généralement par Str::random()).</span></div>
+<div class="line"><span class="comment">     * @param string $path Chemin relatif vers le fichier JSON du document (depuis storage/app/).</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @return TokenLinksRapport Instance du modèle créé avec les données du token.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @throws \Illuminate\Database\QueryException Si la création en base échoue.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Génération d&#39;un token pour un rapport d&#39;intervention</span></div>
+<div class="line"><span class="comment">     * $token = Str::random(40);</span></div>
+<div class="line"><span class="comment">     * $path = &quot;app/public/client1/rapport_intervention/uid123/uid123.json&quot;;</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * $tokenLink = TokenLinksRapport::generateTokenRapport($token, $path);</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * // URL d&#39;accès générée : /bi/{token}</span></div>
+<div class="line"><span class="comment">     * $url = url(&#39;/bi/&#39; . $token);</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Génération d&#39;un token pour un formulaire CERFA</span></div>
+<div class="line"><span class="comment">     * $token = Str::random(40);</span></div>
+<div class="line"><span class="comment">     * $path = &quot;app/public/entreprise1/cerfa_15497/uid456/uid456.json&quot;;</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * $tokenLink = TokenLinksRapport::generateTokenRapport($token, $path);</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Le token expire automatiquement après un mois pour des raisons de sécurité.</span></div>
+<div class="line"><span class="comment">     * @note La date de création est stockée au format Y-m-d.</span></div>
+<div class="line"><span class="comment">     * @warning Le chemin doit pointer vers un fichier JSON valide et existant.</span></div>
+<div class="line"><span class="comment">     * @see BiController::createJson() Méthode qui utilise cette fonction pour créer les tokens.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> function <a id="a3" name="a3"></a><a class="code hl_function" href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a8ca2e7dd62144a9e942b96b122d938b5">generateTokenRapport</a>( $token, $path ) {</div>
+<div class="line">        <span class="keywordflow">return</span> self::create([</div>
+<div class="line">            <span class="stringliteral">&#39;token&#39;</span> =&gt; $token,</div>
+<div class="line">            <span class="stringliteral">&#39;paths&#39;</span> =&gt; $path,</div>
+<div class="line">            <span class="stringliteral">&#39;expires_at&#39;</span> =&gt; now()-&gt;addMonth(),</div>
+<div class="line">            <span class="stringliteral">&#39;created_at&#39;</span> =&gt; now()-&gt;format(<span class="stringliteral">&#39;Y-m-d&#39;</span>),</div>
+<div class="line">        ]);</div>
+<div class="line">    }</div>
+<div class="line">    </div>
+<div class="line">}</div>
+<div class="ttc" id="aclassApp_1_1Models_1_1TokenLinksRapport_html_a0bc19501a7d14126b3d3119d88549a07"><div class="ttname"><a href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a0bc19501a7d14126b3d3119d88549a07">App::Models::TokenLinksRapport::$timestamps</a></div><div class="ttdeci">$timestamps</div><div class="ttdef"><b>Definition</b> <a href="../../d9/d88/TokenLinksRapport_8php_source.html#l00059">TokenLinksRapport.php:59</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1TokenLinksRapport_html_a7487681aeda6253be6c33e38615476bc"><div class="ttname"><a href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a7487681aeda6253be6c33e38615476bc">App::Models::TokenLinksRapport::$table</a></div><div class="ttdeci">$table</div><div class="ttdef"><b>Definition</b> <a href="../../d9/d88/TokenLinksRapport_8php_source.html#l00052">TokenLinksRapport.php:52</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1TokenLinksRapport_html_a7b619b17167ee1347385782779259f2f"><div class="ttname"><a href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a7b619b17167ee1347385782779259f2f">App::Models::TokenLinksRapport::$fillable</a></div><div class="ttdeci">$fillable</div><div class="ttdef"><b>Definition</b> <a href="../../d9/d88/TokenLinksRapport_8php_source.html#l00045">TokenLinksRapport.php:45</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1TokenLinksRapport_html_a8ca2e7dd62144a9e942b96b122d938b5"><div class="ttname"><a href="../../d8/d8a/classApp_1_1Models_1_1TokenLinksRapport.html#a8ca2e7dd62144a9e942b96b122d938b5">App::Models::TokenLinksRapport::generateTokenRapport</a></div><div class="ttdeci">static generateTokenRapport( $token, $path)</div><div class="ttdef"><b>Definition</b> <a href="../../d9/d88/TokenLinksRapport_8php_source.html#l00107">TokenLinksRapport.php:107</a></div></div>
+</div><!-- fragment --> </div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>

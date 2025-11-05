@@ -96,6 +96,9 @@ $(function(){initNavTree('de/d77/classApp_1_1Http_1_1Controllers_1_1Token.html',
   <div class="headertitle"><div class="title">Référence de la classe App::Http::Controllers::Token</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Modèle de gestion des tokens de signature électronique pour les devis.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de App::Http::Controllers::Token:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -109,6 +112,13 @@ $(function(){initNavTree('de/d77/classApp_1_1Http_1_1Controllers_1_1Token.html',
 <div class="center"><!-- SVG 1 --></div>
 </div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:aebea5954c82d9df411d9df2e27bffd19" id="r_aebea5954c82d9df411d9df2e27bffd19"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aebea5954c82d9df411d9df2e27bffd19">getVerifiedTotal</a> ()</td></tr>
+<tr class="memitem:a1ab9982aafa77f01af891e7c6f5ddeda" id="r_a1ab9982aafa77f01af891e7c6f5ddeda"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1ab9982aafa77f01af891e7c6f5ddeda">isExpiringSoon</a> ()</td></tr>
+<tr class="memitem:aaf261f8379b0e03de9f4d0fd5a59ff3b" id="r_aaf261f8379b0e03de9f4d0fd5a59ff3b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf261f8379b0e03de9f4d0fd5a59ff3b">isValid</a> ()</td></tr>
+<tr class="memitem:a7f47456ecf0a5572319d3b082728f35d" id="r_a7f47456ecf0a5572319d3b082728f35d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f47456ecf0a5572319d3b082728f35d">markAsUsed</a> ()</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Fonctions membres publiques statiques</h2></td></tr>
 <tr class="memitem:a09046532c6280dd693e01789960cb772" id="r_a09046532c6280dd693e01789960cb772"><td class="memItemLeft" align="right" valign="top">static&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a09046532c6280dd693e01789960cb772">generateToken</a> ( $organisationId, $tiers, $devisId, $clientEmail, $titre, $montantHT, $montantTVA, $montantTTC, $coords, $nbpages)</td></tr>
@@ -118,8 +128,18 @@ Attributs protégés</h2></td></tr>
 <tr class="memitem:a833ab5c6ec41df6b166f383e3e7d0c1e" id="r_a833ab5c6ec41df6b166f383e3e7d0c1e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a833ab5c6ec41df6b166f383e3e7d0c1e">$fillable</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00009">9</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
+<div class="textblock"><p>Modèle de gestion des tokens de signature électronique pour les devis. </p>
+<p>Ce modèle centralise la gestion des tokens sécurisés permettant la signature électronique des devis par les clients. Il stocke toutes les informations nécessaires à la génération du document de signature et au positionnement des éléments graphiques (signatures, dates).</p>
+<p>Fonctionnalités principales :</p><ul>
+<li>Génération de tokens uniques avec durée de validité limitée.</li>
+<li>Stockage des informations financières du devis (HT, TVA, TTC).</li>
+<li>Gestion des coordonnées de positionnement pour signatures et dates.</li>
+<li>Liaison avec l'organisation et le client pour traçabilité.</li>
+<li>Support de l'expiration automatique des tokens.</li>
+<li>Suivi de l'utilisation des tokens (signature effectuée ou non). </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00061">61</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="a09046532c6280dd693e01789960cb772" name="a09046532c6280dd693e01789960cb772"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a09046532c6280dd693e01789960cb772">&#9670;&#160;</a></span>generateToken()</h2>
@@ -188,9 +208,85 @@ Attributs protégés</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00015">15</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00177">177</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
 
-<p class="reference">Référencé par <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00019">App::Http::Controllers::TokenController::generate()</a>.</p>
+<p class="reference">Référencé par <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00070">App::Http::Controllers::TokenController::generate()</a>.</p>
+
+</div>
+</div>
+<a id="aebea5954c82d9df411d9df2e27bffd19" name="aebea5954c82d9df411d9df2e27bffd19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebea5954c82d9df411d9df2e27bffd19">&#9670;&#160;</a></span>getVerifiedTotal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/d27/classApp_1_1Models_1_1Token.html#aebea5954c82d9df411d9df2e27bffd19">App::Models::Token::getVerifiedTotal</a> </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00295">295</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
+
+</div>
+</div>
+<a id="a1ab9982aafa77f01af891e7c6f5ddeda" name="a1ab9982aafa77f01af891e7c6f5ddeda"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ab9982aafa77f01af891e7c6f5ddeda">&#9670;&#160;</a></span>isExpiringSoon()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/d27/classApp_1_1Models_1_1Token.html#a1ab9982aafa77f01af891e7c6f5ddeda">App::Models::Token::isExpiringSoon</a> </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00271">271</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
+
+</div>
+</div>
+<a id="aaf261f8379b0e03de9f4d0fd5a59ff3b" name="aaf261f8379b0e03de9f4d0fd5a59ff3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf261f8379b0e03de9f4d0fd5a59ff3b">&#9670;&#160;</a></span>isValid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/d27/classApp_1_1Models_1_1Token.html#aaf261f8379b0e03de9f4d0fd5a59ff3b">App::Models::Token::isValid</a> </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00220">220</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
+
+</div>
+</div>
+<a id="a7f47456ecf0a5572319d3b082728f35d" name="a7f47456ecf0a5572319d3b082728f35d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f47456ecf0a5572319d3b082728f35d">&#9670;&#160;</a></span>markAsUsed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/d27/classApp_1_1Models_1_1Token.html#a7f47456ecf0a5572319d3b082728f35d">App::Models::Token::markAsUsed</a> </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00244">244</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
 
 </div>
 </div>
@@ -214,10 +310,26 @@ Attributs protégés</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<b>Valeur initiale :</b><div class="fragment"><div class="line">= [<span class="stringliteral">&#39;token&#39;</span>, <span class="stringliteral">&#39;organisation_id&#39;</span>, <span class="stringliteral">&#39;tiers&#39;</span>,<span class="stringliteral">&#39;client_email&#39;</span>, <span class="stringliteral">&#39;devis_id&#39;</span>, <span class="stringliteral">&#39;used&#39;</span>, <span class="stringliteral">&#39;expires_at&#39;</span>, <span class="stringliteral">&#39;titre&#39;</span>, <span class="stringliteral">&#39;montant_HT&#39;</span>, <span class="stringliteral">&#39;montant_TVA&#39;</span>, </div>
-<div class="line">                            <span class="stringliteral">&#39;montant_TTC&#39;</span>,<span class="stringliteral">&#39;x_signature&#39;</span>,<span class="stringliteral">&#39;y_signature&#39;</span>,<span class="stringliteral">&#39;x_date&#39;</span>,<span class="stringliteral">&#39;y_date&#39;</span>,<span class="stringliteral">&#39;nb_pages&#39;</span>]</div>
+<b>Valeur initiale :</b><div class="fragment"><div class="line">= [</div>
+<div class="line">        <span class="stringliteral">&#39;token&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;organisation_id&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;tiers&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;client_email&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;devis_id&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;used&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;expires_at&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;titre&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;montant_HT&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;montant_TVA&#39;</span>, </div>
+<div class="line">        <span class="stringliteral">&#39;montant_TTC&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;x_signature&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;y_signature&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;x_date&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;y_date&#39;</span>,</div>
+<div class="line">        <span class="stringliteral">&#39;nb_pages&#39;</span></div>
+<div class="line">    ]</div>
 </div><!-- fragment -->
-<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00012">12</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d0/dc5/Token_8php_source.html#l00077">77</a> du fichier <a class="el" href="../../d0/dc5/Token_8php_source.html">Token.php</a>.</p>
 
 </div>
 </div>

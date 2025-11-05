@@ -96,6 +96,9 @@ $(function(){initNavTree('da/d86/classApp_1_1Providers_1_1AppServiceProvider.htm
   <div class="headertitle"><div class="title">Référence de la classe App::Providers::AppServiceProvider</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Fournisseur de services principal de l'application IAPEL.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de App::Providers::AppServiceProvider:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -115,8 +118,18 @@ Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:afaef0ef4a1e0b64e5876192e25047127" id="r_afaef0ef4a1e0b64e5876192e25047127"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afaef0ef4a1e0b64e5876192e25047127">register</a> ()</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html#l00007">7</a> du fichier <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html">AppServiceProvider.php</a>.</p>
+<div class="textblock"><p>Fournisseur de services principal de l'application IAPEL. </p>
+<p>Ce service provider constitue le point d'entrée central pour l'enregistrement et la configuration des services personnalisés de l'application. Il hérite de <a class="el" href="../../d3/d4a/classServiceProvider.html">ServiceProvider</a> de Laravel et permet d'initialiser les composants spécifiques à l'application lors du démarrage du framework.</p>
+<p>Fonctionnalités principales :</p><ul>
+<li>Enregistrement des services personnalisés dans le conteneur IoC de Laravel.</li>
+<li>Configuration des bindings et singletons spécifiques à l'application.</li>
+<li>Initialisation des services tiers et des configurations globales.</li>
+<li>Bootstrap des composants nécessaires au démarrage de l'application.</li>
+<li>Configuration des middlewares, observers et event listeners personnalisés.</li>
+<li>Enregistrement des macros et extensions de façades Laravel. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html#l00044">44</a> du fichier <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html">AppServiceProvider.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="aff598aef2ab56eea6c54ee7b3d2eeec2" name="aff598aef2ab56eea6c54ee7b3d2eeec2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aff598aef2ab56eea6c54ee7b3d2eeec2">&#9670;&#160;</a></span>boot()</h2>
@@ -132,9 +145,10 @@ Fonctions membres publiques</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Bootstrap any application services. </p>
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../d8/dca/C_1_2Users_2richa_2Desktop_2iapel_2app_2Providers_2AppServiceProvider_8php-example.html#a0">C:/Users/richa/Desktop/iapel/app/Providers/AppServiceProvider.php</a>.</dd>
+</dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html#l00020">20</a> du fichier <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html">AppServiceProvider.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html#l00177">177</a> du fichier <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html">AppServiceProvider.php</a>.</p>
 
 </div>
 </div>
@@ -152,9 +166,8 @@ Fonctions membres publiques</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Register any application services. </p>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html#l00012">12</a> du fichier <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html">AppServiceProvider.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html#l00087">87</a> du fichier <a class="el" href="../../d1/d1e/AppServiceProvider_8php_source.html">AppServiceProvider.php</a>.</p>
 
 </div>
 </div>

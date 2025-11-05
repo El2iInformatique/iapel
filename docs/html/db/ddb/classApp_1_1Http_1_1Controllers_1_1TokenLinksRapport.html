@@ -96,6 +96,9 @@ $(function(){initNavTree('db/ddb/classApp_1_1Http_1_1Controllers_1_1TokenLinksRa
   <div class="headertitle"><div class="title">Référence de la classe App::Http::Controllers::TokenLinksRapport</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Modèle de gestion des tokens d'accès aux rapports et documents d'intervention.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de App::Http::Controllers::TokenLinksRapport:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -123,8 +126,17 @@ Attributs protégés</h2></td></tr>
 <tr class="memitem:a7487681aeda6253be6c33e38615476bc" id="r_a7487681aeda6253be6c33e38615476bc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7487681aeda6253be6c33e38615476bc">$table</a> = &quot;token_links_rapport&quot;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00008">8</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
+<div class="textblock"><p>Modèle de gestion des tokens d'accès aux rapports et documents d'intervention. </p>
+<p>Ce modèle centralise la gestion des tokens sécurisés permettant l'accès aux rapports d'intervention, formulaires CERFA et autres documents générés par l'application. Il établit la liaison entre un token unique et le chemin physique du document associé.</p>
+<p>Fonctionnalités principales :</p><ul>
+<li>Génération de tokens d'accès sécurisés avec durée de validité.</li>
+<li>Liaison token/chemin de fichier pour l'accès aux documents.</li>
+<li>Gestion de l'expiration automatique des accès.</li>
+<li>Support des rapports d'intervention, CERFA 15497, CERFA 13948-03.</li>
+<li>Traçabilité des accès aux documents sensibles. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00033">33</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="aee95b72f0d7659fd4dce5f3579e16297" name="aee95b72f0d7659fd4dce5f3579e16297"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aee95b72f0d7659fd4dce5f3579e16297">&#9670;&#160;</a></span>generateTokenRapport()</h2>
@@ -153,9 +165,9 @@ Attributs protégés</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00016">16</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00107">107</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
 
-<p class="reference">Référencé par <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00088">App::Http::Controllers::TokenController::generateTokenRapport()</a>.</p>
+<p class="reference">Référencé par <a class="el" href="../../d1/de6/TokenController_8php_source.html#l00179">App::Http::Controllers::TokenController::generateTokenRapport()</a>.</p>
 
 </div>
 </div>
@@ -180,7 +192,7 @@ Attributs protégés</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00012">12</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00045">45</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
 
 </div>
 </div>
@@ -204,7 +216,7 @@ Attributs protégés</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00013">13</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00052">52</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
 
 </div>
 </div>
@@ -220,7 +232,7 @@ Attributs protégés</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00014">14</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html#l00059">59</a> du fichier <a class="el" href="../../d9/d88/TokenLinksRapport_8php_source.html">TokenLinksRapport.php</a>.</p>
 
 </div>
 </div>

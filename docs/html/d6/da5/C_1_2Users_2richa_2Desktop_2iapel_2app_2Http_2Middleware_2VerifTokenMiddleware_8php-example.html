@@ -1,0 +1,230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenMiddleware.php</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('d6/da5/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2VerifTokenMiddleware_8php-example.html','../../',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">C:/Users/richa/Desktop/iapel/app/Http/Middleware/VerifTokenMiddleware.php</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><span class="comment">// Utilisation dans les routes (routes/web.php)</span></div>
+<div class="line">Route::get(<span class="stringliteral">&#39;/bi/{token}&#39;</span>, [BiController::class, <span class="stringliteral">&#39;show&#39;</span>])</div>
+<div class="line">     -&gt;middleware(<span class="stringliteral">&#39;verify.token&#39;</span>);</div>
+<div class="line"> </div>
+<div class="line">Route::get(<span class="stringliteral">&#39;/download/{token}&#39;</span>, [BiController::class, <span class="stringliteral">&#39;download&#39;</span>])</div>
+<div class="line">     -&gt;middleware(<span class="stringliteral">&#39;verify.token&#39;</span>);</div>
+</div><!-- fragment --><div class="fragment"><div class="line">&lt;?php</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">namespace </span>App\Http\Middleware;</div>
+<div class="line"> </div>
+<div class="line">use Closure;</div>
+<div class="line">use Illuminate\Http\Request;</div>
+<div class="line">use Symfony\Component\HttpFoundation\Response;</div>
+<div class="line"> </div>
+<div class="line">use App\Http\Controllers\TokenController;</div>
+<div class="line">use Illuminate\Support\Facades\Log;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * @class VerifTokenMiddleware</span></div>
+<div class="line"><span class="comment"> * @brief Middleware de vérification des tokens d&#39;accès aux rapports et documents.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Ce middleware assure la sécurité d&#39;accès aux documents sensibles (rapports d&#39;intervention,</span></div>
+<div class="line"><span class="comment"> * formulaires CERFA) en validant les tokens fournis dans les URLs. Il constitue la première</span></div>
+<div class="line"><span class="comment"> * couche de protection pour empêcher l&#39;accès non autorisé aux documents générés par l&#39;application.</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Fonctionnalités principales :</span></div>
+<div class="line"><span class="comment"> * - Validation de l&#39;existence et de la validité des tokens dans les routes.</span></div>
+<div class="line"><span class="comment"> * - Vérification de l&#39;expiration des tokens d&#39;accès.</span></div>
+<div class="line"><span class="comment"> * - Logging automatique des tentatives d&#39;accès pour audit de sécurité.</span></div>
+<div class="line"><span class="comment"> * - Blocage immédiat des accès avec tokens invalides ou expirés.</span></div>
+<div class="line"><span class="comment"> * - Intégration transparente avec le système de routage Laravel.</span></div>
+<div class="line"><span class="comment"> * - Support des tokens de type TokenLinksRapport pour documents BI.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @package App\Http\Middleware</span></div>
+<div class="line"><span class="comment"> * @version 1.0</span></div>
+<div class="line"><span class="comment"> * @author Maxime ENTZ</span></div>
+<div class="line"><span class="comment"> * @since 1.0</span></div>
+<div class="line"><span class="comment"> * @note Utilisé pour protéger les routes d&#39;accès aux documents via tokens.</span></div>
+<div class="line"><span class="comment"> * @note Logs toutes les tentatives de vérification pour traçabilité.</span></div>
+<div class="line"><span class="comment"> * @warning Retourne une erreur 404 si le token est invalide pour masquer l&#39;existence de la ressource.</span></div>
+<div class="line"><span class="comment"> * @see TokenController::isValideTokenRapport() Pour la logique de validation des tokens.</span></div>
+<div class="line"><span class="comment"> * @see TokenLinksRapport Pour le modèle de gestion des tokens de rapports.</span></div>
+<div class="line"><span class="comment"> * @example</span></div>
+<div class="line"><span class="comment"> * ```php</span></div>
+<div class="line"><span class="comment"> * // Utilisation dans les routes (routes/web.php)</span></div>
+<div class="line"><span class="comment"> * Route::get(&#39;/bi/{token}&#39;, [BiController::class, &#39;show&#39;])</span></div>
+<div class="line"><span class="comment"> *      -&gt;middleware(&#39;verify.token&#39;);</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Route::get(&#39;/download/{token}&#39;, [BiController::class, &#39;download&#39;])</span></div>
+<div class="line"><span class="comment"> *      -&gt;middleware(&#39;verify.token&#39;);</span></div>
+<div class="line"><span class="comment"> * ```</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">class </span>VerifTokenMiddleware</div>
+<div class="line">{<span class="comment"></span></div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Traite une requête entrante et vérifie la validité du token.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Cette méthode constitue le point d&#39;entrée du middleware. Elle extrait le token</span></div>
+<div class="line"><span class="comment">     * depuis les paramètres de route, le valide via TokenController, et décide</span></div>
+<div class="line"><span class="comment">     * d&#39;autoriser ou de bloquer l&#39;accès à la ressource demandée.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Le processus de vérification suit ces étapes :</span></div>
+<div class="line"><span class="comment">     * 1. Extraction du token depuis les paramètres de route.</span></div>
+<div class="line"><span class="comment">     * 2. Logging de la tentative d&#39;accès pour audit.</span></div>
+<div class="line"><span class="comment">     * 3. Validation du token via TokenController::isValideTokenRapport().</span></div>
+<div class="line"><span class="comment">     * 4. Autorisation ou refus d&#39;accès selon le résultat de validation.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @param Request $request Requête HTTP entrante contenant le token en paramètre de route.</span></div>
+<div class="line"><span class="comment">     * @param Closure $next Fonction de callback pour passer au middleware suivant ou au contrôleur.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @return Response Réponse HTTP (404 si token invalide, sinon passage au contrôleur).</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException Si le token est invalide.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // URL d&#39;accès typique</span></div>
+<div class="line"><span class="comment">     * https://app.example.com/bi/abc123def456...</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * // Le middleware extrait &#39;abc123def456...&#39; et le valide</span></div>
+<div class="line"><span class="comment">     * // Si valide : accès autorisé au BiController::show()</span></div>
+<div class="line"><span class="comment">     * // Si invalide : erreur 404 retournée</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Configuration dans le kernel HTTP (app/Http/Kernel.php)</span></div>
+<div class="line"><span class="comment">     * protected $middlewareAliases = [</span></div>
+<div class="line"><span class="comment">     *     &#39;verify.token&#39; =&gt; \App\Http\Middleware\VerifTokenMiddleware::class,</span></div>
+<div class="line"><span class="comment">     * ];</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * // Protection de multiple routes</span></div>
+<div class="line"><span class="comment">     * Route::group([&#39;middleware&#39; =&gt; &#39;verify.token&#39;], function () {</span></div>
+<div class="line"><span class="comment">     *     Route::get(&#39;/bi/{token}&#39;, [BiController::class, &#39;show&#39;]);</span></div>
+<div class="line"><span class="comment">     *     Route::get(&#39;/download/{token}&#39;, [BiController::class, &#39;download&#39;]);</span></div>
+<div class="line"><span class="comment">     *     Route::post(&#39;/submit/{token}&#39;, [BiController::class, &#39;submit&#39;]);</span></div>
+<div class="line"><span class="comment">     * });</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Le token est automatiquement extrait depuis $request-&gt;route(&#39;token&#39;).</span></div>
+<div class="line"><span class="comment">     * @note Toutes les tentatives sont loggées avec le niveau INFO pour audit.</span></div>
+<div class="line"><span class="comment">     * @note L&#39;erreur 404 est préférée à 403 pour ne pas révéler l&#39;existence de la ressource.</span></div>
+<div class="line"><span class="comment">     * @warning Ne pas utiliser ce middleware sur des routes ne contenant pas de paramètre {token}.</span></div>
+<div class="line"><span class="comment">     * @warning Les logs peuvent contenir des tokens sensibles, attention à leur protection.</span></div>
+<div class="line"><span class="comment">     * @see Log::info() Pour l&#39;enregistrement des tentatives d&#39;accès.</span></div>
+<div class="line"><span class="comment">     * @see abort() Pour le déclenchement de l&#39;erreur HTTP 404.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> function <a id="a0" name="a0"></a><a class="code hl_function" href="../../d1/d87/classApp_1_1Http_1_1Middleware_1_1VerifTokenMiddleware.html#a5bdb07602317083ff425e39890abf237">handle</a>(Request $request, Closure $next): Response</div>
+<div class="line">    {</div>
+<div class="line">        $token = $request-&gt;route(<span class="stringliteral">&#39;token&#39;</span>);</div>
+<div class="line">        Log::info(<span class="stringliteral">&quot;Demande de verification du token : &quot;</span> . $token);</div>
+<div class="line"> </div>
+<div class="line">        <span class="keywordflow">if</span> (!<a id="a1" name="a1"></a><a class="code hl_function" href="../../d7/d90/classApp_1_1Http_1_1Middleware_1_1TokenController.html#aa507c9c2b115fd46507f4c0327037040">TokenController::isValideTokenRapport</a>($token)) {</div>
+<div class="line">            abort(404, <span class="stringliteral">&#39;Token invalide&#39;</span>);</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="keywordflow">return</span> $next($request);</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassApp_1_1Http_1_1Middleware_1_1TokenController_html_aa507c9c2b115fd46507f4c0327037040"><div class="ttname"><a href="../../d7/d90/classApp_1_1Http_1_1Middleware_1_1TokenController.html#aa507c9c2b115fd46507f4c0327037040">App::Http::Middleware::TokenController::isValideTokenRapport</a></div><div class="ttdeci">static isValideTokenRapport($token)</div><div class="ttdoc">Vérifie la validité d&#39;un token de rapport et gère l&#39;expiration automatique.</div><div class="ttdef"><b>Definition</b> <a href="../../d1/de6/TokenController_8php_source.html#l00230">TokenController.php:230</a></div></div>
+<div class="ttc" id="aclassApp_1_1Http_1_1Middleware_1_1VerifTokenMiddleware_html_a5bdb07602317083ff425e39890abf237"><div class="ttname"><a href="../../d1/d87/classApp_1_1Http_1_1Middleware_1_1VerifTokenMiddleware.html#a5bdb07602317083ff425e39890abf237">App::Http::Middleware::VerifTokenMiddleware::handle</a></div><div class="ttdeci">handle(class Request $request, Closure $next)</div><div class="ttdef"><b>Definition</b> <a href="../../dd/dda/VerifTokenMiddleware_8php_source.html#l00102">VerifTokenMiddleware.php:102</a></div></div>
+</div><!-- fragment --> </div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>

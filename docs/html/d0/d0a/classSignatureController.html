@@ -96,6 +96,9 @@ $(function(){initNavTree('d0/d0a/classSignatureController.html','../../','d2/d34
   <div class="headertitle"><div class="title">Référence de la classe SignatureController</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Gère l'affichage et le traitement des signatures électroniques pour les devis.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de SignatureController:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -112,11 +115,21 @@ $(function(){initNavTree('d0/d0a/classSignatureController.html','../../','d2/d34
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:ac1cae7291e18a400d01d6af6ca599648" id="r_ac1cae7291e18a400d01d6af6ca599648"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac1cae7291e18a400d01d6af6ca599648">show</a> ( $token)</td></tr>
+<tr class="memdesc:ac1cae7291e18a400d01d6af6ca599648"><td class="mdescLeft">&#160;</td><td class="mdescRight">Affiche l'interface de signature ou de téléchargement selon l'état du devis.  <br /></td></tr>
 <tr class="memitem:a502832554663dbcdfabed6b114ff8fb6" id="r_a502832554663dbcdfabed6b114ff8fb6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a502832554663dbcdfabed6b114ff8fb6">sign</a> (class Request $request, $token)</td></tr>
+<tr class="memdesc:a502832554663dbcdfabed6b114ff8fb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Traite la signature électronique et génère le document PDF certifié final.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d6/d95/SignatureController_8php_source.html#l00015">15</a> du fichier <a class="el" href="../../d6/d95/SignatureController_8php_source.html">SignatureController.php</a>.</p>
+<div class="textblock"><p>Gère l'affichage et le traitement des signatures électroniques pour les devis. </p>
+<p>Ce contrôleur centralise toutes les opérations liées à la signature de documents :</p><ul>
+<li>Affichage de l'interface de signature avec vérification des tokens.</li>
+<li>Traitement et intégration des signatures numériques dans les PDF.</li>
+<li>Génération de documents PDF signés et certifiés électroniquement.</li>
+<li>Gestion des états de signature (signé/non signé) avec redirection appropriée.</li>
+<li>Certification électronique via script Python pour la validité juridique. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d6/d95/SignatureController_8php_source.html#l00033">33</a> du fichier <a class="el" href="../../d6/d95/SignatureController_8php_source.html">SignatureController.php</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
 <a id="ac1cae7291e18a400d01d6af6ca599648" name="ac1cae7291e18a400d01d6af6ca599648"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac1cae7291e18a400d01d6af6ca599648">&#9670;&#160;</a></span>show()</h2>
@@ -133,7 +146,34 @@ Fonctions membres publiques</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d6/d95/SignatureController_8php_source.html#l00019">19</a> du fichier <a class="el" href="../../d6/d95/SignatureController_8php_source.html">SignatureController.php</a>.</p>
+<p>Affiche l'interface de signature ou de téléchargement selon l'état du devis. </p>
+<p>Cette méthode détermine l'affichage approprié en fonction du statut de signature :</p><ul>
+<li>Vérifie la validité et l'existence du token d'accès.</li>
+<li>Détermine si le devis a déjà été signé en cherchant le PDF certifié.</li>
+<li>Affiche l'interface de signature si le document n'est pas encore signé.</li>
+<li>Affiche l'interface de téléchargement si le document est déjà certifié.</li>
+<li>Transmet toutes les données nécessaires (montants, titres) aux vues.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> unique d'identification du devis à signer.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>mixed Vue 'signature' pour la signature ou 'signature_download' pour le téléchargement.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si le token n'existe pas (erreur 403).</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>La vérification de signature se base sur l'existence du fichier '_certifie.pdf'. </dd>
+<dd>
+Les données transmises incluent : token, devis_id, organisation_id, titre, montants. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>Aucune vérification d'expiration de token n'est actuellement effectuée (commentée). </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>GET /signature/ABC123 affiche l'interface de signature pour le token "ABC123". </dd></dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d6/d95/SignatureController_8php_source.html#l00058">58</a> du fichier <a class="el" href="../../d6/d95/SignatureController_8php_source.html">SignatureController.php</a>.</p>
 
 </div>
 </div>
@@ -155,9 +195,54 @@ Fonctions membres publiques</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Traite la signature électronique et génère le document PDF certifié final. </p>
+<p>Cette méthode complexe gère tout le processus de signature électronique :</p><ul>
+<li>Validation de la signature base64 reçue du client.</li>
+<li>Vérification et marquage du token comme utilisé.</li>
+<li>Intégration de la signature et de la date dans le PDF à la position calculée.</li>
+<li>Redimensionnement automatique de la signature en conservant les proportions.</li>
+<li>Génération d'un PDF intermédiaire avec signature visuelle.</li>
+<li>Certification électronique du document via script Python externe.</li>
+<li>Nettoyage automatique des fichiers temporaires après traitement.</li>
+</ul>
+<p>Processus de positionnement :</p><ul>
+<li>Utilise un ratio de conversion précis (6.98) pour le placement.</li>
+<li>Place automatiquement la date au format français (d/m/Y).</li>
+<li>Redimensionne la signature dans un cadre 31x13 unités maximum.</li>
+<li>Applique les modifications sur l'avant-dernière page du document.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramtype">Request</td><td class="paramname">$request</td><td>Requête POST contenant :<ul>
+<li>signature : Signature encodée en base64 (obligatoire) </li>
+</ul>
+</td></tr>
+    <tr><td class="paramtype">string</td><td class="paramname">$token</td><td><a class="el" href="../../d2/d6e/classToken.html" title="Modèle de gestion des tokens de signature électronique pour les devis.">Token</a> unique d'identification du devis à signer.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>void Cette méthode ne retourne rien mais génère des fichiers sur le système.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Exception</td><td>Si la validation de la signature échoue. </td></tr>
+    <tr><td class="paramname">ProcessFailedException</td><td>Si le script de certification Python échoue. </td></tr>
+    <tr><td class="paramname">Exception</td><td>Si une erreur survient lors de la manipulation des fichiers.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>Le ratio de conversion 6.98 est calibré spécifiquement pour les modèles PDF utilisés. </dd>
+<dd>
+La signature est redimensionnée automatiquement en conservant les proportions. </dd>
+<dd>
+Les fichiers temporaires (signature PNG, PDF signé) sont supprimés après traitement. </dd></dl>
+<dl class="section warning"><dt>Avertissement</dt><dd>La certification électronique nécessite Python et les dépendances appropriées. </dd>
+<dd>
+Les positions de signature doivent être préalablement configurées dans le token. </dd></dl>
+<dl class="section user"><dt>Exemple:</dt><dd>POST /signature/ABC123 avec signature base64 génère un PDF certifié. </dd></dl>
 <p>Mettre page de fin ici</p>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d6/d95/SignatureController_8php_source.html#l00061">61</a> du fichier <a class="el" href="../../d6/d95/SignatureController_8php_source.html">SignatureController.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d6/d95/SignatureController_8php_source.html#l00135">135</a> du fichier <a class="el" href="../../d6/d95/SignatureController_8php_source.html">SignatureController.php</a>.</p>
 
 </div>
 </div>

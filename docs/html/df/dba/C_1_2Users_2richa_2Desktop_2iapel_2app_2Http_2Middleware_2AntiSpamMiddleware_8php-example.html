@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: C:/Users/richa/Desktop/iapel/app/Http/Middleware/AntiSpamMiddleware.php</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('df/dba/C_1_2Users_2richa_2Desktop_2iapel_2app_2Http_2Middleware_2AntiSpamMiddleware_8php-example.html','../../',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">C:/Users/richa/Desktop/iapel/app/Http/Middleware/AntiSpamMiddleware.php</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><span class="comment">// Utilisation dans les routes (routes/web.php)</span></div>
+<div class="line">Route::post(<span class="stringliteral">&#39;/contact&#39;</span>, [ContactController::class, <span class="stringliteral">&#39;store&#39;</span>])</div>
+<div class="line">     -&gt;middleware(<span class="stringliteral">&#39;antispam:10,5&#39;</span>); <span class="comment">// 10 tentatives max en 5 minutes</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Utilisation avec paramètres par défaut</span></div>
+<div class="line">Route::post(<span class="stringliteral">&#39;/login&#39;</span>, [AuthController::class, <span class="stringliteral">&#39;login&#39;</span>])</div>
+<div class="line">     -&gt;middleware(<span class="stringliteral">&#39;antispam&#39;</span>); <span class="comment">// 5 tentatives max en 1 minute</span></div>
+</div><!-- fragment --><div class="fragment"><div class="line">&lt;?php</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">namespace </span>App\Http\Middleware;</div>
+<div class="line"> </div>
+<div class="line">use Closure;</div>
+<div class="line">use Illuminate\Http\Request;</div>
+<div class="line">use Symfony\Component\HttpFoundation\Response;</div>
+<div class="line">use Illuminate\Support\Facades\Cache;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * @class AntiSpamMiddleware</span></div>
+<div class="line"><span class="comment"> * @brief Middleware de protection contre les attaques par déni de service et le spam.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Ce middleware implémente un système de limitation de taux (rate limiting) pour protéger</span></div>
+<div class="line"><span class="comment"> * l&#39;application contre les tentatives de spam et les attaques par déni de service (DoS).</span></div>
+<div class="line"><span class="comment"> * Il utilise le système de cache de Laravel pour suivre le nombre de requêtes par IP</span></div>
+<div class="line"><span class="comment"> * et par URL, bloquant temporairement les utilisateurs qui dépassent les limites définies.</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Fonctionnalités principales :</span></div>
+<div class="line"><span class="comment"> * - Limitation du nombre de requêtes par IP et par route.</span></div>
+<div class="line"><span class="comment"> * - Configuration flexible des seuils de déclenchement et de la durée de blocage.</span></div>
+<div class="line"><span class="comment"> * - Utilisation du cache Laravel pour un suivi efficace des tentatives.</span></div>
+<div class="line"><span class="comment"> * - Réinitialisation automatique des compteurs après expiration.</span></div>
+<div class="line"><span class="comment"> * - Réponse HTTP 429 (Too Many Requests) conforme aux standards.</span></div>
+<div class="line"><span class="comment"> * - Protection granulaire par route avec paramètres personnalisables.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @package App\Http\Middleware</span></div>
+<div class="line"><span class="comment"> * @version 1.0</span></div>
+<div class="line"><span class="comment"> * @author Maxime ENTZ</span></div>
+<div class="line"><span class="comment"> * @since 1.0</span></div>
+<div class="line"><span class="comment"> * @note Middleware actuellement non utilisé selon le commentaire dans le code.</span></div>
+<div class="line"><span class="comment"> * @note Utilise le système de cache configuré dans l&#39;application Laravel.</span></div>
+<div class="line"><span class="comment"> * @warning Peut bloquer des utilisateurs légitimes en cas de configuration trop restrictive.</span></div>
+<div class="line"><span class="comment"> * @see Cache Pour le stockage des compteurs de tentatives.</span></div>
+<div class="line"><span class="comment"> * @example</span></div>
+<div class="line"><span class="comment"> * ```php</span></div>
+<div class="line"><span class="comment"> * // Utilisation dans les routes (routes/web.php)</span></div>
+<div class="line"><span class="comment"> * Route::post(&#39;/contact&#39;, [ContactController::class, &#39;store&#39;])</span></div>
+<div class="line"><span class="comment"> *      -&gt;middleware(&#39;antispam:10,5&#39;); // 10 tentatives max en 5 minutes</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * // Utilisation avec paramètres par défaut</span></div>
+<div class="line"><span class="comment"> * Route::post(&#39;/login&#39;, [AuthController::class, &#39;login&#39;])</span></div>
+<div class="line"><span class="comment"> *      -&gt;middleware(&#39;antispam&#39;); // 5 tentatives max en 1 minute</span></div>
+<div class="line"><span class="comment"> * ```</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">class </span>AntiSpamMiddleware</div>
+<div class="line">{<span class="comment"></span></div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Traite une requête entrante et applique la limitation de taux.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Cette méthode constitue le cœur du middleware. Elle vérifie le nombre de tentatives</span></div>
+<div class="line"><span class="comment">     * effectuées par l&#39;utilisateur depuis la même adresse IP vers la même URL, et bloque</span></div>
+<div class="line"><span class="comment">     * l&#39;accès si le seuil autorisé est dépassé. Le système utilise une clé composite</span></div>
+<div class="line"><span class="comment">     * incluant l&#39;URL complète et l&#39;adresse IP pour un suivi granulaire.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Le processus de vérification suit ces étapes :</span></div>
+<div class="line"><span class="comment">     * 1. Génération d&#39;une clé unique basée sur l&#39;URL et l&#39;IP de l&#39;utilisateur.</span></div>
+<div class="line"><span class="comment">     * 2. Incrémentation du compteur de tentatives dans le cache.</span></div>
+<div class="line"><span class="comment">     * 3. Configuration de l&#39;expiration du compteur lors de la première tentative.</span></div>
+<div class="line"><span class="comment">     * 4. Vérification du dépassement du seuil autorisé.</span></div>
+<div class="line"><span class="comment">     * 5. Blocage ou autorisation de la requête selon le résultat.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @param Request $request Requête HTTP entrante à analyser.</span></div>
+<div class="line"><span class="comment">     * @param Closure $next Fonction de callback pour passer au middleware suivant.</span></div>
+<div class="line"><span class="comment">     * @param int $maxAttempts Nombre maximum de tentatives autorisées (défaut: 5).</span></div>
+<div class="line"><span class="comment">     * @param int $decayMinutes Durée en minutes avant réinitialisation du compteur (défaut: 1).</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @return Response Réponse HTTP (429 si bloqué, sinon passage au middleware suivant).</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @throws \Illuminate\Contracts\Cache\LockTimeoutException Si le cache est indisponible.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Configuration dans le kernel HTTP (app/Http/Kernel.php)</span></div>
+<div class="line"><span class="comment">     * protected $middlewareAliases = [</span></div>
+<div class="line"><span class="comment">     *     &#39;antispam&#39; =&gt; \App\Http\Middleware\AntiSpamMiddleware::class,</span></div>
+<div class="line"><span class="comment">     * ];</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * // Utilisation restrictive pour les formulaires sensibles</span></div>
+<div class="line"><span class="comment">     * Route::post(&#39;/reset-password&#39;, function() {</span></div>
+<div class="line"><span class="comment">     *     // Logic here</span></div>
+<div class="line"><span class="comment">     * })-&gt;middleware(&#39;antispam:3,10&#39;); // 3 tentatives max en 10 minutes</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * // Utilisation pour protéger les API publiques</span></div>
+<div class="line"><span class="comment">     * Route::apiResource(&#39;users&#39;, UserController::class)</span></div>
+<div class="line"><span class="comment">     *      -&gt;middleware(&#39;antispam:50,60&#39;); // 50 requêtes max par heure</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note La clé de cache inclut l&#39;URL complète pour permettre différents seuils par endpoint.</span></div>
+<div class="line"><span class="comment">     * @note Le premier appel à Cache::increment() retourne 1 et déclenche la configuration d&#39;expiration.</span></div>
+<div class="line"><span class="comment">     * @note Les tentatives sont comptées par combinaison IP + URL, pas globalement par IP.</span></div>
+<div class="line"><span class="comment">     * @warning Une configuration trop restrictive peut nuire à l&#39;expérience utilisateur.</span></div>
+<div class="line"><span class="comment">     * @warning Le middleware ne distingue pas les requêtes légitimes des tentatives malveillantes.</span></div>
+<div class="line"><span class="comment">     * @see Cache::increment() Pour l&#39;incrémentation atomique des compteurs.</span></div>
+<div class="line"><span class="comment">     * @see now()-&gt;addMinutes() Pour la gestion de l&#39;expiration des compteurs.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> function <a id="a0" name="a0"></a><a class="code hl_function" href="../../db/dc7/classApp_1_1Http_1_1Middleware_1_1AntiSpamMiddleware.html#afa2ada6e7c70802b8673bb748b5a6786">handle</a>(Request $request, Closure $next, <span class="keywordtype">int</span> $maxAttempts = 5, <span class="keywordtype">int</span> $decayMinutes = 1): Response</div>
+<div class="line">    {</div>
+<div class="line">        <span class="comment">// On utilise l&#39;URL de la route et l&#39;adresse IP de l&#39;utilisateur.</span></div>
+<div class="line">        $key = <span class="stringliteral">&#39;anti-spam:&#39;</span> . $request-&gt;fullUrl() . <span class="charliteral">&#39;:&#39;</span> . $request-&gt;ip();</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Cache::increment() retourne la nouvelle valeur après incrémentation.</span></div>
+<div class="line">        $attempts = Cache::increment($key);</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Cela permet de réinitialiser le compteur après un certain temps.</span></div>
+<div class="line">        <span class="keywordflow">if</span> ($attempts === 1) {</div>
+<div class="line">            Cache::put($key, 1, now()-&gt;addMinutes($decayMinutes));</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="keywordflow">if</span> ($attempts &gt; $maxAttempts) {</div>
+<div class="line">            <span class="comment">// return redirect()-&gt;back()-&gt;withErrors([&#39;spam&#39; =&gt; &#39;Trop de tentatives. Veuillez réessayer plus tard.&#39;]);</span></div>
+<div class="line">            <span class="comment">// ou</span></div>
+<div class="line">            <span class="keywordflow">return</span> response(<span class="stringliteral">&#39;Trop de tentatives de spam. Veuillez réessayer plus tard.&#39;</span>, 429); <span class="comment">// 429 Too Many Requests</span></div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// 5. Si pas de spam détecté, passer la requête au middleware suivant ou au contrôleur</span></div>
+<div class="line">        <span class="keywordflow">return</span> $next($request);</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassApp_1_1Http_1_1Middleware_1_1AntiSpamMiddleware_html_afa2ada6e7c70802b8673bb748b5a6786"><div class="ttname"><a href="../../db/dc7/classApp_1_1Http_1_1Middleware_1_1AntiSpamMiddleware.html#afa2ada6e7c70802b8673bb748b5a6786">App::Http::Middleware::AntiSpamMiddleware::handle</a></div><div class="ttdeci">handle(class Request $request, Closure $next, int $maxAttempts=5, int $decayMinutes=1)</div><div class="ttdef"><b>Definition</b> <a href="../../d1/d40/AntiSpamMiddleware_8php_source.html#l00100">AntiSpamMiddleware.php:100</a></div></div>
+</div><!-- fragment --> </div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>

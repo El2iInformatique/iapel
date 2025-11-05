@@ -96,6 +96,9 @@ $(function(){initNavTree('d4/d0f/classApp_1_1Models_1_1layou__client.html','../.
   <div class="headertitle"><div class="title">Référence de la classe App::Models::layou_client</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Modèle de gestion des layouts personnalisés par client.  
+ <a href="#details">Plus de détails...</a></p>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Graphe d'héritage de App::Models::layou_client:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -109,14 +112,87 @@ $(function(){initNavTree('d4/d0f/classApp_1_1Models_1_1layou__client.html','../.
 <div class="center"><!-- SVG 1 --></div>
 </div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Fonctions membres publiques statiques</h2></td></tr>
+<tr class="memitem:a09cac7eda7ff9b57489eb332143beff7" id="r_a09cac7eda7ff9b57489eb332143beff7"><td class="memItemLeft" align="right" valign="top">static&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a09cac7eda7ff9b57489eb332143beff7">getLayoutByClient</a> ($nomClient)</td></tr>
+<tr class="memitem:ae0cf5f93cec85a5a857c5c64c58679e9" id="r_ae0cf5f93cec85a5a857c5c64c58679e9"><td class="memItemLeft" align="right" valign="top">static&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0cf5f93cec85a5a857c5c64c58679e9">hasCustomLayout</a> ($nomClient)</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
 <tr class="memitem:afd8be29e6367e26bdd96b1d92cca62c4" id="r_afd8be29e6367e26bdd96b1d92cca62c4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afd8be29e6367e26bdd96b1d92cca62c4">$table</a> = 'layout_client'</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Description détaillée</h2>
-<div class="textblock">
-<p class="definition">Définition à la ligne <a class="el" href="../../d8/da7/layou__client_8php_source.html#l00007">7</a> du fichier <a class="el" href="../../d8/da7/layou__client_8php_source.html">layou_client.php</a>.</p>
-</div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Documentation des données membres</h2>
+<div class="textblock"><p>Modèle de gestion des layouts personnalisés par client. </p>
+<p>Ce modèle gère les configurations de mise en page spécifiques à chaque client pour la génération des rapports d'intervention et documents personnalisés. Il permet d'adapter l'apparence et le contenu des formulaires selon les préférences et la charte graphique de chaque entreprise cliente.</p>
+<p>Fonctionnalités principales :</p><ul>
+<li>Stockage des paramètres de layout par client.</li>
+<li>Personnalisation de l'apparence des rapports d'intervention.</li>
+<li>Configuration des éléments visuels spécifiques (logos, couleurs, etc.).</li>
+<li>Adaptation des formulaires aux besoins métier de chaque client.</li>
+<li>Support de la personnalisation multi-client. </li>
+</ul>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d8/da7/layou__client_8php_source.html#l00045">45</a> du fichier <a class="el" href="../../d8/da7/layou__client_8php_source.html">layou_client.php</a>.</p>
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Documentation des fonctions membres</h2>
+<a id="a09cac7eda7ff9b57489eb332143beff7" name="a09cac7eda7ff9b57489eb332143beff7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09cac7eda7ff9b57489eb332143beff7">&#9670;&#160;</a></span>getLayoutByClient()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">App::Models::layou_client::getLayoutByClient </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$nomClient</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../da/dd1/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2layou_client_8php-example.html#a1">C:/Users/richa/Desktop/iapel/app/Models/layou_client.php</a>.</dd>
+</dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d8/da7/layou__client_8php_source.html#l00096">96</a> du fichier <a class="el" href="../../d8/da7/layou__client_8php_source.html">layou_client.php</a>.</p>
+
+</div>
+</div>
+<a id="ae0cf5f93cec85a5a857c5c64c58679e9" name="ae0cf5f93cec85a5a857c5c64c58679e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0cf5f93cec85a5a857c5c64c58679e9">&#9670;&#160;</a></span>hasCustomLayout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">App::Models::layou_client::hasCustomLayout </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>$nomClient</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../da/dd1/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2layou_client_8php-example.html#a2">C:/Users/richa/Desktop/iapel/app/Models/layou_client.php</a>.</dd>
+</dl>
+
+<p class="definition">Définition à la ligne <a class="el" href="../../d8/da7/layou__client_8php_source.html#l00124">124</a> du fichier <a class="el" href="../../d8/da7/layou__client_8php_source.html">layou_client.php</a>.</p>
+
+</div>
+</div>
+<a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Documentation des données membres</h2>
 <a id="afd8be29e6367e26bdd96b1d92cca62c4" name="afd8be29e6367e26bdd96b1d92cca62c4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd8be29e6367e26bdd96b1d92cca62c4">&#9670;&#160;</a></span>$table</h2>
 
@@ -128,8 +204,10 @@ Attributs publics</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section examples"><dt>Exemples</dt><dd><a class="el" href="../../da/dd1/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2layou_client_8php-example.html#a0">C:/Users/richa/Desktop/iapel/app/Models/layou_client.php</a>.</dd>
+</dl>
 
-<p class="definition">Définition à la ligne <a class="el" href="../../d8/da7/layou__client_8php_source.html#l00009">9</a> du fichier <a class="el" href="../../d8/da7/layou__client_8php_source.html">layou_client.php</a>.</p>
+<p class="definition">Définition à la ligne <a class="el" href="../../d8/da7/layou__client_8php_source.html#l00055">55</a> du fichier <a class="el" href="../../d8/da7/layou__client_8php_source.html">layou_client.php</a>.</p>
 
 </div>
 </div>

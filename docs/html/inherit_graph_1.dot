@@ -6,5 +6,5 @@ digraph "Graphe hiérarchique des classes"
   edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
   node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
   rankdir="LR";
-  Node0 [id="Node000000",label="App::Http::Middleware\l::AntiSpamMiddleware",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$db/dc7/classApp_1_1Http_1_1Middleware_1_1AntiSpamMiddleware.html",tooltip=" "];
+  Node0 [id="Node000000",label="App::Http::Middleware\l::AntiSpamMiddleware",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$db/dc7/classApp_1_1Http_1_1Middleware_1_1AntiSpamMiddleware.html",tooltip="Middleware de protection contre les attaques par déni de service et le spam."];
 }

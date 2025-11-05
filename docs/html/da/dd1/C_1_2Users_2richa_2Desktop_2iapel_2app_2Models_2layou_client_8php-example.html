@@ -1,0 +1,250 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>IAPEL API: C:/Users/richa/Desktop/iapel/app/Models/layou_client.php</title>
+<link href="../../tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../jquery.js"></script>
+<script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
+<link href="../../navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../navtreedata.js"></script>
+<script type="text/javascript" src="../../navtree.js"></script>
+<script type="text/javascript" src="../../cookie.js"></script>
+<link href="../../search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="../../search/searchdata.js"></script>
+<script type="text/javascript" src="../../search/search.js"></script>
+<link href="../../doxygen.css" rel="stylesheet" type="text/css" />
+<link href="../../doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="../../doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="../../favicon.ico"/></td>
+  <td id="projectalign">
+   <div id="projectname">IAPEL API<span id="projectnumber">&#160;v1.0.0</span>
+   </div>
+   <div id="projectbrief">API Laravel moderne pour la gestion intelligente des documents et signatures électroniques</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.15.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "../../search/",'.html');
+</script>
+<script type="text/javascript">
+$(function() { codefold.init(); });
+</script>
+<script type="text/javascript" src="../../menudata.js"></script>
+<script type="text/javascript" src="../../menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('../../',true,false,'search.php','Recherche',true);
+  $(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(function(){initNavTree('da/dd1/C_1_2Users_2richa_2Desktop_2iapel_2app_2Models_2layou_client_8php-example.html','../../',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">C:/Users/richa/Desktop/iapel/app/Models/layou_client.php</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><span class="comment">// Récupération du layout d&#39;un client</span></div>
+<div class="line">$clientLayout = layou_client::where(<span class="stringliteral">&#39;nom_client&#39;</span>, <span class="stringliteral">&#39;Entreprise1&#39;</span>)-&gt;first();</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordflow">if</span> ($clientLayout) {</div>
+<div class="line">    <span class="comment">// Utilisation du layout personnalisé</span></div>
+<div class="line">    <span class="keywordflow">return</span> view(<span class="stringliteral">&#39;bi&#39;</span>, compact(<span class="stringliteral">&#39;data&#39;</span>, <span class="stringliteral">&#39;client_layout&#39;</span>));</div>
+<div class="line">} <span class="keywordflow">else</span> {</div>
+<div class="line">    <span class="comment">// Utilisation du layout par défaut</span></div>
+<div class="line">    <span class="keywordflow">return</span> view(<span class="stringliteral">&#39;bi&#39;</span>, compact(<span class="stringliteral">&#39;data&#39;</span>));</div>
+<div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">&lt;?php</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">namespace </span>App\Models;</div>
+<div class="line"> </div>
+<div class="line">use Illuminate\Database\Eloquent\Model;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">/**</span></div>
+<div class="line"><span class="comment"> * @class layou_client</span></div>
+<div class="line"><span class="comment"> * @brief Modèle de gestion des layouts personnalisés par client.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Ce modèle gère les configurations de mise en page spécifiques à chaque client</span></div>
+<div class="line"><span class="comment"> * pour la génération des rapports d&#39;intervention et documents personnalisés.</span></div>
+<div class="line"><span class="comment"> * Il permet d&#39;adapter l&#39;apparence et le contenu des formulaires selon les</span></div>
+<div class="line"><span class="comment"> * préférences et la charte graphique de chaque entreprise cliente.</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * Fonctionnalités principales :</span></div>
+<div class="line"><span class="comment"> * - Stockage des paramètres de layout par client.</span></div>
+<div class="line"><span class="comment"> * - Personnalisation de l&#39;apparence des rapports d&#39;intervention.</span></div>
+<div class="line"><span class="comment"> * - Configuration des éléments visuels spécifiques (logos, couleurs, etc.).</span></div>
+<div class="line"><span class="comment"> * - Adaptation des formulaires aux besoins métier de chaque client.</span></div>
+<div class="line"><span class="comment"> * - Support de la personnalisation multi-client.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * @package App\Models</span></div>
+<div class="line"><span class="comment"> * @version 1.0</span></div>
+<div class="line"><span class="comment"> * @author Maxime ENTZ</span></div>
+<div class="line"><span class="comment"> * @since 1.0</span></div>
+<div class="line"><span class="comment"> * @note Utilise la table &quot;layout_client&quot; en base de données.</span></div>
+<div class="line"><span class="comment"> * @note Ne surcharge pas les timestamps Laravel par défaut.</span></div>
+<div class="line"><span class="comment"> * @warning Ce modèle est utilisé pour la personnalisation visuelle et ne doit pas contenir de données sensibles.</span></div>
+<div class="line"><span class="comment"> * @see BiController::show() Méthode qui utilise ce modèle pour personnaliser l&#39;affichage des rapports.</span></div>
+<div class="line"><span class="comment"> * @example</span></div>
+<div class="line"><span class="comment"> * ```php</span></div>
+<div class="line"><span class="comment"> * // Récupération du layout d&#39;un client</span></div>
+<div class="line"><span class="comment"> * $clientLayout = layou_client::where(&#39;nom_client&#39;, &#39;Entreprise1&#39;)-&gt;first();</span></div>
+<div class="line"><span class="comment"> * </span></div>
+<div class="line"><span class="comment"> * if ($clientLayout) {</span></div>
+<div class="line"><span class="comment"> *     // Utilisation du layout personnalisé</span></div>
+<div class="line"><span class="comment"> *     return view(&#39;bi&#39;, compact(&#39;data&#39;, &#39;client_layout&#39;));</span></div>
+<div class="line"><span class="comment"> * } else {</span></div>
+<div class="line"><span class="comment"> *     // Utilisation du layout par défaut</span></div>
+<div class="line"><span class="comment"> *     return view(&#39;bi&#39;, compact(&#39;data&#39;));</span></div>
+<div class="line"><span class="comment"> * }</span></div>
+<div class="line"><span class="comment"> * ```</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">class </span>layou_client <span class="keyword">extends</span> Model</div>
+<div class="line">{<span class="comment"></span></div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Nom de la table de base de données.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * Spécifie le nom de la table utilisée pour stocker les layouts clients.</span></div>
+<div class="line"><span class="comment">     * Cette table contient les paramètres de personnalisation pour chaque client.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @var string Nom de la table &quot;layout_client&quot;.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> <a id="a0" name="a0"></a><a class="code hl_variable" href="../../d4/d0f/classApp_1_1Models_1_1layou__client.html#afd8be29e6367e26bdd96b1d92cca62c4">$table</a> = <span class="stringliteral">&#39;layout_client&#39;</span>;</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Les attributs qui peuvent être assignés en masse.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * Bien que non explicitement définis, cette classe hérite des attributs</span></div>
+<div class="line"><span class="comment">     * de base d&#39;Eloquent. Les champs typiques incluent :</span></div>
+<div class="line"><span class="comment">     * - nom_client : Nom du client pour lequel le layout est défini</span></div>
+<div class="line"><span class="comment">     * - logo_path : Chemin vers le logo personnalisé</span></div>
+<div class="line"><span class="comment">     * - couleur_principale : Couleur principale de la charte graphique</span></div>
+<div class="line"><span class="comment">     * - couleur_secondaire : Couleur secondaire</span></div>
+<div class="line"><span class="comment">     * - style_css : CSS personnalisé supplémentaire</span></div>
+<div class="line"><span class="comment">     * - configuration_json : Configuration avancée au format JSON</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @note Les attributs exacts dépendent de la structure de la table layout_client.</span></div>
+<div class="line"><span class="comment">     * @note Pour des raisons de sécurité, il est recommandé de définir explicitement $fillable.</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Récupère le layout d&#39;un client par son nom.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Méthode utilitaire pour récupérer facilement la configuration de layout</span></div>
+<div class="line"><span class="comment">     * d&#39;un client spécifique à partir de son nom.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @param string $nomClient Nom du client dont on veut récupérer le layout.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @return layou_client|null Instance du layout du client ou null si non trouvé.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * $layout = layou_client::getLayoutByClient(&#39;MonEntreprise&#39;);</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * if ($layout) {</span></div>
+<div class="line"><span class="comment">     *     echo &quot;Layout trouvé pour &quot; . $layout-&gt;nom_client;</span></div>
+<div class="line"><span class="comment">     * } else {</span></div>
+<div class="line"><span class="comment">     *     echo &quot;Aucun layout personnalisé pour ce client&quot;;</span></div>
+<div class="line"><span class="comment">     * }</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @static</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> function <a id="a1" name="a1"></a><a class="code hl_function" href="../../d4/d0f/classApp_1_1Models_1_1layou__client.html#a09cac7eda7ff9b57489eb332143beff7">getLayoutByClient</a>($nomClient)</div>
+<div class="line">    {</div>
+<div class="line">        <span class="keywordflow">return</span> self::where(<span class="stringliteral">&#39;nom_client&#39;</span>, $nomClient)-&gt;first();</div>
+<div class="line">    }</div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">    /**</span></div>
+<div class="line"><span class="comment">     * @brief Vérifie si un client a un layout personnalisé.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * Méthode utilitaire pour vérifier rapidement si un client</span></div>
+<div class="line"><span class="comment">     * dispose d&#39;une configuration de layout personnalisée.</span></div>
+<div class="line"><span class="comment">     *</span></div>
+<div class="line"><span class="comment">     * @param string $nomClient Nom du client à vérifier.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @return bool True si le client a un layout personnalisé, false sinon.</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @example</span></div>
+<div class="line"><span class="comment">     * ```php</span></div>
+<div class="line"><span class="comment">     * if (layou_client::hasCustomLayout(&#39;MonEntreprise&#39;)) {</span></div>
+<div class="line"><span class="comment">     *     // Utiliser le layout personnalisé</span></div>
+<div class="line"><span class="comment">     *     $layout = layou_client::getLayoutByClient(&#39;MonEntreprise&#39;);</span></div>
+<div class="line"><span class="comment">     * } else {</span></div>
+<div class="line"><span class="comment">     *     // Utiliser le layout par défaut</span></div>
+<div class="line"><span class="comment">     *     $layout = null;</span></div>
+<div class="line"><span class="comment">     * }</span></div>
+<div class="line"><span class="comment">     * ```</span></div>
+<div class="line"><span class="comment">     * </span></div>
+<div class="line"><span class="comment">     * @static</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> function <a id="a2" name="a2"></a><a class="code hl_function" href="../../d4/d0f/classApp_1_1Models_1_1layou__client.html#ae0cf5f93cec85a5a857c5c64c58679e9">hasCustomLayout</a>($nomClient)</div>
+<div class="line">    {</div>
+<div class="line">        <span class="keywordflow">return</span> self::where(<span class="stringliteral">&#39;nom_client&#39;</span>, $nomClient)-&gt;exists();</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassApp_1_1Models_1_1layou__client_html_a09cac7eda7ff9b57489eb332143beff7"><div class="ttname"><a href="../../d4/d0f/classApp_1_1Models_1_1layou__client.html#a09cac7eda7ff9b57489eb332143beff7">App::Models::layou_client::getLayoutByClient</a></div><div class="ttdeci">static getLayoutByClient($nomClient)</div><div class="ttdef"><b>Definition</b> <a href="../../d8/da7/layou__client_8php_source.html#l00096">layou_client.php:96</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1layou__client_html_ae0cf5f93cec85a5a857c5c64c58679e9"><div class="ttname"><a href="../../d4/d0f/classApp_1_1Models_1_1layou__client.html#ae0cf5f93cec85a5a857c5c64c58679e9">App::Models::layou_client::hasCustomLayout</a></div><div class="ttdeci">static hasCustomLayout($nomClient)</div><div class="ttdef"><b>Definition</b> <a href="../../d8/da7/layou__client_8php_source.html#l00124">layou_client.php:124</a></div></div>
+<div class="ttc" id="aclassApp_1_1Models_1_1layou__client_html_afd8be29e6367e26bdd96b1d92cca62c4"><div class="ttname"><a href="../../d4/d0f/classApp_1_1Models_1_1layou__client.html#afd8be29e6367e26bdd96b1d92cca62c4">App::Models::layou_client::$table</a></div><div class="ttdeci">$table</div><div class="ttdef"><b>Definition</b> <a href="../../d8/da7/layou__client_8php_source.html#l00055">layou_client.php:55</a></div></div>
+</div><!-- fragment --> </div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Généré le <span class="timestamp"></span> pour IAPEL API par <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
+</body>
+</html>
