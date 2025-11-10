@@ -37,6 +37,7 @@ class BiController extends Controller
      *
      * @param string $client Nom du client.
      * @return JsonResponse Liste des documents ou message d’erreur.
+     * PS: CROATAN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
     public function getDocuments($client)
     {

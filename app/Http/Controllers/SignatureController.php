@@ -182,7 +182,7 @@ class SignatureController extends Controller
                     'ratioConversion' => $ratioConversion
                 ]);
                 
-                \Log::info("DEBUG: Tentative d'ajout de l'image au PDF");
+                \Log::info(message: "DEBUG: Tentative d'ajout de l'image au PDF");
                 
                 try {
                     $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
