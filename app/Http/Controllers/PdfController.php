@@ -1295,14 +1295,49 @@ class PdfController extends Controller
      * GET /devis/ABC123 affiche le devis associé au token "ABC123" avec son statut de certification.
      */
     public function viewDevis(Request $request, $token){
+        Log::info("Tentative d'accès au devis", [
+            'token_recu' => $token,
+            'ip_client' => $request->ip(),
+            'user_agent' => $request->userAgent()
+        ]);
+
         $leToken = Token::where('token', $token)->first();
 
         if (!$leToken) {
+            Log::warning("Token non trouvé en base de données", [
+                'token_recherche' => $token,
+                'tokens_existants_sample' => Token::limit(5)->pluck('token')->toArray()
+            ]);
             abort(404);
         }
 
+        Log::info("Token trouvé en base", [
+            'token' => $token,
+            'organisation_id' => $leToken->organisation_id,
+            'devis_id' => $leToken->devis_id,
+            'created_at' => $leToken->created_at
+        ]);
+
         $devisName = $leToken->devis_id . '_' . $token;
-        $isCertified = Storage::disk('public')->exists($leToken->organisation_id . '/devis/' . $devisName . '/' . $devisName . '_certifie.pdf'); 
+        $certifiedPath = $leToken->organisation_id . '/devis/' . $devisName . '/' . $devisName . '_certifie.pdf';
+        $isCertified = Storage::disk('public')->exists($certifiedPath);
+
+        Log::info("Vérification du fichier certifié", [
+            'devis_name' => $devisName,
+            'chemin_certifie' => $certifiedPath,
+            'fichier_existe' => $isCertified,
+            'storage_path_complet' => storage_path('app/public/' . $certifiedPath)
+        ]);
+
+        // Vérification supplémentaire de l'existence du répertoire de base
+        $baseDevisPath = $leToken->organisation_id . '/devis/' . $devisName;
+        $baseExists = Storage::disk('public')->exists($baseDevisPath);
+        
+        Log::info("Vérification du répertoire de base", [
+            'chemin_base' => $baseDevisPath,
+            'repertoire_existe' => $baseExists,
+            'contenu_repertoire' => $baseExists ? Storage::disk('public')->files($baseDevisPath) : []
+        ]);
 
         return view('devis_pdf', [
             'client' => $leToken->organisation_id,
