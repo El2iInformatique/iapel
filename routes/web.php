@@ -9,6 +9,7 @@ use App\Http\Controllers\PdfController;
 use App\Http\Controllers\CerfaController;
 use App\Http\Controllers\BiController;
 use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\RevisionController;
 use Illuminate\Http\Request;
 
 
@@ -62,6 +63,10 @@ Route::get('/68', function () {
 Route::get('/', function () {
     return redirect()->away('https://www.el2i.fr');
 });
+
+// Perso Adrien
+Route::get('/revision', [RevisionController::class, 'index'])->name('revision.index');
+Route::post('/revision/check', [RevisionController::class, 'check'])->name('revision.check');
 
 
 // Listing des documents disponibles pour un client
