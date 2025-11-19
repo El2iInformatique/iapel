@@ -3,6 +3,7 @@ use App\Http\Controllers\DevisController;
 use App\Models\Token;
 use App\Http\Controllers\TokenController;
 use App\Http\Controllers\PdfController;
+use App\Http\Controllers\BiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
@@ -14,4 +15,5 @@ Route::prefix('api')->group(function () {
         return response()->json(Token::all());
     });
     Route::post('/upload-pdf', [PdfController::class, 'upload'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::post('/create-json', [BiController::class, 'createJson'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });

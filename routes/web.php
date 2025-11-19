@@ -37,9 +37,6 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     // Génération et affichage des PDFs
     Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view')->middleware('VerifToken');
 
-    // Création du JSON de données pour le document
-    Route::post('/create-json', [BiController::class, 'createJson']);
-
     // Data d'un document
     Route::get('/open/{token}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
 
