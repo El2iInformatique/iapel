@@ -26,3 +26,117 @@ yarn-error.log
 /*.tmp
 /*e.txt
 /python-script*
+
+
+# =========================================
+# LARAVEL / PHP
+# =========================================
+
+# Environnement et configurations locales
+.env
+.env.*
+!.env.example
+.env.backup
+*.local
+Homestead.yaml
+Homestead.json
+
+# Vendor (dépendances PHP)
+vendor/
+
+# Caches et fichiers générés
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+storage/*.key
+storage/app/*
+!storage/app/.gitignore
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+!storage/logs/.gitignore
+
+# =========================================
+# NODE / FRONTEND
+# =========================================
+
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+pnpm-lock.yaml
+vite.config.js.timestamp-*
+public/hot
+public/storage
+public/mix-manifest.json
+
+# =========================================
+# PYTHON (scripts et tests)
+# =========================================
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+*.log
+.env_python
+venv/
+.venv/
+env/
+ENV/
+
+# =========================================
+# TESTS / COVERAGE
+# =========================================
+
+.phpunit.result.cache
+coverage/
+.cache/
+
+# =========================================
+# IDEs / OS
+# =========================================
+
+# VSCode / PhpStorm / autres IDE
+.vscode/
+.idea/
+nbproject/
+*.iml
+
+# Mac / Windows / Linux
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# =========================================
+# AUTRES / PERSONNALISÉ
+# =========================================
+
+# Sauvegardes et anciens fichiers
+*_OLD.php
+*_OLD.py
+*_backup*
+*.bak
+
+# Scripts temporaires
+python-script-test/__pycache__/
+python-script-test/tmp/
+python-script-test/.ipynb_checkpoints/
+
+# Logs ou fichiers sensibles
+*.log
+*.tmp
+*.swp
+*.swo
+
+# =========================================
+# PUBLIC (si besoin)
+# =========================================
+
+# Garde les images mais pas les fichiers temporaires
+public/tmp/
+public/storage/

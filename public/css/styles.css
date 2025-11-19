@@ -1,0 +1,50 @@
+
+body {
+    background: url('/storage/images/tweed.png');
+    background-repeat: repeat;
+}
+
+.card {
+    background-color: #ffffff;
+}
+
+.card-header {
+    font-size: 24px;
+    font-weight: bold;
+    background-color: silver;  
+    box-shadow: 0px -4px 6px rgba(0, 0, 0, 0.4);
+}
+
+.card-body {
+    background-color: #f7f7f7;  
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Effet d'ombre légère */  
+}
+
+.form-control {
+    background-color: #ffffff;
+}
+
+.accordion-button.collapsed {
+    background-color: #d6d6d6; /* Couleur par défaut des headers fermés */
+    color: black;
+}
+
+.accordion-button:disabled {
+    background-color: silver !important;
+    color: #6c757d !important; /* Texte en gris foncé */
+}
+
+.info-icon {
+    color: #007bff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-right: 12px; /* Espacement entre l'icône et le texte */
+}
+
+.accordion-body {
+    background-color: #f7f7f7;  
+}
+
+.small-text {
+    font-size: 0.8em; /* Réduit la taille du texte */
+}
