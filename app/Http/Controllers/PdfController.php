@@ -1295,55 +1295,111 @@ class PdfController extends Controller
      * GET /devis/ABC123 affiche le devis associé au token "ABC123" avec son statut de certification.
      */
     public function viewDevis(Request $request, $token){
-        Log::info("Tentative d'accès au devis", [
-            'token_recu' => $token,
-            'ip_client' => $request->ip(),
-            'user_agent' => $request->userAgent()
-        ]);
-
-        $leToken = Token::where('token', $token)->first();
-
-        if (!$leToken) {
-            Log::warning("Token non trouvé en base de données", [
-                'token_recherche' => $token,
-                'tokens_existants_sample' => Token::limit(5)->pluck('token')->toArray()
+        try {
+            Log::info("Tentative d'accès au devis", [
+                'token_recu' => $token,
+                'ip_client' => $request->ip(),
+                'user_agent' => $request->userAgent()
             ]);
-            abort(404);
+
+            // Validation du token
+            if (empty($token) || !is_string($token)) {
+                Log::error("Token invalide", ['token' => $token]);
+                abort(404, "Token invalide");
+            }
+
+            $leToken = Token::where('token', $token)->first();
+
+            if (!$leToken) {
+                Log::warning("Token non trouvé en base de données", [
+                    'token_recherche' => $token,
+                    'tokens_existants_sample' => Token::limit(5)->pluck('token')->toArray()
+                ]);
+                abort(404, "Devis non trouvé");
+            }
+
+            Log::info("Token trouvé en base", [
+                'token' => $token,
+                'organisation_id' => $leToken->organisation_id,
+                'devis_id' => $leToken->devis_id,
+                'created_at' => $leToken->created_at
+            ]);
+
+            // Validation des données du token
+            if (empty($leToken->organisation_id) || empty($leToken->devis_id)) {
+                Log::error("Données token incomplètes", [
+                    'token' => $token,
+                    'organisation_id' => $leToken->organisation_id,
+                    'devis_id' => $leToken->devis_id
+                ]);
+                abort(404, "Données devis incomplètes");
+            }
+
+            $devisName = $leToken->devis_id . '_' . $token;
+            $certifiedPath = $leToken->organisation_id . '/devis/' . $devisName . '/' . $devisName . '_certifie.pdf';
+            $normalPath = $leToken->organisation_id . '/devis/' . $devisName . '/' . $devisName . '.pdf';
+            
+            $isCertified = Storage::disk('public')->exists($certifiedPath);
+            $hasNormalFile = Storage::disk('public')->exists($normalPath);
+
+            Log::info("Vérification des fichiers", [
+                'devis_name' => $devisName,
+                'chemin_certifie' => $certifiedPath,
+                'fichier_certifie_existe' => $isCertified,
+                'chemin_normal' => $normalPath,
+                'fichier_normal_existe' => $hasNormalFile,
+                'storage_public_path' => storage_path('app/public/')
+            ]);
+
+            // Vérification qu'au moins un fichier existe
+            if (!$isCertified && !$hasNormalFile) {
+                Log::error("Aucun fichier PDF trouvé", [
+                    'token' => $token,
+                    'devis_name' => $devisName,
+                    'chemin_certifie' => $certifiedPath,
+                    'chemin_normal' => $normalPath
+                ]);
+                abort(404, "Fichier PDF non trouvé");
+            }
+
+            // Vérification supplémentaire de l'existence du répertoire de base
+            $baseDevisPath = $leToken->organisation_id . '/devis/' . $devisName;
+            $baseExists = Storage::disk('public')->exists($baseDevisPath);
+            
+            Log::info("Vérification du répertoire de base", [
+                'chemin_base' => $baseDevisPath,
+                'repertoire_existe' => $baseExists,
+                'contenu_repertoire' => $baseExists ? Storage::disk('public')->files($baseDevisPath) : []
+            ]);
+
+            // Préparation des données pour la vue avec validation
+            $viewData = [
+                'client' => $leToken->organisation_id,
+                'token' => $token,
+                'nomDevis' => $leToken->devis_id,
+                'isCertified' => $isCertified
+            ];
+
+            Log::info("Données préparées pour la vue", $viewData);
+
+            return view('devis_pdf', $viewData);
+
+        } catch (\Exception $e) {
+            Log::error("Erreur dans viewDevis", [
+                'token' => $token ?? 'non défini',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            // Si c'est une erreur HTTP (abort), on la relance
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+                throw $e;
+            }
+
+            // Sinon, on retourne une erreur 500 avec un message générique
+            abort(500, "Erreur interne du serveur lors de l'accès au devis");
         }
-
-        Log::info("Token trouvé en base", [
-            'token' => $token,
-            'organisation_id' => $leToken->organisation_id,
-            'devis_id' => $leToken->devis_id,
-            'created_at' => $leToken->created_at
-        ]);
-
-        $devisName = $leToken->devis_id . '_' . $token;
-        $certifiedPath = $leToken->organisation_id . '/devis/' . $devisName . '/' . $devisName . '_certifie.pdf';
-        $isCertified = Storage::disk('public')->exists($certifiedPath);
-
-        Log::info("Vérification du fichier certifié", [
-            'devis_name' => $devisName,
-            'chemin_certifie' => $certifiedPath,
-            'fichier_existe' => $isCertified,
-            'storage_path_complet' => storage_path('app/public/' . $certifiedPath)
-        ]);
-
-        // Vérification supplémentaire de l'existence du répertoire de base
-        $baseDevisPath = $leToken->organisation_id . '/devis/' . $devisName;
-        $baseExists = Storage::disk('public')->exists($baseDevisPath);
-        
-        Log::info("Vérification du répertoire de base", [
-            'chemin_base' => $baseDevisPath,
-            'repertoire_existe' => $baseExists,
-            'contenu_repertoire' => $baseExists ? Storage::disk('public')->files($baseDevisPath) : []
-        ]);
-
-        return view('devis_pdf', [
-            'client' => $leToken->organisation_id,
-            'token' => $token,
-            'nomDevis' => $leToken->devis_id,
-            'isCertified' => $isCertified
-        ]);
     }
 }
