@@ -1385,7 +1385,7 @@ class PdfController extends Controller
             return view('devis_pdf', $viewData);
 
         } catch (\Exception $e) {
-            Log::error("Erreur dans viewDevis", [
+            Log::info("Erreur dans viewDevis", [
                 'token' => $token ?? 'non défini',
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
