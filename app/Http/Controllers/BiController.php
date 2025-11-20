@@ -516,11 +516,13 @@ class BiController extends Controller
 
         $files = Storage::disk('public')->allFiles($basePath);
 
-        // Sépare proprement les fichiers "devis" et les autres
+        // Sépare proprement les fichiers "devis", "rapport_intervention" et les autres
         $lesDevisFiles = array_filter($files, fn($f) => strpos($f, '/devis/') !== false);
-        $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false);
+        $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
+        $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false);
 
         \Log::info('lesDevisFiles: ' . json_encode(array_values($lesDevisFiles)));
+        \Log::info('lesRapportInterventionFiles: ' . json_encode(array_values($lesRapportInterventionFiles)));
 
         // Chargement des règles de format (comme dans ta version)
         $formatPath = 'format.json';
@@ -578,10 +580,53 @@ class BiController extends Controller
             }
         }
 
+        // Construction d'une map des rapports d'intervention par dossier
+        $rapportInterventionTraites = [];
+        foreach ($lesRapportInterventionFiles as $file) {
+            $parts = explode('/', $file);
+            $rapportIndex = array_search('rapport_intervention', $parts);
+            if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) {
+                \Log::warning("Chemin rapport_intervention inattendu: $file");
+                continue;
+            }
+
+            $folder = $parts[$rapportIndex + 1]; // ex: uid_folder
+            $fileName = end($parts); // ex: uid.pdf ou uid.json
+
+            if (!isset($rapportInterventionTraites[$folder])) {
+                $rapportInterventionTraites[$folder] = [
+                    'uid' => $folder,
+                    'has_json' => false,
+                    'has_pdf' => false,
+                    'json_file' => null,
+                    'pdf_file' => null,
+                    'json_last' => null,
+                    'pdf_last' => null,
+                ];
+            }
+
+            if (str_ends_with($fileName, '.json')) {
+                $rapportInterventionTraites[$folder]['has_json'] = true;
+                $rapportInterventionTraites[$folder]['json_file'] = $file;
+                if (Storage::disk('public')->exists($file)) {
+                    $rapportInterventionTraites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
+                }
+            } elseif (str_ends_with($fileName, '.pdf')) {
+                $rapportInterventionTraites[$folder]['has_pdf'] = true;
+                $rapportInterventionTraites[$folder]['pdf_file'] = $file;
+                if (Storage::disk('public')->exists($file)) {
+                    $rapportInterventionTraites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
+                }
+            }
+        }
+
         \Log::info('Devis recueillis: ' . json_encode($devisTraites));
+        \Log::info('Rapports intervention recueillis: ' . json_encode($rapportInterventionTraites));
 
         // Création de l'index documents pour retour
         $documents = [];
+        
+        // Traitement des devis
         foreach ($devisTraites as $folder => $d) {
             $status = $d['has_certifie'] ? 'certifie' : '';
             // Preferer la date du PDF normal comme date de traitement
@@ -603,6 +648,51 @@ class BiController extends Controller
                     "par" => null
                 ]
             ];
+        }
+
+        // Traitement des rapports d'intervention
+        foreach ($rapportInterventionTraites as $folder => $r) {
+            $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
+            
+            $traitTs = $r['json_last'];
+            $pdfTs = $r['pdf_last'];
+
+            $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
+            $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
+
+            // Récupérer les données du JSON si disponible
+            $jsonData = null;
+            if ($r['has_json'] && $r['json_file']) {
+                try {
+                    $jsonContent = Storage::disk('public')->get($r['json_file']);
+                    $jsonData = json_decode($jsonContent, true);
+                } catch (\Exception $e) {
+                    \Log::warning("Erreur lecture JSON rapport intervention: " . $e->getMessage());
+                }
+            }
+
+            $documents['rapport_intervention/' . $folder] = [
+                'path' => 'rapport_intervention/' . $folder,
+                'status' => $status,
+                'token_rapport' => null, // sera rempli plus bas si on trouve le token
+                'data' => [
+                    "uid" => $r['uid'],
+                    "client" => $jsonData['nom_client'] ?? null,
+                    "intervenant" => $jsonData['intervenant'] ?? null,
+                    "description" => $jsonData['description'] ?? null,
+                    "date_traitement" => $dateTrait,
+                    "date_pdf" => $datePdf,
+                ]
+            ];
+
+            // Chercher le token associé
+            if ($r['json_file']) {
+                $pathToken = "app/public/" . $r['json_file'];
+                $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
+                if ($tokenRapport) {
+                    $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token;
+                }
+            }
         }
 
         // Traitement des autres documents (reste très proche de ta version)
