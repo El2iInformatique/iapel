@@ -8,5 +8,6 @@
         'POL_AIR' => env('POL_AIR_SECRET'),
         'apelWEB' => env('APEL_WEB_SECRET'),
         'APEL_Test' => env('APEL_TEST_SECRET'),
+        'CHARPENTIER' => env('CHARPENTIER_SECRET'),
     ];
     
