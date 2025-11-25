@@ -60,6 +60,9 @@ Route::get('/', function () {
     return redirect()->away('https://www.el2i.fr');
 });
 
+Route::get('/revision', [RevisionController::class, 'index'])->name('revision.index');
+Route::post('/revision/check', [RevisionController::class, 'check'])->name('revision.check');
+
 
 // Listing des documents disponibles pour un client
 Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
