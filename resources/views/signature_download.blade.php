@@ -9,318 +9,294 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
-            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            --hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --success-color: #27ae60;
+            --accent-color: #3498db;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #6c757d;
+            --white: #ffffff;
         }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f6fa;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #2c3e50;
+            line-height: 1.6;
         }
 
         .main-container {
-            padding: 3rem 0;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .success-card {
-            border: none;
-            border-radius: 20px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            background: white;
-        }
-
-        .success-card:hover {
-            box-shadow: var(--hover-shadow);
-            transform: translateY(-5px);
-        }
-
-        .card-header-custom {
-            background: var(--primary-gradient);
-            color: white;
-            padding: 2rem;
-            border: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-header-custom::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            opacity: 0.3;
-        }
-
-        .card-header-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0;
-            position: relative;
-            z-index: 1;
+            padding: 2rem 0;
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
         }
 
-        .card-body-custom {
-            padding: 2.5rem;
-            background: #fafbfc;
-        }
-
-        .success-alert {
-            background: var(--success-gradient);
-            border: none;
-            border-radius: 15px;
-            color: white;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            animation: pulse 2s infinite;
-        }
-
-        .success-alert .check-icon {
-            font-size: 2rem;
-            margin-right: 1rem;
-            animation: bounceIn 1s ease-out;
-        }
-
-        .title-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .price-list {
-            background: white;
-            border-radius: 15px;
+        .document-card {
+            background: var(--white);
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card-header-professional {
+            background: var(--primary-color);
+            color: var(--white);
+            padding: 1.5rem 2rem;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .card-body-professional {
+            padding: 2rem;
+        }
+
+        .status-notification {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .status-icon {
+            font-size: 1.25rem;
+            color: var(--success-color);
+        }
+
+        .document-info {
+            background: var(--light-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .document-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .financial-summary {
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            overflow: hidden;
             margin-bottom: 2rem;
         }
 
-        .price-item {
-            padding: 1.2rem 1.5rem;
-            border: none;
-            transition: all 0.3s ease;
+        .summary-header {
+            background: var(--medium-gray);
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.95rem;
+        }
+
+        .summary-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid var(--medium-gray);
+            background: var(--white);
         }
 
-        .price-item:hover {
-            background-color: #f8f9ff;
-            transform: translateX(5px);
+        .summary-item:last-child {
+            border-bottom: none;
         }
 
-        .price-item.total {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .summary-item.total {
+            background: var(--primary-color);
+            color: var(--white);
             font-weight: 600;
         }
 
-        .price-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
+        .summary-label {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            background: #f0f2ff;
-            color: #667eea;
+            gap: 0.5rem;
+            font-size: 0.95rem;
         }
 
-        .download-btn {
-            background: var(--success-gradient);
-            border: none;
-            border-radius: 50px;
-            padding: 1rem 2rem;
+        .summary-amount {
             font-weight: 600;
-            font-size: 1.1rem;
-            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
-            transition: all 0.3s ease;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
+            font-size: 1rem;
         }
 
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(78, 205, 196, 0.6);
+        .download-section {
+            text-align: center;
+            padding-top: 1rem;
         }
 
-        .download-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.6s;
+        .download-button {
+            background: var(--success-color);
+            border: none;
+            color: var(--white);
+            padding: 0.875rem 2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 200px;
+            justify-content: center;
         }
 
-        .download-btn:hover::before {
-            left: 100%;
+        .download-button:hover {
+            background: #219a52;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.2);
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
+        .download-button:active {
+            transform: translateY(0);
+        }
+
+        .download-button:disabled {
+            background: var(--dark-gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .download-info {
+            color: var(--dark-gray);
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+        }
+
+        .company-branding {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--medium-gray);
+            color: var(--dark-gray);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 576px) {
+            .main-container {
+                padding: 1rem 0;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            
+            .card-body-professional {
+                padding: 1.5rem;
             }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        @keyframes bounceIn {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        .floating-elements {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .floating-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(102, 126, 234, 0.1);
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .floating-circle:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .floating-circle:nth-child(2) {
-            width: 60px;
-            height: 60px;
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
-
-        .floating-circle:nth-child(3) {
-            width: 40px;
-            height: 40px;
-            top: 80%;
-            left: 30%;
-            animation-delay: 4s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+            
+            .header-title {
+                font-size: 1.1rem;
+            }
+            
+            .summary-item {
+                padding: 0.75rem 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="floating-elements">
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
-    </div>
-
     <div class="container main-container">
         <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10">
-                <div class="success-card">
-                    <div class="card-header-custom">
-                        <h1 class="card-header-title">
-                            <i class="bi bi-file-earmark-check-fill"></i>
-                            Devis n°{{ $devis_id }} signé avec succès
+            <div class="col-lg-8 col-md-10 col-12">
+                <div class="document-card">
+                    <div class="card-header-professional">
+                        <h1 class="header-title">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Signature électronique validée
                         </h1>
+                        <div class="header-subtitle">Devis n°{{ $devis_id }}</div>
                     </div>
                     
-                    <div class="card-body-custom">
-                        <!-- Alert de succès avec animation -->
-                        <div class="success-alert text-center">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <i class="bi bi-check-circle-fill check-icon"></i>
-                                <div>
-                                    <h4 class="mb-1">Signature réussie !</h4>
-                                    <p class="mb-0">Votre devis est maintenant prêt au téléchargement</p>
-                                </div>
+                    <div class="card-body-professional">
+                        <!-- Notification de succès -->
+                        <div class="status-notification">
+                            <i class="bi bi-check-circle-fill status-icon"></i>
+                            <div>
+                                <strong>Signature enregistrée avec succès</strong><br>
+                                Votre document est maintenant disponible au téléchargement
                             </div>
                         </div>
                         
-                        <!-- Titre du devis -->
-                        <div class="title-badge text-center">
-                            <i class="bi bi-file-earmark-text me-2"></i>
-                            <strong>{{ $titre }}</strong>
+                        <!-- Informations du document -->
+                        <div class="document-info">
+                            <div class="document-title">
+                                <i class="bi bi-file-earmark-text me-2"></i>{{ $titre }}
+                            </div>
+                            <small class="text-muted">
+                                Document signé le {{ date('d/m/Y à H:i') }}
+                            </small>
                         </div>
 
-                        <!-- Liste des prix modernisée -->
-                        <div class="price-list">
-                            <div class="price-item">
-                                <div class="d-flex align-items-center">
-                                    <div class="price-icon">
-                                        <i class="bi bi-receipt"></i>
-                                    </div>
-                                    <span>Montant HT</span>
-                                </div>
-                                <strong>{{ number_format($montant_HT, 2, ',', ' ') }} €</strong>
+                        <!-- Récapitulatif financier -->
+                        <div class="financial-summary">
+                            <div class="summary-header">
+                                <i class="bi bi-calculator me-2"></i>Récapitulatif financier
                             </div>
-                            <div class="price-item">
-                                <div class="d-flex align-items-center">
-                                    <div class="price-icon">
-                                        <i class="bi bi-percent"></i>
-                                    </div>
-                                    <span>Montant TVA</span>
+                            <div class="summary-item">
+                                <div class="summary-label">
+                                    <i class="bi bi-receipt"></i>
+                                    Montant hors taxes
                                 </div>
-                                <strong>{{ number_format($montant_TVA, 2, ',', ' ') }} €</strong>
+                                <div class="summary-amount">{{ number_format($montant_HT, 2, ',', ' ') }} €</div>
                             </div>
-                            <div class="price-item total">
-                                <div class="d-flex align-items-center">
-                                    <div class="price-icon" style="background: rgba(255,255,255,0.2); color: white;">
-                                        <i class="bi bi-cash-coin"></i>
-                                    </div>
-                                    <span><strong>Total TTC</strong></span>
+                            <div class="summary-item">
+                                <div class="summary-label">
+                                    <i class="bi bi-percent"></i>
+                                    TVA
                                 </div>
-                                <strong>{{ number_format($montant_TTC, 2, ',', ' ') }} €</strong>
+                                <div class="summary-amount">{{ number_format($montant_TVA, 2, ',', ' ') }} €</div>
+                            </div>
+                            <div class="summary-item total">
+                                <div class="summary-label">
+                                    <i class="bi bi-cash-coin"></i>
+                                    <strong>Total TTC</strong>
+                                </div>
+                                <div class="summary-amount">{{ number_format($montant_TTC, 2, ',', ' ') }} €</div>
                             </div>
                         </div>
 
-                        <!-- Bouton de téléchargement modernisé -->
-                        <div class="text-center">
-                            <button id="viewPdfBtn" class="download-btn">
-                                <i class="bi bi-cloud-download me-2"></i>
+                        <!-- Section téléchargement -->
+                        <div class="download-section">
+                            <button id="viewPdfBtn" class="download-button">
+                                <i class="bi bi-download"></i>
                                 Télécharger le devis signé
                             </button>
-                            <p class="text-muted mt-3 small">
+                            <div class="download-info">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Le fichier sera téléchargé au format PDF
-                            </p>
+                                Format PDF - Signature électronique certifiée
+                            </div>
+                        </div>
+
+                        <!-- Branding entreprise -->
+                        <div class="company-branding">
+                            <div><strong>APEL</strong> - Solution de signature électronique</div>
+                            <div>Développé par <strong>EL2i informatique</strong></div>
                         </div>
                     </div>
                 </div>
@@ -332,36 +308,32 @@
 
     <script>
         document.getElementById("viewPdfBtn").addEventListener("click", function() {
-            // Animation du bouton lors du clic
-            this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Préparation du téléchargement...';
-            this.disabled = true;
+            const button = this;
+            const originalContent = button.innerHTML;
             
+            // Changement d'état du bouton
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Préparation...';
+            button.disabled = true;
+            
+            // Simulation d'un délai de traitement
             setTimeout(() => {
-                let pdfUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
-                let link = document.createElement("a");
+                const pdfUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
+                const link = document.createElement("a");
                 link.href = pdfUrl;
                 link.download = "{{ $devis_id }}.pdf";
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 
-                // Restaurer le bouton
-                this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Téléchargement effectué !';
+                // Confirmation du téléchargement
+                button.innerHTML = '<i class="bi bi-check-lg"></i> Téléchargé';
+                
+                // Retour à l'état initial après 2 secondes
                 setTimeout(() => {
-                    this.innerHTML = '<i class="bi bi-cloud-download me-2"></i>Télécharger le devis signé';
-                    this.disabled = false;
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
                 }, 2000);
-            }, 1000);
-        });
-
-        // Animation d'apparition progressive des éléments
-        document.addEventListener('DOMContentLoaded', function() {
-            const elements = document.querySelectorAll('.price-item');
-            elements.forEach((el, index) => {
-                setTimeout(() => {
-                    el.style.animation = `fadeInUp 0.6s ease-out ${index * 0.1}s both`;
-                }, 300);
-            });
+            }, 800);
         });
     </script>
 </body>
