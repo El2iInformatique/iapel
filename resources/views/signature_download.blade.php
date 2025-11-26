@@ -19,15 +19,21 @@
             --white: #ffffff;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             background-color: #f5f6fa;
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #2c3e50;
             line-height: 1.6;
+            margin: 0;
+            padding: 0;
         }
 
         .main-container {
-            padding: 2rem 0;
+            padding: 1rem;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -39,6 +45,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             overflow: hidden;
+            width: 100%;
             max-width: 600px;
             margin: 0 auto;
         }
@@ -46,51 +53,59 @@
         .card-header-professional {
             background: var(--primary-color);
             color: var(--white);
-            padding: 1.5rem 2rem;
+            padding: 1rem 1.5rem;
             border-bottom: 3px solid var(--accent-color);
         }
 
         .header-title {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 600;
             margin: 0;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .header-subtitle {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             opacity: 0.9;
             margin-top: 0.25rem;
         }
 
         .card-body-professional {
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
         .status-notification {
             background: #d4edda;
             border: 1px solid #c3e6cb;
             color: #155724;
-            padding: 1rem 1.25rem;
+            padding: 1rem;
             border-radius: 6px;
             margin-bottom: 1.5rem;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 0.75rem;
+            flex-wrap: wrap;
         }
 
         .status-icon {
             font-size: 1.25rem;
             color: var(--success-color);
+            flex-shrink: 0;
+        }
+
+        .status-content {
+            flex: 1;
+            min-width: 0;
         }
 
         .document-info {
             background: var(--light-gray);
             border: 1px solid var(--medium-gray);
             border-radius: 6px;
-            padding: 1.25rem;
+            padding: 1rem;
             margin-bottom: 1.5rem;
         }
 
@@ -98,7 +113,11 @@
             font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 0.5rem;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .financial-summary {
@@ -110,19 +129,23 @@
 
         .summary-header {
             background: var(--medium-gray);
-            padding: 0.75rem 1.25rem;
+            padding: 0.75rem 1rem;
             font-weight: 600;
             color: var(--primary-color);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .summary-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.875rem 1.25rem;
+            padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--medium-gray);
             background: var(--white);
+            gap: 1rem;
         }
 
         .summary-item:last-child {
@@ -139,12 +162,16 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 0;
         }
 
         .summary-amount {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .download-section {
@@ -156,17 +183,18 @@
             background: var(--success-color);
             border: none;
             color: var(--white);
-            padding: 0.875rem 2rem;
+            padding: 1rem 1.5rem;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            min-width: 200px;
             justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 300px;
         }
 
         .download-button:hover {
@@ -188,8 +216,9 @@
 
         .download-info {
             color: var(--dark-gray);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             margin-top: 0.75rem;
+            text-align: center;
         }
 
         .company-branding {
@@ -198,37 +227,161 @@
             padding-top: 1.5rem;
             border-top: 1px solid var(--medium-gray);
             color: var(--dark-gray);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            line-height: 1.4;
         }
 
-        @media (max-width: 576px) {
+        /* Breakpoints responsifs */
+        @media (max-width: 767px) {
             .main-container {
-                padding: 1rem 0;
+                padding: 0.5rem;
+                align-items: flex-start;
+                padding-top: 2rem;
             }
             
             .card-body-professional {
-                padding: 1.5rem;
+                padding: 1rem;
+            }
+            
+            .card-header-professional {
+                padding: 1rem;
             }
             
             .header-title {
-                font-size: 1.1rem;
+                font-size: 1rem;
+                gap: 0.4rem;
+            }
+            
+            .header-subtitle {
+                font-size: 0.8rem;
             }
             
             .summary-item {
-                padding: 0.75rem 1rem;
+                padding: 0.6rem 0.8rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .summary-item .summary-label {
+                width: 100%;
+            }
+            
+            .summary-item .summary-amount {
+                align-self: flex-end;
+                font-size: 1rem;
+            }
+            
+            .document-title {
+                font-size: 0.95rem;
+            }
+            
+            .status-notification {
+                padding: 0.8rem;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .download-button {
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .company-branding {
+                margin-top: 1.5rem;
+                padding-top: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 0.25rem;
+                padding-top: 1rem;
+            }
+            
+            .document-card {
+                border-radius: 4px;
+            }
+            
+            .card-body-professional {
+                padding: 0.8rem;
+            }
+            
+            .card-header-professional {
+                padding: 0.8rem;
+            }
+            
+            .header-title {
+                font-size: 0.9rem;
+                text-align: center;
+                justify-content: center;
+            }
+            
+            .summary-header {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .summary-item {
+                padding: 0.5rem 0.6rem;
+            }
+            
+            .summary-label {
+                font-size: 0.85rem;
+            }
+            
+            .summary-amount {
+                font-size: 0.9rem;
+            }
+            
+            .download-info {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .main-container {
+                padding: 2rem;
+            }
+            
+            .card-body-professional {
+                padding: 2rem;
+            }
+            
+            .card-header-professional {
+                padding: 1.5rem 2rem;
+            }
+            
+            .header-title {
+                font-size: 1.25rem;
+            }
+            
+            .summary-item {
+                padding: 0.875rem 1.25rem;
+            }
+            
+            .download-button {
+                max-width: 250px;
+                padding: 0.875rem 2rem;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .document-card {
+                max-width: 650px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container main-container">
+    <div class="container-fluid main-container">
         <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10 col-12">
+            <div class="col-12 col-sm-11 col-md-10 col-lg-8 col-xl-6">
                 <div class="document-card">
                     <div class="card-header-professional">
                         <h1 class="header-title">
                             <i class="bi bi-check-circle-fill"></i>
-                            Signature électronique validée
+                            <span>Signature électronique validée</span>
                         </h1>
                         <div class="header-subtitle">Devis n°{{ $devis_id }}</div>
                     </div>
@@ -237,7 +390,7 @@
                         <!-- Notification de succès -->
                         <div class="status-notification">
                             <i class="bi bi-check-circle-fill status-icon"></i>
-                            <div>
+                            <div class="status-content">
                                 <strong>Signature enregistrée avec succès</strong><br>
                                 Votre document est maintenant disponible au téléchargement
                             </div>
@@ -246,7 +399,8 @@
                         <!-- Informations du document -->
                         <div class="document-info">
                             <div class="document-title">
-                                <i class="bi bi-file-earmark-text me-2"></i>{{ $titre }}
+                                <i class="bi bi-file-earmark-text"></i>
+                                <span>{{ $titre }}</span>
                             </div>
                             <small class="text-muted">
                                 Document signé le {{ date('d/m/Y à H:i') }}
@@ -256,19 +410,20 @@
                         <!-- Récapitulatif financier -->
                         <div class="financial-summary">
                             <div class="summary-header">
-                                <i class="bi bi-calculator me-2"></i>Récapitulatif financier
+                                <i class="bi bi-calculator"></i>
+                                <span>Récapitulatif financier</span>
                             </div>
                             <div class="summary-item">
                                 <div class="summary-label">
                                     <i class="bi bi-receipt"></i>
-                                    Montant hors taxes
+                                    <span>Montant hors taxes</span>
                                 </div>
                                 <div class="summary-amount">{{ number_format($montant_HT, 2, ',', ' ') }} €</div>
                             </div>
                             <div class="summary-item">
                                 <div class="summary-label">
                                     <i class="bi bi-percent"></i>
-                                    TVA
+                                    <span>TVA</span>
                                 </div>
                                 <div class="summary-amount">{{ number_format($montant_TVA, 2, ',', ' ') }} €</div>
                             </div>
@@ -285,7 +440,7 @@
                         <div class="download-section">
                             <button id="viewPdfBtn" class="download-button">
                                 <i class="bi bi-download"></i>
-                                Télécharger le devis signé
+                                <span>Télécharger le devis signé</span>
                             </button>
                             <div class="download-info">
                                 <i class="bi bi-info-circle me-1"></i>
@@ -312,7 +467,7 @@
             const originalContent = button.innerHTML;
             
             // Changement d'état du bouton
-            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Préparation...';
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Préparation...</span>';
             button.disabled = true;
             
             // Simulation d'un délai de traitement
@@ -326,7 +481,7 @@
                 document.body.removeChild(link);
                 
                 // Confirmation du téléchargement
-                button.innerHTML = '<i class="bi bi-check-lg"></i> Téléchargé';
+                button.innerHTML = '<i class="bi bi-check-lg"></i> <span>Téléchargé</span>';
                 
                 // Retour à l'état initial après 2 secondes
                 setTimeout(() => {
