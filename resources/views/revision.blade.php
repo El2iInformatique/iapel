@@ -100,6 +100,7 @@
                             class="btn btn-sm {{ $pack === 'all' ? 'btn-success mode-active' : 'btn-outline-success' }}">
                                 Tous
                             </a>
+                            <!-- Ancienne révision
                             <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => $direction, 'pack' => 'g1']) }}"
                             class="btn btn-sm {{ $pack === 'g1' ? 'btn-success mode-active' : 'btn-outline-success' }}">
                                 Groupe 1
@@ -111,6 +112,11 @@
                             <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => $direction, 'pack' => 'g3']) }}"
                             class="btn btn-sm {{ $pack === 'g3' ? 'btn-success mode-active' : 'btn-outline-success' }}">
                                 Groupe 3
+                            </a>
+                            -->
+                            <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => $direction, 'pack' => 'g4']) }}"
+                            class="btn btn-sm {{ $pack === 'g4' ? 'btn-success mode-active' : 'btn-outline-success' }}">
+                                Groupe 4
                             </a>
                         </div>
 

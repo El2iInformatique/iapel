@@ -44,6 +44,17 @@ class RevisionController extends Controller
             ['groupe'=>3,'nom'=>"Marronnier d'Indes",'famille'=>"Hippocastanaceae",'espece'=>"Aesculus",'sous_espece'=>"hippocastanum"],
             ['groupe'=>3,'nom'=>"Tulipier de Virginie",'famille'=>"Magnoliaceae",'espece'=>"Liriodendron",'sous_espece'=>"tulipifera"],
             ['groupe'=>3,'nom'=>"Paulownia",'famille'=>"Scrophulariaceae",'espece'=>"Paulownia",'sous_espece'=>"tomentosa"],
+            // ====== GROUPE 4 - Les conifères  ======
+            ['groupe'=>4,'nom'=>"Pin Sylvestre",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"sylvestris"],
+            ['groupe'=>4,'nom'=>"Pin de montagne",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"mugo"],
+            ['groupe'=>4,'nom'=>"Pin pleureur de l'Himalaya",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"wallichiana"],
+            ['groupe'=>4,'nom'=>"Sapin de Nordmann",'famille'=>"Pinacées",'espece'=>"Abies",'sous_espece'=>"nordmanniana"],
+            ['groupe'=>4,'nom'=>"Sapin de Corée",'famille'=>"Pinacées",'espece'=>"Abies",'sous_espece'=>"koreana"],
+            ['groupe'=>4,'nom'=>"Épicea Commun",'famille'=>"Pinacées",'espece'=>"Picea",'sous_espece'=>"abies"],
+            ['groupe'=>4,'nom'=>"Épicea de Serbie",'famille'=>"Pinacées",'espece'=>"Picea",'sous_espece'=>"omorika"],
+            ['groupe'=>4,'nom'=>"Cèdre de l'Atlas",'famille'=>"Pinacées",'espece'=>"Cedrus",'sous_espece'=>"atlantica"],
+            ['groupe'=>4,'nom'=>"Thuya du Canada",'famille'=>"Cupressacées",'espece'=>"Thuja",'sous_espece'=>"occidentalis"],
+            ['groupe'=>4,'nom'=>"Thuya géant",'famille'=>"Cupressacées",'espece'=>"Thuja",'sous_espece'=>"plicata"],
         ];
     }
 
@@ -91,6 +102,7 @@ class RevisionController extends Controller
             if ($pack === 'g1') return $p['groupe'] === 1;
             if ($pack === 'g2') return $p['groupe'] === 2;
             if ($pack === 'g3') return $p['groupe'] === 3;
+            if ($pack === 'g4') return $p['groupe'] === 4;
             return true;
         }));
 
@@ -234,6 +246,7 @@ class RevisionController extends Controller
             if ($pack === 'g1') return $p['groupe'] === 1;
             if ($pack === 'g2') return $p['groupe'] === 2;
             if ($pack === 'g3') return $p['groupe'] === 3;
+            if ($pack === 'g4') return $p['groupe'] === 4;
             return true;
         }));
         $options = $this->getOptions($filtered);
