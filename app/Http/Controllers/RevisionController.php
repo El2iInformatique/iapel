@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
 
 class RevisionController extends Controller
 {
@@ -45,16 +47,26 @@ class RevisionController extends Controller
             ['groupe'=>3,'nom'=>"Tulipier de Virginie",'famille'=>"Magnoliaceae",'espece'=>"Liriodendron",'sous_espece'=>"tulipifera"],
             ['groupe'=>3,'nom'=>"Paulownia",'famille'=>"Scrophulariaceae",'espece'=>"Paulownia",'sous_espece'=>"tomentosa"],
             // ====== GROUPE 4 - Les conifères  ======
-            ['groupe'=>4,'nom'=>"Pin Sylvestre",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"sylvestris"],
-            ['groupe'=>4,'nom'=>"Pin de montagne",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"mugo"],
-            ['groupe'=>4,'nom'=>"Pin pleureur de l'Himalaya",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"wallichiana"],
-            ['groupe'=>4,'nom'=>"Sapin de Nordmann",'famille'=>"Pinacées",'espece'=>"Abies",'sous_espece'=>"nordmanniana"],
-            ['groupe'=>4,'nom'=>"Sapin de Corée",'famille'=>"Pinacées",'espece'=>"Abies",'sous_espece'=>"koreana"],
-            ['groupe'=>4,'nom'=>"Épicea Commun",'famille'=>"Pinacées",'espece'=>"Picea",'sous_espece'=>"abies"],
-            ['groupe'=>4,'nom'=>"Épicea de Serbie",'famille'=>"Pinacées",'espece'=>"Picea",'sous_espece'=>"omorika"],
-            ['groupe'=>4,'nom'=>"Cèdre de l'Atlas",'famille'=>"Pinacées",'espece'=>"Cedrus",'sous_espece'=>"atlantica"],
-            ['groupe'=>4,'nom'=>"Thuya du Canada",'famille'=>"Cupressacées",'espece'=>"Thuja",'sous_espece'=>"occidentalis"],
-            ['groupe'=>4,'nom'=>"Thuya géant",'famille'=>"Cupressacées",'espece'=>"Thuja",'sous_espece'=>"plicata"],
+            ['groupe'=>4,'nom'=>"Pin Sylvestre",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"sylvestris",
+             'images'=>["sylvestre_1.jpg","sylvestre_2.jpg","sylvestre_3.webp","sylvestre_4.webp"]],
+            ['groupe'=>4,'nom'=>"Pin de montagne",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"mugo",
+             'images'=>["montagne_1.jpg","montagne_2.jpg","montagne_3.webp","montagne_4.jpg"]],
+            ['groupe'=>4,'nom'=>"Pin pleureur de l'Himalaya",'famille'=>"Pinacées",'espece'=>"Pinus",'sous_espece'=>"wallichiana",
+             'images'=>["himalaya_1.webp","himalaya_2.jpg","himalaya_3.webp","himalaya_4.jpg"]],
+            ['groupe'=>4,'nom'=>"Sapin de Nordmann",'famille'=>"Pinacées",'espece'=>"Abies",'sous_espece'=>"nordmanniana",
+             'images'=>["nordmann_1.jpg","nordmann_2.jpg","nordmann_3.jpg","nordmann_4.jpg"]],
+            ['groupe'=>4,'nom'=>"Sapin de Corée",'famille'=>"Pinacées",'espece'=>"Abies",'sous_espece'=>"koreana",
+             'images'=>["coree_1.jpg","coree_2.jpg","coree_3.webp"]],
+            ['groupe'=>4,'nom'=>"Épicea Commun",'famille'=>"Pinacées",'espece'=>"Picea",'sous_espece'=>"abies",
+             'images'=>["commun_1.jpg","commun_2.jpg","commun_3.jpg"]],
+            ['groupe'=>4,'nom'=>"Épicea de Serbie",'famille'=>"Pinacées",'espece'=>"Picea",'sous_espece'=>"omorika",
+             'images'=>["serbie_1.jpg","serbie_2.jpg","serbie_3.jpg","serbie_4.jpg"]],
+            ['groupe'=>4,'nom'=>"Cèdre de l'Atlas",'famille'=>"Pinacées",'espece'=>"Cedrus",'sous_espece'=>"atlantica",
+             'images'=>["atlas_1.jpg","atlas_2.jpg","atlas_3.jpg","atlas_4.jpg"]],
+            ['groupe'=>4,'nom'=>"Thuya du Canada",'famille'=>"Cupressacées",'espece'=>"Thuja",'sous_espece'=>"occidentalis",
+             'images'=>["canada_1.jpg","canada_2.jpg","canada_3.jpg","canada_4.jpg"]],
+            ['groupe'=>4,'nom'=>"Thuya géant",'famille'=>"Cupressacées",'espece'=>"Thuja",'sous_espece'=>"plicata",
+             'images'=>["geant_1.jpg","geant_2.jpg","geant_3.jpg"]],
         ];
     }
 
@@ -90,7 +102,7 @@ class RevisionController extends Controller
     public function index(Request $request)
     {
         $mode = $request->query('mode', 'simple');           // simple | difficile
-        $direction = $request->query('direction', 'normal');  // normal | inverse
+        $direction = $request->query('direction', 'normal');  // normal | inverse | image]
         $pack = $request->query('pack', 'all');               // all | g1 | g2
 
         // 1) Charger toutes les plantes
@@ -105,6 +117,16 @@ class RevisionController extends Controller
             if ($pack === 'g4') return $p['groupe'] === 4;
             return true;
         }));
+
+        // pour le type image : garder seulement celles qui ont une image existante
+        if ($direction === 'image') {
+            $filtered = array_values(array_filter($filtered, function($p) {
+                
+                if (empty($p['images'])) return false;
+                // si tu stockes en public/ (ex: public/plantes/xxx.jpg) :
+                return true;//file_exists(storage_path('app/public/images/plantes/'.$p['image']));
+            }));
+        }
 
         // Sécurité : si filtrage vide, retomber sur all
         if (empty($filtered)) $filtered = $all;
@@ -136,14 +158,29 @@ class RevisionController extends Controller
                 'espece' => $planteChoisie['espece'],
                 'sous_espece' => $planteChoisie['sous_espece'],
                 'nom' => null,
+                'image' => null,
             ];
-        } else {
+        } elseif ($direction === 'inverse') {
             $questionLabel = $planteChoisie['famille'].' / '.$planteChoisie['espece'].' '.$planteChoisie['sous_espece'];
             $solution = [
                 'famille' => null,
                 'espece' => null,
                 'sous_espece' => null,
                 'nom' => $planteChoisie['nom'],
+                'image' => null,
+            ];
+        } else { // image
+            
+            $candidates = $planteChoisie['images'];
+            $imageChoisie = $candidates[array_rand($candidates)];
+
+            $questionLabel = null;
+            $solution = [
+                'famille' => null,
+                'espece' => null,
+                'sous_espece' => null,
+                'nom' => $planteChoisie['nom'],
+                'image' => $imageChoisie ?? null,
             ];
         }
 
@@ -158,6 +195,7 @@ class RevisionController extends Controller
             'solution_espece' => $solution['espece'],
             'solution_sous_espece' => $solution['sous_espece'],
             'solution_nom' => $solution['nom'],
+            'solution_image' => $solution['image'],
 
             'familles' => $options['familles'],
             'especes' => $options['especes'],
@@ -197,6 +235,7 @@ class RevisionController extends Controller
         $solution_espece = $request->input('solution_espece');
         $solution_sous_espece = $request->input('solution_sous_espece');
         $solution_nom = $request->input('solution_nom');
+        $solution_image = $request->input('solution_image') ?? null;
 
         // l'"énoncé" affiché à l'écran
         $question = $request->input('question');
@@ -249,6 +288,17 @@ class RevisionController extends Controller
             if ($pack === 'g4') return $p['groupe'] === 4;
             return true;
         }));
+
+        // pour le type image : garder seulement celles qui ont une image existante
+        if ($direction === 'image') {
+            $filtered = array_values(array_filter($filtered, function($p) {
+                
+                if (empty($p['images'])) return false;
+                // si tu stockes en public/ (ex: public/plantes/xxx.jpg) :
+                return true;//file_exists(storage_path('app/public/images/plantes/'.$p['image']));
+            }));
+        }
+
         $options = $this->getOptions($filtered);
 
         return view('revision', [
@@ -264,6 +314,7 @@ class RevisionController extends Controller
             'solution_espece' => $solution_espece,
             'solution_sous_espece' => $solution_sous_espece,
             'solution_nom' => $solution_nom,
+            'solution_image' => $solution_image,
 
             // listes pour les selects
             'familles' => $options['familles'],

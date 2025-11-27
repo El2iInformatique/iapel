@@ -81,13 +81,13 @@
                     <div class="d-flex flex-column gap-2 text-md-end">
                         <!-- Choix du mode de difficulté -->
                         <div class="mode-buttons d-flex gap-2 flex-wrap justify-content-md-end">
-                            <a href="{{ route('revision.index', ['mode' => 'simple', 'direction' => $direction]) }}"
+                            <a href="{{ route('revision.index', ['mode' => 'simple', 'direction' => $direction, 'pack' => $pack]) }}"
                                class="btn btn-sm {{ $mode === 'simple' ? 'btn-primary mode-active' : 'btn-outline-primary' }}">
                                 <i class="bi bi-hand-index-thumb"></i>
                                 Simple
                             </a>
 
-                            <a href="{{ route('revision.index', ['mode' => 'difficile', 'direction' => $direction]) }}"
+                            <a href="{{ route('revision.index', ['mode' => 'difficile', 'direction' => $direction, 'pack' => $pack]) }}"
                                class="btn btn-sm {{ $mode === 'difficile' ? 'btn-danger mode-active' : 'btn-outline-danger' }}">
                                 <i class="bi bi-pencil-square"></i>
                                 Difficile
@@ -122,16 +122,22 @@
 
                         <!-- Choix du sens (direction) -->
                         <div class="direction-buttons d-flex gap-2 flex-wrap justify-content-md-end">
-                            <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => 'normal']) }}"
+                            <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => 'normal', 'pack' => $pack]) }}"
                                class="btn btn-sm {{ $direction === 'normal' ? 'btn-secondary mode-active' : 'btn-outline-secondary' }}">
                                 <i class="bi bi-arrow-right-circle"></i>
                                 Mode 1
                             </a>
 
-                            <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => 'inverse']) }}"
+                            <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => 'inverse', 'pack' => $pack]) }}"
                                class="btn btn-sm {{ $direction === 'inverse' ? 'btn-secondary mode-active' : 'btn-outline-secondary' }}">
                                 <i class="bi bi-arrow-left-circle"></i>
                                 Mode 2
+                            </a>
+
+                            <a href="{{ route('revision.index', ['mode' => $mode, 'direction' => 'image', 'pack' => $pack]) }}"
+                               class="btn btn-sm {{ $direction === 'image' ? 'btn-secondary mode-active' : 'btn-outline-secondary' }}">
+                                <i class="bi bi-arrow-left-circle"></i>
+                                Image
                             </a>
                         </div>
                     </div>
@@ -208,14 +214,21 @@
                     </div>
                     @endif
                     
-
-                    <!-- Question affichée -->
-                    <div class="mb-4 text-center">
-                        <div class="text-primary question-nom">
+                    @if ($direction === 'image' && $solution_image)
+                        @php
+                        $src = file_exists(storage_path('app/public/images/plantes/'.$solution_image))
+                            ? asset('images/plantes/'.$solution_image)
+                            : asset($solution_image);
+                        @endphp
+                        <img src="{{ $src }}" alt="Plante à reconnaître" class="img-fluid rounded shadow-sm" style="max-width: 100%; object-fit: cover;">
+                    @else
+                        <!-- Question affichée -->
+                        <div class="mb-4 text-center">
+                            <div class="text-primary question-nom">
                             {{ $question }}
+                            </div>
                         </div>
-                    </div>
-
+                    @endif                
                     <!-- Formulaire -->
                     <form method="POST" action="{{ route('revision.check') }}" autocomplete="off">
                         @csrf
@@ -231,6 +244,7 @@
                         <input type="hidden" name="solution_espece" value="{{ $solution_espece }}">
                         <input type="hidden" name="solution_sous_espece" value="{{ $solution_sous_espece }}">
                         <input type="hidden" name="solution_nom" value="{{ $solution_nom }}">
+                        <input type="hidden" name="solution_image" value="{{ $solution_image }}">
 
 
                         <div class="row g-3">
