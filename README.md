@@ -1,6 +1,6 @@
 # IApel
 
-Application web principalement en PHP avec des vues Blade — très probablement un projet Laravel — destinée à être déployée dans un environnement serveur classique (PHP + base de données). Ce dépôt contient majoritairement du code PHP et Blade, avec un peu de JavaScript/CSS pour l’interface, et quelques scripts Python éventuels d’outillage.
+Application web principalement en PHP avec des vues Blade destinée à être déployée dans un environnement serveur classique (PHP + base de données). Ce dépôt contient majoritairement du code PHP et Blade, avec un peu de JavaScript/CSS pour l’interface, et quelques scripts Python éventuels d’outillage.
 
 - Dépôt: [El2iInformatique/iapel](https://github.com/El2iInformatique/iapel)
 - Branche par défaut: `main`
