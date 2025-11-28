@@ -702,40 +702,66 @@
             let clearButton = document.getElementById("clear-signature");
             let submitButton = document.getElementById("submit-signature");
             let placeholder = document.getElementById("signature-placeholder");
-            
-            // Créer la signature avec gestion souris + tactile
-            let signaturePad = new SignaturePad(canvas, {
-                backgroundColor: 'rgba(255, 255, 255, 0)', // Fond transparent
-                penColor: "#334155", // Couleur du stylo
-                backgroundColor: "white"
-            });
+            let signaturePad;
 
+            // Fonction pour redimensionner le canvas correctement
             function resizeCanvas() {
-                let ratio = Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
+                const rect = canvas.getBoundingClientRect();
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                
+                canvas.width = rect.width * ratio;
+                canvas.height = rect.height * ratio;
+                canvas.style.width = rect.width + 'px';
+                canvas.style.height = rect.height + 'px';
+                
+                const context = canvas.getContext("2d");
+                context.scale(ratio, ratio);
+                
+                // Réinitialiser le SignaturePad après redimensionnement
+                if (signaturePad) {
+                    signaturePad.clear();
+                }
             }
-            
-            // Gérer les interactions avec le canvas
-            signaturePad.addEventListener("beginStroke", function() {
-                canvas.classList.add("active");
-                placeholder.classList.add("hidden");
-            });
 
-            // Désactiver le resize après le premier chargement
-            window.addEventListener("load", function () {
+            // Initialiser le canvas et SignaturePad
+            function initSignaturePad() {
                 resizeCanvas();
-                signaturePad.clear();
-            });
+                
+                // Créer la signature avec gestion souris + tactile
+                signaturePad = new SignaturePad(canvas, {
+                    backgroundColor: 'rgba(255, 255, 255, 1)', // Fond blanc
+                    penColor: "#334155", // Couleur du stylo
+                    minWidth: 1,
+                    maxWidth: 2.5,
+                    throttle: 16,
+                    minDistance: 5
+                });
+
+                // Gérer les interactions avec le canvas
+                signaturePad.addEventListener("beginStroke", function() {
+                    canvas.classList.add("active");
+                    placeholder.classList.add("hidden");
+                });
+
+                signaturePad.addEventListener("endStroke", function() {
+                    if (!signaturePad.isEmpty()) {
+                        placeholder.classList.add("hidden");
+                    }
+                });
+            }
+
+            // Initialiser au chargement
+            initSignaturePad();
 
             // Sauvegarder la signature au format Base64
             function saveSignature() {
                 if (signaturePad.isEmpty()) {
                     // Animation d'erreur sur le canvas
                     canvas.style.borderColor = "#ef4444";
+                    canvas.style.borderWidth = "3px";
                     setTimeout(() => {
                         canvas.style.borderColor = "";
+                        canvas.style.borderWidth = "";
                     }, 2000);
                     
                     // Alert stylisée
@@ -767,42 +793,83 @@
                 const infoModal_signature = new bootstrap.Modal(document.getElementById("info_modal_signature"));
                 infoModal_signature.show();
 
-                var signature = signaturePad.toDataURL("image/png");
+                try {
+                    var signature = signaturePad.toDataURL("image/png");
 
-                fetch("{{ url('/signature/' . $token) }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify({ signature: signature })
-                })
-                .then(() => {
-                    // État de succès
-                    submitButton.innerHTML = `
-                        <i class="bi bi-check-lg"></i>
-                        <span>Signature validée !</span>
-                    `;
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                })
-                .catch(error => {
-                    console.error("Erreur :", error);
+                    fetch("{{ url('/signature/' . $token) }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
+                        body: JSON.stringify({ signature: signature })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erreur réseau: ' + response.status);
+                        }
+                        return response.json().catch(() => {
+                            // Si pas de JSON en retour, on considère que c'est OK
+                            return { success: true };
+                        });
+                    })
+                    .then(data => {
+                        // État de succès
+                        submitButton.innerHTML = `
+                            <i class="bi bi-check-lg"></i>
+                            <span>Signature validée !</span>
+                        `;
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    })
+                    .catch(error => {
+                        console.error("Erreur lors de la signature :", error);
+                        
+                        // État d'erreur
+                        submitButton.innerHTML = `
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span>Erreur de signature</span>
+                        `;
+                        submitButton.style.backgroundColor = "#ef4444";
+                        
+                        // Alert d'erreur
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+                        errorDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+                        errorDiv.innerHTML = `
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Erreur lors de la signature. Veuillez réessayer.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        document.body.appendChild(errorDiv);
+                        
+                        setTimeout(() => {
+                            if (errorDiv.parentNode) {
+                                errorDiv.remove();
+                            }
+                            // Restaurer le bouton
+                            submitButton.innerHTML = `
+                                <i class="bi bi-check-lg"></i>
+                                <span>Signer électroniquement</span>
+                            `;
+                            submitButton.disabled = false;
+                            submitButton.style.backgroundColor = "";
+                        }, 5000);
+                        
+                        infoModal_signature.hide();
+                    });
+                } catch (error) {
+                    console.error("Erreur lors de la génération de la signature :", error);
                     submitButton.innerHTML = `
                         <i class="bi bi-check-lg"></i>
                         <span>Signer électroniquement</span>
                     `;
                     submitButton.disabled = false;
                     infoModal_signature.hide();
-                });
+                }
             }
-
-            // Empêcher le resize intempestif en bloquant les événements sur mobile
-            canvas.addEventListener("touchstart", function () {
-                window.removeEventListener("resize", resizeCanvas);
-            }, { passive: false });
 
             // Effacer la signature
             clearButton.addEventListener("click", function () {
@@ -817,6 +884,7 @@
                 saveSignature();
             });
             
+            // Gestion PDF
             var pdfUrl = "{{ url('devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
             var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
             var viewPdfBtn = document.getElementById("viewPdfBtn");
@@ -830,6 +898,22 @@
                 } else { // Si mobile
                     window.location.href = pdfDownloadUrl; // Téléchargement direct
                 }
+            });
+
+            // Redimensionner le canvas si nécessaire (débounced)
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (signaturePad && !signaturePad.isEmpty()) {
+                        // Sauvegarder la signature avant redimensionnement
+                        const imageData = signaturePad.toDataURL();
+                        resizeCanvas();
+                        signaturePad.fromDataURL(imageData);
+                    } else {
+                        resizeCanvas();
+                    }
+                }, 250);
             });
 
             // Animation au chargement de la page
