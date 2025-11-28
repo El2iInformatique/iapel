@@ -734,18 +734,16 @@
                     minWidth: 1,
                     maxWidth: 2.5,
                     throttle: 16,
-                    minDistance: 5
-                });
-
-                // Gérer les interactions avec le canvas
-                signaturePad.addEventListener("beginStroke", function() {
-                    canvas.classList.add("active");
-                    placeholder.classList.add("hidden");
-                });
-
-                signaturePad.addEventListener("endStroke", function() {
-                    if (!signaturePad.isEmpty()) {
+                    minDistance: 5,
+                    // Événements corrects pour SignaturePad
+                    onBegin: function() {
+                        canvas.classList.add("active");
                         placeholder.classList.add("hidden");
+                    },
+                    onEnd: function() {
+                        if (!signaturePad.isEmpty()) {
+                            placeholder.classList.add("hidden");
+                        }
                     }
                 });
             }
@@ -795,6 +793,7 @@
 
                 try {
                     var signature = signaturePad.toDataURL("image/png");
+                    console.log("Signature générée, taille:", signature.length);
 
                     fetch("{{ url('/signature/' . $token) }}", {
                         method: "POST",
@@ -805,6 +804,7 @@
                         body: JSON.stringify({ signature: signature })
                     })
                     .then(response => {
+                        console.log("Réponse reçue:", response.status);
                         if (!response.ok) {
                             throw new Error('Erreur réseau: ' + response.status);
                         }
@@ -814,6 +814,7 @@
                         });
                     })
                     .then(data => {
+                        console.log("Données reçues:", data);
                         // État de succès
                         submitButton.innerHTML = `
                             <i class="bi bi-check-lg"></i>
@@ -873,6 +874,7 @@
 
             // Effacer la signature
             clearButton.addEventListener("click", function () {
+                console.log("Effacement de la signature");
                 signaturePad.clear();
                 signatureInput.value = "";
                 canvas.classList.remove("active");
@@ -881,6 +883,7 @@
 
             // Signer le document
             submitButton.addEventListener("click", function () {
+                console.log("Tentative de signature");
                 saveSignature();
             });
             
@@ -928,6 +931,11 @@
                     element.style.transform = 'translateY(0)';
                 }, index * 150);
             });
+
+            // Debug - vérifier que tout est bien initialisé
+            console.log("SignaturePad initialisé:", signaturePad);
+            console.log("Canvas:", canvas);
+            console.log("Boutons:", { clearButton, submitButton });
         });
     </script>
 </body>
