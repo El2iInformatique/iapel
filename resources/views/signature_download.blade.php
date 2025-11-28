@@ -10,11 +10,13 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
         :root {
-            --primary-blue: #1e40af;
-            --primary-dark: #1e3a8a;
+            --primary-purple: #8B5A96;
+            --primary-dark: #6B4575;
+            --primary-light: #A478B0;
+            --accent-orange: #F4A261;
+            --accent-orange-dark: #E76F00;
             --success-green: #059669;
             --success-light: #d1fae5;
-            --accent-orange: #ea580c;
             --neutral-50: #f8fafc;
             --neutral-100: #f1f5f9;
             --neutral-200: #e2e8f0;
@@ -38,7 +40,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--neutral-50) 0%, var(--neutral-100) 100%);
+            background: linear-gradient(135deg, var(--neutral-50) 0%, #f3f0f5 100%);
             color: var(--neutral-800);
             line-height: 1.6;
             min-height: 100vh;
@@ -66,7 +68,7 @@
         }
 
         .header-section {
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-dark) 100%);
             padding: 2rem 2.5rem;
             color: var(--white);
             position: relative;
@@ -80,7 +82,7 @@
             right: 0;
             width: 200px;
             height: 200px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(244,162,97,0.2) 0%, transparent 70%);
             border-radius: 50%;
             transform: translate(50%, -50%);
         }
@@ -101,6 +103,7 @@
             font-weight: 500;
             margin-bottom: 1rem;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .header-title {
@@ -158,8 +161,8 @@
         }
 
         .document-details {
-            background: var(--neutral-50);
-            border: 1px solid var(--neutral-200);
+            background: linear-gradient(135deg, #faf9fc 0%, var(--neutral-50) 100%);
+            border: 1px solid #e8e5eb;
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 2rem;
@@ -173,7 +176,7 @@
         }
 
         .document-icon {
-            background: var(--primary-blue);
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-light) 100%);
             color: var(--white);
             width: 3rem;
             height: 3rem;
@@ -183,6 +186,7 @@
             justify-content: center;
             font-size: 1.25rem;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(139, 90, 150, 0.3);
         }
 
         .document-info h4 {
@@ -211,13 +215,13 @@
         }
 
         .summary-header {
-            background: var(--neutral-100);
+            background: linear-gradient(135deg, #f8f6fa 0%, var(--neutral-100) 100%);
             padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--neutral-200);
+            border-bottom: 1px solid #e8e5eb;
         }
 
         .summary-title {
-            color: var(--neutral-800);
+            color: var(--primary-purple);
             font-size: 1rem;
             font-weight: 600;
             margin: 0;
@@ -244,14 +248,14 @@
         }
 
         .summary-row.total {
-            background: var(--primary-blue);
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-dark) 100%);
             color: var(--white);
             font-weight: 600;
             font-size: 1.0625rem;
         }
 
         .summary-row.total:hover {
-            background: var(--primary-dark);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #5a3562 100%);
         }
 
         .summary-label {
@@ -269,7 +273,7 @@
         .summary-amount {
             font-weight: 600;
             font-size: 1rem;
-            color: var(--neutral-800);
+            color: var (--neutral-800);
             text-align: right;
         }
 
@@ -284,7 +288,7 @@
         }
 
         .download-button {
-            background: linear-gradient(135deg, var(--success-green) 0%, #047857 100%);
+            background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-orange-dark) 100%);
             border: none;
             color: var(--white);
             padding: 1rem 2rem;
@@ -300,12 +304,12 @@
             min-width: 280px;
             position: relative;
             overflow: hidden;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 4px 15px rgba(244, 162, 97, 0.4);
         }
 
         .download-button:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 8px 25px rgba(244, 162, 97, 0.5);
         }
 
         .download-button:active {
@@ -330,9 +334,9 @@
         }
 
         .footer-branding {
-            background: var(--neutral-50);
+            background: linear-gradient(135deg, #f8f6fa 0%, var(--neutral-100) 100%);
             padding: 1.5rem 2.5rem;
-            border-top: 1px solid var(--neutral-200);
+            border-top: 1px solid #e8e5eb;
             text-align: center;
         }
 
@@ -346,7 +350,7 @@
         .company-name {
             font-size: 1rem;
             font-weight: 600;
-            color: var(--primary-blue);
+            color: var(--primary-purple);
         }
 
         .developer-info {
@@ -393,6 +397,12 @@
 
             .header-section {
                 padding: 1.5rem 1.5rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
             }
 
             .header-title {
