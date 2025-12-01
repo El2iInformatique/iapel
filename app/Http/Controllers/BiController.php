@@ -497,265 +497,281 @@ class BiController extends Controller
      * @return JsonResponse Liste des fichiers enregistrés.
      */
     public function listSavedDocs($entreprise, Request $request): JsonResponse
-{
-    try {
-        if (!$request->hasHeader('secret-token')) {
-            return response()->json(['error' => 'No token provided.'], 403);
-        }
-
-        $secretToken = config("secrets.$entreprise");
-        $adminToken = config('secrets.admin');
-
-        $providedToken = $request->header('secret-token');
-
-        if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
-            return response()->json(['error' => 'Not authorized.'], 403);
-        }
-
-        $basePath = "$entreprise";
-
-        $files = Storage::disk('public')->allFiles($basePath);
-
-        // Sépare proprement les fichiers "devis", "rapport_intervention" et les autres
-        $lesDevisFiles = array_filter($files, fn($f) => strpos($f, '/devis/') !== false);
-        $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
-        $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false);
-
-        \Log::info('lesDevisFiles: ' . json_encode(array_values($lesDevisFiles)));
-        \Log::info('lesRapportInterventionFiles: ' . json_encode(array_values($lesRapportInterventionFiles)));
-
-        // Chargement des règles de format (comme dans ta version)
-        $formatPath = 'format.json';
-        $formatRules = [];
-        if (Storage::disk('public')->exists($formatPath)) {
-            $formatContent = Storage::disk('public')->get($formatPath);
-            $formatRules = json_decode($formatContent, true);
-        }
-
-        // Construction d'une map des devis par dossier (ex: testn17_PC67...)
-        $devisTraites = [];
-        foreach ($lesDevisFiles as $file) {
-            $parts = explode('/', $file);
-            $devisIndex = array_search('devis', $parts);
-            if ($devisIndex === false || !isset($parts[$devisIndex + 1])) {
-                \Log::warning("Chemin devis inattendu: $file");
-                continue;
+    {
+        try {
+            if (!$request->hasHeader('secret-token')) {
+                \Log::warning("[Client: $entreprise] Tentative d'accès sans token");
+                return response()->json(['error' => 'No token provided.'], 403);
             }
 
-            $folder = $parts[$devisIndex + 1]; // ex: testn17_PC67...
-            $fileName = end($parts); // ex: testn17_PC67....pdf ou testn17_PC67..._certifie.pdf
+            $secretToken = config("secrets.$entreprise");
+            $adminToken = config('secrets.admin');
+            $providedToken = $request->header('secret-token');
 
-            // extraction nom / token depuis le nom du dossier
-            $folderParts = explode('_', $folder);
-            $nom = $folderParts[0] ?? $folder;
-            $tokenStr = $folderParts[1] ?? null;
-            $tokenModel = $tokenStr ? Token::where('token', $tokenStr)->first() : null;
-
-            if (!isset($devisTraites[$folder])) {
-                $devisTraites[$folder] = [
-                    'nom' => $nom,
-                    'token' => $tokenModel->token ?? $tokenStr,
-                    'tiers' => $tokenModel->tiers ?? null,
-                    'has_normal' => false,
-                    'has_certifie' => false,
-                    'normal_file' => null,
-                    'certifie_file' => null,
-                    'normal_last' => null,
-                    'certifie_last' => null,
-                ];
+            // Vérifier que les tokens ne sont pas null avant hash_equals
+            if (!$secretToken && !$adminToken) {
+                \Log::error("[Client: $entreprise] Aucun token configuré pour ce client");
+                return response()->json(['error' => 'Client not configured.'], 403);
             }
 
-            if (str_ends_with($fileName, '_certifie.pdf')) {
-                $devisTraites[$folder]['has_certifie'] = true;
-                $devisTraites[$folder]['certifie_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $devisTraites[$folder]['certifie_last'] = Storage::disk('public')->lastModified($file);
+            $isAuthorized = false;
+            if ($secretToken && hash_equals($providedToken, $secretToken)) {
+                $isAuthorized = true;
+            } elseif ($adminToken && hash_equals($providedToken, $adminToken)) {
+                $isAuthorized = true;
+            }
+
+            if (!$isAuthorized) {
+                \Log::warning("[Client: $entreprise] Tentative d'accès avec token invalide");
+                return response()->json(['error' => 'Not authorized.'], 403);
+            }
+
+            \Log::info("[Client: $entreprise] Accès autorisé à listSavedDocs");
+
+            $basePath = "$entreprise";
+
+            $files = Storage::disk('public')->allFiles($basePath);
+
+            // Sépare proprement les fichiers "devis", "rapport_intervention" et les autres
+            $lesDevisFiles = array_filter($files, fn($f) => strpos($f, '/devis/') !== false);
+            $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
+            $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false);
+
+            \Log::info("[Client: $entreprise] lesDevisFiles: " . json_encode(array_values($lesDevisFiles)));
+            \Log::info("[Client: $entreprise] lesRapportInterventionFiles: " . json_encode(array_values($lesRapportInterventionFiles)));
+
+            // Chargement des règles de format (comme dans ta version)
+            $formatPath = 'format.json';
+            $formatRules = [];
+            if (Storage::disk('public')->exists($formatPath)) {
+                $formatContent = Storage::disk('public')->get($formatPath);
+                $formatRules = json_decode($formatContent, true);
+            }
+
+            // Construction d'une map des devis par dossier (ex: testn17_PC67...)
+            $devisTraites = [];
+            foreach ($lesDevisFiles as $file) {
+                $parts = explode('/', $file);
+                $devisIndex = array_search('devis', $parts);
+                if ($devisIndex === false || !isset($parts[$devisIndex + 1])) {
+                    \Log::warning("Chemin devis inattendu: $file");
+                    continue;
                 }
-            } elseif (str_ends_with($fileName, '.pdf')) {
-                $devisTraites[$folder]['has_normal'] = true;
-                $devisTraites[$folder]['normal_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $devisTraites[$folder]['normal_last'] = Storage::disk('public')->lastModified($file);
+
+                $folder = $parts[$devisIndex + 1]; // ex: testn17_PC67...
+                $fileName = end($parts); // ex: testn17_PC67....pdf ou testn17_PC67..._certifie.pdf
+
+                // extraction nom / token depuis le nom du dossier
+                $folderParts = explode('_', $folder);
+                $nom = $folderParts[0] ?? $folder;
+                $tokenStr = $folderParts[1] ?? null;
+                $tokenModel = $tokenStr ? Token::where('token', $tokenStr)->first() : null;
+
+                if (!isset($devisTraites[$folder])) {
+                    $devisTraites[$folder] = [
+                        'nom' => $nom,
+                        'token' => $tokenModel->token ?? $tokenStr,
+                        'tiers' => $tokenModel->tiers ?? null,
+                        'has_normal' => false,
+                        'has_certifie' => false,
+                        'normal_file' => null,
+                        'certifie_file' => null,
+                        'normal_last' => null,
+                        'certifie_last' => null,
+                    ];
                 }
-            }
-        }
 
-        // Construction d'une map des rapports d'intervention par dossier
-        $rapportInterventionTraites = [];
-        foreach ($lesRapportInterventionFiles as $file) {
-            $parts = explode('/', $file);
-            $rapportIndex = array_search('rapport_intervention', $parts);
-            if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) {
-                \Log::warning("Chemin rapport_intervention inattendu: $file");
-                continue;
-            }
-
-            $folder = $parts[$rapportIndex + 1]; // ex: uid_folder
-            $fileName = end($parts); // ex: uid.pdf ou uid.json
-
-            if (!isset($rapportInterventionTraites[$folder])) {
-                $rapportInterventionTraites[$folder] = [
-                    'uid' => $folder,
-                    'has_json' => false,
-                    'has_pdf' => false,
-                    'json_file' => null,
-                    'pdf_file' => null,
-                    'json_last' => null,
-                    'pdf_last' => null,
-                ];
-            }
-
-            if (str_ends_with($fileName, '.json')) {
-                $rapportInterventionTraites[$folder]['has_json'] = true;
-                $rapportInterventionTraites[$folder]['json_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $rapportInterventionTraites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
-                }
-            } elseif (str_ends_with($fileName, '.pdf')) {
-                $rapportInterventionTraites[$folder]['has_pdf'] = true;
-                $rapportInterventionTraites[$folder]['pdf_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $rapportInterventionTraites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
-                }
-            }
-        }
-
-        \Log::info('Devis recueillis: ' . json_encode($devisTraites));
-        \Log::info('Rapports intervention recueillis: ' . json_encode($rapportInterventionTraites));
-
-        // Création de l'index documents pour retour
-        $documents = [];
-        
-        // Traitement des devis
-        foreach ($devisTraites as $folder => $d) {
-            $status = $d['has_certifie'] ? 'certifie' : '';
-            // Preferer la date du PDF normal comme date de traitement
-            $traitTs = $d['normal_last'] ?? $d['certifie_last'];
-            $confTs = $d['certifie_last'] ?? null;
-
-            $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-            $dateConf = $confTs ? \Carbon\Carbon::createFromTimestamp($confTs)->toDateTimeString() : null;
-
-            $documents['devis/' . $folder] = [
-                'path' => 'devis/' . $folder,
-                'status' => $status,
-                'data' => [
-                    "nom" => $d['nom'],
-                    "tiers" => $d['tiers'],
-                    'token' => $d['token'],
-                    "date_traitement" => $dateTrait,
-                    "date_confirmation" => $dateConf,
-                    "par" => null
-                ]
-            ];
-        }
-
-        // Traitement des rapports d'intervention
-        foreach ($rapportInterventionTraites as $folder => $r) {
-            $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
-            
-            $traitTs = $r['json_last'];
-            $pdfTs = $r['pdf_last'];
-
-            $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-            $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
-
-            // Récupérer les données du JSON si disponible
-            $jsonData = null;
-            if ($r['has_json'] && $r['json_file']) {
-                try {
-                    $jsonContent = Storage::disk('public')->get($r['json_file']);
-                    $jsonData = json_decode($jsonContent, true);
-                } catch (\Exception $e) {
-                    \Log::warning("Erreur lecture JSON rapport intervention: " . $e->getMessage());
-                }
-            }
-
-            $documents['rapport_intervention/' . $folder] = [
-                'path' => 'rapport_intervention/' . $folder,
-                'status' => $status,
-                'token_rapport' => null, // sera rempli plus bas si on trouve le token
-                'data' => [
-                    "uid" => $r['uid'],
-                    "client" => $jsonData['nom_client'] ?? null,
-                    "intervenant" => $jsonData['intervenant'] ?? null,
-                    "description" => $jsonData['description'] ?? null,
-                    "date_traitement" => $dateTrait,
-                    "date_pdf" => $datePdf,
-                ]
-            ];
-
-            // Chercher le token associé
-            if ($r['json_file']) {
-                $pathToken = "app/public/" . $r['json_file'];
-                $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
-                if ($tokenRapport) {
-                    $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token;
-                }
-            }
-        }
-
-        // Traitement des autres documents (reste très proche de ta version)
-        foreach ($lesDocuments as $file) {
-            $relativePath = preg_replace('#^' . preg_quote($basePath, '#') . '/?#', '', $file);
-            $dirPath = dirname($relativePath);
-            $docType = explode('/', $relativePath)[0];
-
-            if ($dirPath === '.' || $dirPath === $basePath) {
-                continue;
-            }
-
-            if (!isset($documents[$dirPath])) {
-                $documents[$dirPath] = [
-                    'path' => $dirPath,
-                    'token_rapport' => null,
-                    'status' => 'À traiter',
-                    'data' => null
-                ];
-            }
-
-            if (str_ends_with($file, '.pdf')) {
-                $documents[$dirPath]['status'] = 'Validé';
-            }
-
-            if (str_ends_with($file, '.json')) {
-                try {
-                    $jsonContent = Storage::disk('public')->get($file);
-                    $jsonData = json_decode($jsonContent, true);
-
-                    $pathToken = "app/public/" . $file;
-                    $token = TokenLinksRapport::where('paths', $pathToken)->first()["token"] ?? null;
-                    $documents[$dirPath]["token_rapport"] = $token;
-
-                    if (isset($formatRules[$docType])) {
-                        $rules = $formatRules[$docType];
-                        $formattedData = [];
-
-                        foreach ($rules as $key => $rule) {
-                            if (is_array($rule)) {
-                                $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
-                            } elseif (is_string($rule)) {
-                                $formattedData[$key] = $jsonData[$rule] ?? null;
-                            } else {
-                                $formattedData[$key] = null;
-                            }
-                        }
-
-                        $documents[$dirPath]['data'] = $formattedData;
+                if (str_ends_with($fileName, '_certifie.pdf')) {
+                    $devisTraites[$folder]['has_certifie'] = true;
+                    $devisTraites[$folder]['certifie_file'] = $file;
+                    if (Storage::disk('public')->exists($file)) {
+                        $devisTraites[$folder]['certifie_last'] = Storage::disk('public')->lastModified($file);
                     }
-                } catch (\Exception $e) {
-                    $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
+                } elseif (str_ends_with($fileName, '.pdf')) {
+                    $devisTraites[$folder]['has_normal'] = true;
+                    $devisTraites[$folder]['normal_file'] = $file;
+                    if (Storage::disk('public')->exists($file)) {
+                        $devisTraites[$folder]['normal_last'] = Storage::disk('public')->lastModified($file);
+                    }
                 }
             }
-        }
 
-        $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
-        return response()->json($filteredDocs);
-    } catch (\Exception $e) {
-        \Log::error('Erreur dans listSavedDocs: ' . $e->getMessage());
-        return response()->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
+            // Construction d'une map des rapports d'intervention par dossier
+            $rapportInterventionTraites = [];
+            foreach ($lesRapportInterventionFiles as $file) {
+                $parts = explode('/', $file);
+                $rapportIndex = array_search('rapport_intervention', $parts);
+                if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) {
+                    \Log::warning("Chemin rapport_intervention inattendu: $file");
+                    continue;
+                }
+
+                $folder = $parts[$rapportIndex + 1]; // ex: uid_folder
+                $fileName = end($parts); // ex: uid.pdf ou uid.json
+
+                if (!isset($rapportInterventionTraites[$folder])) {
+                    $rapportInterventionTraites[$folder] = [
+                        'uid' => $folder,
+                        'has_json' => false,
+                        'has_pdf' => false,
+                        'json_file' => null,
+                        'pdf_file' => null,
+                        'json_last' => null,
+                        'pdf_last' => null,
+                    ];
+                }
+
+                if (str_ends_with($fileName, '.json')) {
+                    $rapportInterventionTraites[$folder]['has_json'] = true;
+                    $rapportInterventionTraites[$folder]['json_file'] = $file;
+                    if (Storage::disk('public')->exists($file)) {
+                        $rapportInterventionTraites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
+                    }
+                } elseif (str_ends_with($fileName, '.pdf')) {
+                    $rapportInterventionTraites[$folder]['has_pdf'] = true;
+                    $rapportInterventionTraites[$folder]['pdf_file'] = $file;
+                    if (Storage::disk('public')->exists($file)) {
+                        $rapportInterventionTraites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
+                    }
+                }
+            }
+
+            \Log::info("[Client: $entreprise] Devis recueillis: " . json_encode($devisTraites));
+            \Log::info("[Client: $entreprise] Rapports intervention recueillis: " . json_encode($rapportInterventionTraites));
+
+            // Création de l'index documents pour retour
+            $documents = [];
+            
+            // Traitement des devis
+            foreach ($devisTraites as $folder => $d) {
+                $status = $d['has_certifie'] ? 'certifie' : '';
+                // Preferer la date du PDF normal comme date de traitement
+                $traitTs = $d['normal_last'] ?? $d['certifie_last'];
+                $confTs = $d['certifie_last'] ?? null;
+
+                $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
+                $dateConf = $confTs ? \Carbon\Carbon::createFromTimestamp($confTs)->toDateTimeString() : null;
+
+                $documents['devis/' . $folder] = [
+                    'path' => 'devis/' . $folder,
+                    'status' => $status,
+                    'data' => [
+                        "nom" => $d['nom'],
+                        "tiers" => $d['tiers'],
+                        'token' => $d['token'],
+                        "date_traitement" => $dateTrait,
+                        "date_confirmation" => $dateConf,
+                        "par" => null
+                    ]
+                ];
+            }
+
+            // Traitement des rapports d'intervention
+            foreach ($rapportInterventionTraites as $folder => $r) {
+                $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
+                
+                $traitTs = $r['json_last'];
+                $pdfTs = $r['pdf_last'];
+
+                $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
+                $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
+
+                // Récupérer les données du JSON si disponible
+                $jsonData = null;
+                if ($r['has_json'] && $r['json_file']) {
+                    try {
+                        $jsonContent = Storage::disk('public')->get($r['json_file']);
+                        $jsonData = json_decode($jsonContent, true);
+                    } catch (\Exception $e) {
+                        \Log::warning("Erreur lecture JSON rapport intervention: " . $e->getMessage());
+                    }
+                }
+
+                $documents['rapport_intervention/' . $folder] = [
+                    'path' => 'rapport_intervention/' . $folder,
+                    'status' => $status,
+                    'token_rapport' => null, // sera rempli plus bas si on trouve le token
+                    'data' => [
+                        "uid" => $r['uid'],
+                        "client" => $jsonData['nom_client'] ?? null,
+                        "intervenant" => $jsonData['intervenant'] ?? null,
+                        "description" => $jsonData['description'] ?? null,
+                        "date_traitement" => $dateTrait,
+                        "date_pdf" => $datePdf,
+                    ]
+                ];
+
+                // Chercher le token associé
+                if ($r['json_file']) {
+                    $pathToken = "app/public/" . $r['json_file'];
+                    $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
+                    if ($tokenRapport) {
+                        $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token;
+                    }
+                }
+            }
+
+            // Traitement des autres documents (reste très proche de ta version)
+            foreach ($lesDocuments as $file) {
+                $relativePath = preg_replace('#^' . preg_quote($basePath, '#') . '/?#', '', $file);
+                $dirPath = dirname($relativePath);
+                $docType = explode('/', $relativePath)[0];
+
+                if ($dirPath === '.' || $dirPath === $basePath) {
+                    continue;
+                }
+
+                if (!isset($documents[$dirPath])) {
+                    $documents[$dirPath] = [
+                        'path' => $dirPath,
+                        'token_rapport' => null,
+                        'status' => 'À traiter',
+                        'data' => null
+                    ];
+                }
+
+                if (str_ends_with($file, '.pdf')) {
+                    $documents[$dirPath]['status'] = 'Validé';
+                }
+
+                if (str_ends_with($file, '.json')) {
+                    try {
+                        $jsonContent = Storage::disk('public')->get($file);
+                        $jsonData = json_decode($jsonContent, true);
+
+                        $pathToken = "app/public/" . $file;
+                        $token = TokenLinksRapport::where('paths', $pathToken)->first()["token"] ?? null;
+                        $documents[$dirPath]["token_rapport"] = $token;
+
+                        if (isset($formatRules[$docType])) {
+                            $rules = $formatRules[$docType];
+                            $formattedData = [];
+
+                            foreach ($rules as $key => $rule) {
+                                if (is_array($rule)) {
+                                    $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
+                                } elseif (is_string($rule)) {
+                                    $formattedData[$key] = $jsonData[$rule] ?? null;
+                                } else {
+                                    $formattedData[$key] = null;
+                                }
+                            }
+
+                            $documents[$dirPath]['data'] = $formattedData;
+                        }
+                    } catch (\Exception $e) {
+                        $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
+                    }
+                }
+            }
+
+            $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
+            return response()->json($filteredDocs);
+        } catch (\Exception $e) {
+            \Log::error("[Client: $entreprise] Erreur dans listSavedDocs: " . $e->getMessage());
+            return response()->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
+        }
     }
-}
 
     /**
      * @brief Supprime un document spécifique.
