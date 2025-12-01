@@ -251,4 +251,239 @@ class SignatureController extends Controller
         unlink($signaturePath);
         \Log::info("DEBUG: Fichiers temporaires supprimés - Processus de signature terminé avec succès");
     }
+
+    // Gérer la signature par initiales
+    public function signWithInitials(Request $request, $token)
+    {
+        \Log::info("DEBUG: Début du processus de signature par initiales pour le token : " . $token);
+        
+        $request->validate([
+            'initials' => 'required|string|max:3' // Initiales (maximum 3 caractères)
+        ]);
+        \Log::info("DEBUG: Validation des initiales réussie");
+
+        $tokenEntry = Token::where('token', $token)
+            ->first();
+
+        \Log::info("DEBUG: Recherche du token dans la base de données", ['token_found' => $tokenEntry ? 'true' : 'false']);
+        
+        if (!$tokenEntry) {
+            \Log::error("DEBUG: Token non trouvé ou invalide", ['token' => $token]);
+            return response()->json(['message' => 'Token invalide'], Response::HTTP_FORBIDDEN);
+        }
+
+        \Log::info("DEBUG: Informations du token", [
+            'devis_id' => $tokenEntry->devis_id,
+            'organisation_id' => $tokenEntry->organisation_id,
+            'used' => $tokenEntry->used
+        ]);
+
+        // Marquer le token comme utilisé
+        $tokenEntry->used = true;
+        $tokenEntry->save();
+        \Log::info("DEBUG: Token marqué comme utilisé");
+
+        // Générer une signature basée sur les initiales
+        $initials = strtoupper($request->input('initials'));
+        
+        // Créer une image de signature basée sur les initiales
+        $uid = $tokenEntry->devis_id;
+        $document = 'devis';
+        $nomDoc = $uid . '_' . $token;
+        $client = $tokenEntry->organisation_id;
+        
+        // Créer un répertoire s'il n'existe pas
+        $signatureDir = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc);
+        if (!file_exists($signatureDir)) {
+            mkdir($signatureDir, 0755, true);
+        }
+        
+        $signaturePath = $signatureDir . '/' . $nomDoc . '_signature.png';
+        
+        // Générer l'image de signature avec les initiales
+        $this->generateInitialsSignature($initials, $signaturePath);
+        \Log::info("DEBUG: Signature par initiales générée", ['signaturePath' => $signaturePath]);
+
+        // Continuer avec le même processus que la signature manuelle
+        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '.pdf');
+        $outputPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf');
+
+        \Log::info("DEBUG: Chemins des fichiers calculés", [
+            'pdfPath' => $pdfPath,
+            'outputPath' => $outputPath,
+            'pdf_exists' => file_exists($pdfPath)
+        ]);
+
+        // Charger le PDF source
+        $pdf = new Fpdi();
+        $pdf->SetAutoPageBreak(false);
+        \Log::info("DEBUG: Instance FPDI créée");
+
+        $pageCount = $pdf->setSourceFile($pdfPath);
+        \Log::info("DEBUG: PDF source chargé", ['pageCount' => $pageCount]);
+
+        // Importer toutes les pages
+        for ($i = 1; $i <= $pageCount; $i++) {
+            \Log::info("DEBUG: Traitement de la page", ['page' => $i, 'total' => $pageCount]);
+            
+            $pdf->AddPage();
+            $tplIdx = $pdf->importPage($i);
+            $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
+
+            // Si avant-dernière page, appliquer signature et date
+            if ($i == $pageCount - $tokenEntry->nb_pages) {
+                \Log::info("DEBUG: Application de la signature par initiales sur la page", ['page' => $i]);
+                
+                $ratioConversion = 6.98;
+
+                $xDate = $tokenEntry->x_date;
+                $yDate = $tokenEntry->y_date;
+                $xSignature = $tokenEntry->x_signature;
+                $ySignature = $tokenEntry->y_signature;
+
+                // Intégration de la date
+                $date_signature = date('d/m/Y');
+                $pdf->SetXY($xDate/$ratioConversion, $yDate/$ratioConversion);
+                $pdf->Write(10, $date_signature);
+                \Log::info("DEBUG: Date ajoutée au PDF", ['date' => $date_signature]);
+
+                // Intégration de la signature par initiales
+                list($width, $height) = getimagesize($signaturePath);
+                $maxWidth = 31;
+                $maxHeight = 13;
+                
+                if ($width > $height) {
+                    $newWidth = $maxWidth;
+                    $newHeight = ($height / $width) * $maxWidth;
+                } else {
+                    $newHeight = $maxHeight;
+                    $newWidth = ($width / $height) * $maxHeight;
+                }
+                
+                $xImage = $xSignature / $ratioConversion; 
+                $yImage = $ySignature / $ratioConversion;
+                
+                try {
+                    $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+                    \Log::info("DEBUG: Image signature par initiales ajoutée au PDF avec succès");
+                } catch (\Exception $e) {
+                    \Log::error("DEBUG: Erreur lors de l'ajout de l'image", [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    throw $e;
+                }
+            }
+        }
+
+        // Configuration PDF
+        $pdf->SetMargins(0, 0, 0);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        
+        $pdf->Output($outputPath, 'F');
+        \Log::info("DEBUG: PDF signé avec initiales généré", ['outputPath' => $outputPath]);
+
+        // Signature électronique
+        $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf');
+        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_certifie.pdf');
+        $scriptPath = storage_path('app/signature/sign.py');
+        
+        $pythonPath = trim(shell_exec("which python3"));
+        $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath]);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            \Log::error("DEBUG: Échec du processus Python pour signature initiales", [
+                'exit_code' => $process->getExitCode(),
+                'error_output' => $process->getErrorOutput()
+            ]);
+            throw new ProcessFailedException($process);
+        }
+
+        \Log::info("DEBUG: Signature électronique par initiales réussie");
+
+        // Suppression des fichiers temporaires
+        unlink($outputPath);
+        unlink($signaturePath);
+        \Log::info("DEBUG: Processus de signature par initiales terminé avec succès");
+        
+        return response()->json(['success' => true, 'message' => 'Signature par initiales réussie']);
+    }
+
+    /**
+     * Génère une image de signature basée sur les initiales
+     */
+    private function generateInitialsSignature($initials, $outputPath)
+    {
+        // Dimensions de l'image
+        $width = 300;
+        $height = 150;
+        
+        // Créer une image vide
+        $image = imagecreate($width, $height);
+        
+        // Définir les couleurs
+        $backgroundColor = imagecolorallocate($image, 255, 255, 255); // Blanc
+        $textColor = imagecolorallocate($image, 51, 65, 85); // Couleur sombre (--neutral-800)
+        
+        // Rendre le fond transparent
+        imagecolortransparent($image, $backgroundColor);
+        
+        // Configuration de la police
+        $fontSize = 48;
+        $angle = -5; // Légère rotation
+        
+        // Utiliser une police système ou intégrée
+        $font = 5; // Police intégrée de GD
+        
+        // Calculer la position pour centrer le texte
+        $textBox = imagettfbbox($fontSize, $angle, null, $initials);
+        if ($textBox !== false) {
+            $textWidth = $textBox[4] - $textBox[0];
+            $textHeight = $textBox[1] - $textBox[5];
+            $x = ($width - $textWidth) / 2;
+            $y = ($height - $textHeight) / 2 + $textHeight;
+        } else {
+            // Fallback si imagettfbbox échoue
+            $x = $width / 2 - (strlen($initials) * 15);
+            $y = $height / 2 + 20;
+        }
+        
+        // Essayer d'utiliser une police TrueType si disponible
+        $fontPath = null;
+        $possibleFonts = [
+            '/System/Library/Fonts/Arial.ttf', // macOS
+            '/Windows/Fonts/arial.ttf', // Windows
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', // Linux
+            '/usr/share/fonts/TTF/arial.ttf' // Linux alternative
+        ];
+        
+        foreach ($possibleFonts as $fontFile) {
+            if (file_exists($fontFile)) {
+                $fontPath = $fontFile;
+                break;
+            }
+        }
+        
+        if ($fontPath && function_exists('imagettftext')) {
+            // Utiliser une police TrueType
+            imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $initials);
+        } else {
+            // Fallback avec une police système
+            $fontSize = 5; // Taille de police système (1-5)
+            imagestring($image, $fontSize, $x, $y - 20, $initials, $textColor);
+        }
+        
+        // Sauvegarder l'image
+        imagepng($image, $outputPath);
+        imagedestroy($image);
+        
+        \Log::info("DEBUG: Image de signature par initiales créée", [
+            'initials' => $initials,
+            'outputPath' => $outputPath,
+            'fontPath' => $fontPath
+        ]);
+    }
 }
