@@ -521,8 +521,8 @@ class BiController extends Controller
         $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
         $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false);
 
-        \Log::info('lesDevisFiles: ' . json_encode(array_values($lesDevisFiles)));
-        \Log::info('lesRapportInterventionFiles: ' . json_encode(array_values($lesRapportInterventionFiles)));
+        \Log::info("[Client: $entreprise] lesDevisFiles: " . json_encode(array_values($lesDevisFiles)));
+        \Log::info("[Client: $entreprise] lesRapportInterventionFiles: " . json_encode(array_values($lesRapportInterventionFiles)));
 
         // Chargement des règles de format (comme dans ta version)
         $formatPath = 'format.json';
@@ -620,8 +620,8 @@ class BiController extends Controller
             }
         }
 
-        \Log::info('Devis recueillis: ' . json_encode($devisTraites));
-        \Log::info('Rapports intervention recueillis: ' . json_encode($rapportInterventionTraites));
+        \Log::info("[Client: $entreprise] Devis recueillis: " . json_encode($devisTraites));
+        \Log::info("[Client: $entreprise] Rapports intervention recueillis: " . json_encode($rapportInterventionTraites));
 
         // Création de l'index documents pour retour
         $documents = [];
