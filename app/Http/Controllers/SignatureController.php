@@ -413,11 +413,11 @@ class SignatureController extends Controller
     }
 
     /**
-     * Génère une image de signature basée sur les initiales
+     * Génère une image de signature basée sur les initiales avec un style manuscrit
      */
     private function generateInitialsSignature($initials, $outputPath)
     {
-        // Dimensions de l'image plus grandes pour une meilleure qualité
+        // Dimensions de l'image
         $width = 600;
         $height = 300;
         
@@ -430,20 +430,23 @@ class SignatureController extends Controller
         
         // Définir les couleurs
         $backgroundColor = imagecolorallocatealpha($image, 255, 255, 255, 127); // Blanc transparent
-        $textColor = imagecolorallocate($image, 0, 0, 0); // Noir au lieu de violet
+        $textColor = imagecolorallocate($image, 0, 0, 0); // Noir
+        $shadowColor = imagecolorallocate($image, 128, 128, 128); // Gris pour l'ombre
         
         // Remplir avec le fond transparent
         imagefill($image, 0, 0, $backgroundColor);
         
-        // Essayer d'utiliser une police TrueType si disponible
+        // Essayer d'utiliser une police cursive/manuscrite si disponible
         $fontPath = null;
         $possibleFonts = [
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', // Linux
-            '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf', // Linux alternative
-            '/usr/share/fonts/TTF/arial.ttf', // Linux alternative
-            '/System/Library/Fonts/Arial.ttf', // macOS
-            '/Windows/Fonts/arial.ttf', // Windows
-            '/Windows/Fonts/calibri.ttf', // Windows alternative
+            // Polices cursives/manuscrites sur différents systèmes
+            '/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf', // Linux
+            '/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf', // Linux
+            '/System/Library/Fonts/Brush Script.ttf', // macOS
+            '/System/Library/Fonts/Bradley Hand Bold.ttf', // macOS
+            '/Windows/Fonts/brushsci.ttf', // Windows Brush Script
+            '/Windows/Fonts/BRITANIC.TTF', // Windows Britannic Bold
+            '/usr/share/fonts/TTF/LiberationSerif-Italic.ttf', // Linux alternative
         ];
         
         foreach ($possibleFonts as $fontFile) {
@@ -453,13 +456,13 @@ class SignatureController extends Controller
             }
         }
         
-        $angle = -5; // Légère rotation
-        $fontSize = 72; // Police plus grande pour une meilleure qualité
+        $angle = -8; // Rotation plus marquée pour effet manuscrit
+        $fontSize = 80; // Police plus grande
         
         if ($fontPath && function_exists('imagettftext')) {
-            // Utiliser une police TrueType
+            // Utiliser une police TrueType avec style manuscrit
             try {
-                // Calculer la position pour centrer le texte de manière sécurisée
+                // Calculer la position pour centrer le texte
                 $textBox = imagettfbbox($fontSize, $angle, $fontPath, $initials);
                 if ($textBox !== false) {
                     $textWidth = $textBox[4] - $textBox[0];
@@ -467,74 +470,155 @@ class SignatureController extends Controller
                     $x = ($width - $textWidth) / 2 - $textBox[0];
                     $y = ($height - $textHeight) / 2 - $textBox[5];
                 } else {
-                    // Fallback position
-                    $x = $width / 2 - (strlen($initials) * 30);
-                    $y = $height / 2 + 30;
+                    $x = $width / 2 - (strlen($initials) * 35);
+                    $y = $height / 2 + 35;
                 }
                 
-                // Dessiner le texte avec la police TrueType
+                // Ajouter une ombre légère pour plus de profondeur
+                imagettftext($image, $fontSize, $angle, $x + 3, $y + 3, $shadowColor, $fontPath, $initials);
+                // Texte principal
                 imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $initials);
                 
-                \Log::info("DEBUG: Police TrueType utilisée avec succès", [
+                \Log::info("DEBUG: Police TrueType manuscrite utilisée", [
                     'fontPath' => $fontPath,
                     'fontSize' => $fontSize,
-                    'x' => $x,
-                    'y' => $y,
-                    'textColor' => 'noir (0,0,0)'
+                    'angle' => $angle,
+                    'style' => 'avec ombre'
                 ]);
                 
             } catch (\Exception $e) {
-                \Log::warning("DEBUG: Erreur avec police TrueType, fallback vers police système", [
-                    'error' => $e->getMessage(),
-                    'fontPath' => $fontPath
+                \Log::warning("DEBUG: Erreur avec police TrueType, fallback vers style manuscrit personnalisé", [
+                    'error' => $e->getMessage()
                 ]);
-                $fontPath = null; // Forcer le fallback
+                $fontPath = null;
             }
         }
         
         if (!$fontPath) {
-            // Fallback avec une police système (plus robuste)
-            $systemFontSize = 5; // Taille maximale de police système (1-5)
-            
-            // Répéter le texte plusieurs fois pour simuler une police plus épaisse
-            for ($offset = 0; $offset <= 2; $offset++) {
-                // Calculer la position pour centrer le texte avec police système
-                $textWidth = strlen($initials) * imagefontwidth($systemFontSize);
-                $textHeight = imagefontheight($systemFontSize);
-                $x = ($width - $textWidth) / 2 + $offset;
-                $y = ($height - $textHeight) / 2 + $offset;
-                
-                // Pour simuler la rotation avec une police système, décaler légèrement
-                $x += 20;
-                
-                // Dessiner le texte avec la police système plusieurs fois pour plus d'épaisseur
-                imagestring($image, $systemFontSize, $x, $y, $initials, $textColor);
-            }
-            
-            \Log::info("DEBUG: Police système utilisée avec épaississement", [
-                'systemFontSize' => $systemFontSize,
-                'textColor' => 'noir (0,0,0)',
-                'technique' => 'répétition pour épaisseur'
-            ]);
+            // Créer un style manuscrit personnalisé avec la police système
+            $this->createHandwrittenStyle($image, $initials, $textColor, $width, $height);
         }
         
-        // Sauvegarder l'image en PNG avec transparence et compression optimale
-        imagepng($image, $outputPath, 0); // 0 = pas de compression pour préserver la qualité
+        // Sauvegarder l'image
+        imagepng($image, $outputPath, 0);
         imagedestroy($image);
         
-        // Vérifier que le fichier a bien été créé et a une taille raisonnable
+        // Vérification finale
         if (file_exists($outputPath)) {
             $fileSize = filesize($outputPath);
-            \Log::info("DEBUG: Image de signature par initiales créée avec succès", [
+            \Log::info("DEBUG: Signature manuscrite créée", [
                 'initials' => $initials,
                 'outputPath' => $outputPath,
-                'fontPath' => $fontPath ?? 'police système épaissie',
                 'fileSize' => $fileSize . ' bytes',
-                'dimensions' => $width . 'x' . $height,
-                'color' => 'noir'
+                'style' => $fontPath ? 'police cursive' : 'manuscrit personnalisé'
             ]);
-        } else {
-            \Log::error("DEBUG: Échec de la création de l'image de signature");
+        }
+    }
+    
+    /**
+     * Crée un style manuscrit personnalisé en dessinant les lettres à la main
+     */
+    private function createHandwrittenStyle($image, $initials, $textColor, $width, $height)
+    {
+        $letters = str_split(strtoupper($initials));
+        $letterWidth = $width / (count($letters) + 1);
+        $baseY = $height / 2;
+        
+        foreach ($letters as $index => $letter) {
+            $x = $letterWidth * ($index + 1);
+            $y = $baseY + rand(-20, 20); // Variation verticale pour effet manuscrit
+            
+            // Dessiner chaque lettre avec un style manuscrit
+            $this->drawHandwrittenLetter($image, $letter, $x, $y, $textColor);
+        }
+        
+        \Log::info("DEBUG: Style manuscrit personnalisé appliqué", [
+            'letters' => $letters,
+            'letterCount' => count($letters),
+            'technique' => 'dessin vectoriel personnalisé'
+        ]);
+    }
+    
+    /**
+     * Dessine une lettre avec un style manuscrit personnalisé
+     */
+    private function drawHandwrittenLetter($image, $letter, $centerX, $centerY, $color)
+    {
+        $thickness = 4; // Épaisseur du trait
+        
+        // Dessiner chaque lettre avec des courbes manuscrites
+        switch ($letter) {
+            case 'A':
+                // Trait gauche
+                $this->drawThickLine($image, $centerX - 30, $centerY + 40, $centerX - 10, $centerY - 40, $color, $thickness);
+                // Trait droit
+                $this->drawThickLine($image, $centerX + 10, $centerY - 40, $centerX + 30, $centerY + 40, $color, $thickness);
+                // Barre horizontale
+                $this->drawThickLine($image, $centerX - 15, $centerY, $centerX + 15, $centerY, $color, $thickness);
+                break;
+                
+            case 'B':
+                // Trait vertical
+                $this->drawThickLine($image, $centerX - 25, $centerY - 40, $centerX - 25, $centerY + 40, $color, $thickness);
+                // Courbe supérieure
+                $this->drawCurve($image, $centerX - 25, $centerY - 40, $centerX + 20, $centerY - 20, $centerX - 25, $centerY, $color, $thickness);
+                // Courbe inférieure
+                $this->drawCurve($image, $centerX - 25, $centerY, $centerX + 25, $centerY + 20, $centerX - 25, $centerY + 40, $color, $thickness);
+                break;
+                
+            case 'C':
+                // Arc de cercle
+                $this->drawArc($image, $centerX, $centerY, 50, 70, 30, 330, $color, $thickness);
+                break;
+                
+            default:
+                // Pour les autres lettres, dessiner un style générique élégant
+                // Trait principal avec courbe
+                $this->drawCurve($image, $centerX - 20, $centerY + 30, $centerX, $centerY - 30, $centerX + 20, $centerY + 20, $color, $thickness);
+                // Flourish décoratif
+                $this->drawCurve($image, $centerX - 15, $centerY - 20, $centerX + 5, $centerY - 35, $centerX + 25, $centerY - 15, $color, 2);
+                break;
+        }
+    }
+    
+    /**
+     * Dessine une ligne épaisse
+     */
+    private function drawThickLine($image, $x1, $y1, $x2, $y2, $color, $thickness)
+    {
+        for ($i = 0; $i < $thickness; $i++) {
+            imageline($image, $x1 + $i, $y1, $x2 + $i, $y2, $color);
+            imageline($image, $x1, $y1 + $i, $x2, $y2 + $i, $color);
+        }
+    }
+    
+    /**
+     * Dessine une courbe manuscrite
+     */
+    private function drawCurve($image, $x1, $y1, $x2, $y2, $x3, $y3, $color, $thickness)
+    {
+        // Dessiner une courbe de Bézier simplifiée
+        for ($t = 0; $t <= 1; $t += 0.01) {
+            $x = (1 - $t) * (1 - $t) * $x1 + 2 * (1 - $t) * $t * $x2 + $t * $t * $x3;
+            $y = (1 - $t) * (1 - $t) * $y1 + 2 * (1 - $t) * $t * $y2 + $t * $t * $y3;
+            
+            // Dessiner un point épais
+            for ($i = 0; $i < $thickness; $i++) {
+                for ($j = 0; $j < $thickness; $j++) {
+                    imagesetpixel($image, $x + $i, $y + $j, $color);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Dessine un arc avec épaisseur
+     */
+    private function drawArc($image, $centerX, $centerY, $width, $height, $start, $end, $color, $thickness)
+    {
+        for ($i = 0; $i < $thickness; $i++) {
+            imagearc($image, $centerX + $i, $centerY, $width, $height, $start, $end, $color);
+            imagearc($image, $centerX, $centerY + $i, $width, $height, $start, $end, $color);
         }
     }
 }
