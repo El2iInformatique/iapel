@@ -421,43 +421,28 @@ class SignatureController extends Controller
         $width = 300;
         $height = 150;
         
-        // Créer une image vide
-        $image = imagecreate($width, $height);
+        // Créer une image vide avec support alpha pour la transparence
+        $image = imagecreatetruecolor($width, $height);
+        
+        // Activer le canal alpha pour la transparence
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
         
         // Définir les couleurs
-        $backgroundColor = imagecolorallocate($image, 255, 255, 255); // Blanc
-        $textColor = imagecolorallocate($image, 51, 65, 85); // Couleur sombre (--neutral-800)
+        $backgroundColor = imagecolorallocatealpha($image, 255, 255, 255, 127); // Blanc transparent
+        $textColor = imagecolorallocate($image, 139, 90, 150); // Couleur violette du thème
         
-        // Rendre le fond transparent
-        imagecolortransparent($image, $backgroundColor);
-        
-        // Configuration de la police
-        $fontSize = 48;
-        $angle = -5; // Légère rotation
-        
-        // Utiliser une police système ou intégrée
-        $font = 5; // Police intégrée de GD
-        
-        // Calculer la position pour centrer le texte
-        $textBox = imagettfbbox($fontSize, $angle, null, $initials);
-        if ($textBox !== false) {
-            $textWidth = $textBox[4] - $textBox[0];
-            $textHeight = $textBox[1] - $textBox[5];
-            $x = ($width - $textWidth) / 2;
-            $y = ($height - $textHeight) / 2 + $textHeight;
-        } else {
-            // Fallback si imagettfbbox échoue
-            $x = $width / 2 - (strlen($initials) * 15);
-            $y = $height / 2 + 20;
-        }
+        // Remplir avec le fond transparent
+        imagefill($image, 0, 0, $backgroundColor);
         
         // Essayer d'utiliser une police TrueType si disponible
         $fontPath = null;
         $possibleFonts = [
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', // Linux
+            '/usr/share/fonts/TTF/arial.ttf', // Linux alternative
             '/System/Library/Fonts/Arial.ttf', // macOS
             '/Windows/Fonts/arial.ttf', // Windows
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', // Linux
-            '/usr/share/fonts/TTF/arial.ttf' // Linux alternative
+            '/Windows/Fonts/calibri.ttf', // Windows alternative
         ];
         
         foreach ($possibleFonts as $fontFile) {
@@ -467,23 +452,79 @@ class SignatureController extends Controller
             }
         }
         
+        $angle = -5; // Légère rotation
+        
         if ($fontPath && function_exists('imagettftext')) {
             // Utiliser une police TrueType
-            imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $initials);
-        } else {
-            // Fallback avec une police système
-            $fontSize = 5; // Taille de police système (1-5)
-            imagestring($image, $fontSize, $x, $y - 20, $initials, $textColor);
+            $fontSize = 48;
+            
+            // Calculer la position pour centrer le texte de manière sécurisée
+            try {
+                $textBox = imagettfbbox($fontSize, $angle, $fontPath, $initials);
+                if ($textBox !== false) {
+                    $textWidth = $textBox[4] - $textBox[0];
+                    $textHeight = $textBox[1] - $textBox[5];
+                    $x = ($width - $textWidth) / 2 - $textBox[0];
+                    $y = ($height - $textHeight) / 2 - $textBox[5];
+                } else {
+                    // Fallback position
+                    $x = $width / 2 - (strlen($initials) * 20);
+                    $y = $height / 2 + 20;
+                }
+                
+                // Dessiner le texte avec la police TrueType
+                imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $initials);
+                
+                \Log::info("DEBUG: Police TrueType utilisée avec succès", [
+                    'fontPath' => $fontPath,
+                    'fontSize' => $fontSize,
+                    'x' => $x,
+                    'y' => $y
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::warning("DEBUG: Erreur avec police TrueType, fallback vers police système", [
+                    'error' => $e->getMessage(),
+                    'fontPath' => $fontPath
+                ]);
+                $fontPath = null; // Forcer le fallback
+            }
         }
         
-        // Sauvegarder l'image
+        if (!$fontPath) {
+            // Fallback avec une police système (plus robuste)
+            $systemFontSize = 5; // Taille maximale de police système (1-5)
+            
+            // Calculer la position pour centrer le texte avec police système
+            $textWidth = strlen($initials) * imagefontwidth($systemFontSize);
+            $textHeight = imagefontheight($systemFontSize);
+            $x = ($width - $textWidth) / 2;
+            $y = ($height - $textHeight) / 2;
+            
+            // Pour simuler la rotation avec une police système, on peut décaler légèrement
+            $x += 10; // Décalage pour simuler l'inclinaison
+            
+            // Dessiner le texte avec la police système
+            imagestring($image, $systemFontSize, $x, $y, $initials, $textColor);
+            
+            \Log::info("DEBUG: Police système utilisée", [
+                'systemFontSize' => $systemFontSize,
+                'x' => $x,
+                'y' => $y,
+                'textWidth' => $textWidth,
+                'textHeight' => $textHeight
+            ]);
+        }
+        
+        // Sauvegarder l'image en PNG avec transparence
         imagepng($image, $outputPath);
         imagedestroy($image);
         
-        \Log::info("DEBUG: Image de signature par initiales créée", [
+        \Log::info("DEBUG: Image de signature par initiales créée avec succès", [
             'initials' => $initials,
             'outputPath' => $outputPath,
-            'fontPath' => $fontPath
+            'fontPath' => $fontPath ?? 'police système',
+            'fileExists' => file_exists($outputPath)
         ]);
     }
 }
