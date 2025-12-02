@@ -417,9 +417,9 @@ class SignatureController extends Controller
      */
     private function generateInitialsSignature($initials, $outputPath)
     {
-        // Dimensions de l'image
-        $width = 300;
-        $height = 150;
+        // Dimensions de l'image plus grandes pour une meilleure qualité
+        $width = 600;
+        $height = 300;
         
         // Créer une image vide avec support alpha pour la transparence
         $image = imagecreatetruecolor($width, $height);
@@ -430,7 +430,7 @@ class SignatureController extends Controller
         
         // Définir les couleurs
         $backgroundColor = imagecolorallocatealpha($image, 255, 255, 255, 127); // Blanc transparent
-        $textColor = imagecolorallocate($image, 139, 90, 150); // Couleur violette du thème
+        $textColor = imagecolorallocate($image, 0, 0, 0); // Noir au lieu de violet
         
         // Remplir avec le fond transparent
         imagefill($image, 0, 0, $backgroundColor);
@@ -439,6 +439,7 @@ class SignatureController extends Controller
         $fontPath = null;
         $possibleFonts = [
             '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', // Linux
+            '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf', // Linux alternative
             '/usr/share/fonts/TTF/arial.ttf', // Linux alternative
             '/System/Library/Fonts/Arial.ttf', // macOS
             '/Windows/Fonts/arial.ttf', // Windows
@@ -453,13 +454,12 @@ class SignatureController extends Controller
         }
         
         $angle = -5; // Légère rotation
+        $fontSize = 72; // Police plus grande pour une meilleure qualité
         
         if ($fontPath && function_exists('imagettftext')) {
             // Utiliser une police TrueType
-            $fontSize = 48;
-            
-            // Calculer la position pour centrer le texte de manière sécurisée
             try {
+                // Calculer la position pour centrer le texte de manière sécurisée
                 $textBox = imagettfbbox($fontSize, $angle, $fontPath, $initials);
                 if ($textBox !== false) {
                     $textWidth = $textBox[4] - $textBox[0];
@@ -468,8 +468,8 @@ class SignatureController extends Controller
                     $y = ($height - $textHeight) / 2 - $textBox[5];
                 } else {
                     // Fallback position
-                    $x = $width / 2 - (strlen($initials) * 20);
-                    $y = $height / 2 + 20;
+                    $x = $width / 2 - (strlen($initials) * 30);
+                    $y = $height / 2 + 30;
                 }
                 
                 // Dessiner le texte avec la police TrueType
@@ -479,7 +479,8 @@ class SignatureController extends Controller
                     'fontPath' => $fontPath,
                     'fontSize' => $fontSize,
                     'x' => $x,
-                    'y' => $y
+                    'y' => $y,
+                    'textColor' => 'noir (0,0,0)'
                 ]);
                 
             } catch (\Exception $e) {
@@ -495,36 +496,45 @@ class SignatureController extends Controller
             // Fallback avec une police système (plus robuste)
             $systemFontSize = 5; // Taille maximale de police système (1-5)
             
-            // Calculer la position pour centrer le texte avec police système
-            $textWidth = strlen($initials) * imagefontwidth($systemFontSize);
-            $textHeight = imagefontheight($systemFontSize);
-            $x = ($width - $textWidth) / 2;
-            $y = ($height - $textHeight) / 2;
+            // Répéter le texte plusieurs fois pour simuler une police plus épaisse
+            for ($offset = 0; $offset <= 2; $offset++) {
+                // Calculer la position pour centrer le texte avec police système
+                $textWidth = strlen($initials) * imagefontwidth($systemFontSize);
+                $textHeight = imagefontheight($systemFontSize);
+                $x = ($width - $textWidth) / 2 + $offset;
+                $y = ($height - $textHeight) / 2 + $offset;
+                
+                // Pour simuler la rotation avec une police système, décaler légèrement
+                $x += 20;
+                
+                // Dessiner le texte avec la police système plusieurs fois pour plus d'épaisseur
+                imagestring($image, $systemFontSize, $x, $y, $initials, $textColor);
+            }
             
-            // Pour simuler la rotation avec une police système, on peut décaler légèrement
-            $x += 10; // Décalage pour simuler l'inclinaison
-            
-            // Dessiner le texte avec la police système
-            imagestring($image, $systemFontSize, $x, $y, $initials, $textColor);
-            
-            \Log::info("DEBUG: Police système utilisée", [
+            \Log::info("DEBUG: Police système utilisée avec épaississement", [
                 'systemFontSize' => $systemFontSize,
-                'x' => $x,
-                'y' => $y,
-                'textWidth' => $textWidth,
-                'textHeight' => $textHeight
+                'textColor' => 'noir (0,0,0)',
+                'technique' => 'répétition pour épaisseur'
             ]);
         }
         
-        // Sauvegarder l'image en PNG avec transparence
-        imagepng($image, $outputPath);
+        // Sauvegarder l'image en PNG avec transparence et compression optimale
+        imagepng($image, $outputPath, 0); // 0 = pas de compression pour préserver la qualité
         imagedestroy($image);
         
-        \Log::info("DEBUG: Image de signature par initiales créée avec succès", [
-            'initials' => $initials,
-            'outputPath' => $outputPath,
-            'fontPath' => $fontPath ?? 'police système',
-            'fileExists' => file_exists($outputPath)
-        ]);
+        // Vérifier que le fichier a bien été créé et a une taille raisonnable
+        if (file_exists($outputPath)) {
+            $fileSize = filesize($outputPath);
+            \Log::info("DEBUG: Image de signature par initiales créée avec succès", [
+                'initials' => $initials,
+                'outputPath' => $outputPath,
+                'fontPath' => $fontPath ?? 'police système épaissie',
+                'fileSize' => $fileSize . ' bytes',
+                'dimensions' => $width . 'x' . $height,
+                'color' => 'noir'
+            ]);
+        } else {
+            \Log::error("DEBUG: Échec de la création de l'image de signature");
+        }
     }
 }
