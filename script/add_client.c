@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <time.h>
 #define SIZE_CLIENT_SECRET 10
 #define BASIC_PATH "/var/www/iapel/"
 
@@ -27,14 +28,26 @@ static void to_upper(char *str)
     }
 }
 
-
 void create_client_secret(char *client_name, char * client_secret)
 {
-    for (int i = 0; client_name[i] != '\0'; i++) {
-        if (i <= 3)
-            break;
-        client_secret[i] = client_name[i] - 32;
+    int i;
+    
+    // Copier les 3 premiers caractères en majuscules
+    for (i = 0; client_name[i] != '\0' && i < 3; i++) {
+        client_secret[i] = (client_name[i] >= 'a' && client_name[i] <= 'z') 
+                          ? client_name[i] - 32 
+                          : client_name[i];
     }
+    
+    // Ajouter "_SECRET"
+    client_secret[i++] = '_';
+    client_secret[i++] = 'S';
+    client_secret[i++] = 'E';
+    client_secret[i++] = 'C';
+    client_secret[i++] = 'R';
+    client_secret[i++] = 'E';
+    client_secret[i++] = 'T';
+    client_secret[i] = '\0';
 }
 
 int basic_validation(char *argv[], int argc)
@@ -57,15 +70,18 @@ int basic_validation(char *argv[], int argc)
 int add_client_to_environment(char *client_name, char *client_secret)
 {
     int fd = open("/var/www/iapel/.env", O_WRONLY | O_APPEND);
-    char buffer[strlen(client_name)];
-
-    for (int i = 0; client_name[i] != '\0'; i++)
-        buffer[i] = client_name[i] - 32;
+    
     if (fd == -1) {
         perror("Erreur lors de l'ouverture du fichier .env");
         return 1;
     }
-    dprintf(fd, "%s_SECRET=%s\n", buffer, client_secret);
+    
+    // Créer le buffer avec la taille correcte (+1 pour le \0)
+    char buffer_upper[strlen(client_name) + 1];
+    strcpy(buffer_upper, client_name);
+    to_upper(buffer_upper);
+    
+    dprintf(fd, "%s_SECRET=%s\n", buffer_upper, client_secret);
     close(fd);
     return 0;
 }
