@@ -47,7 +47,7 @@ int basic_validation(char *argv[], int argc)
         fprintf(stderr, "Usage: %s <client_name>\n", argv[0]);
         return 1;
     }
-    if (client_name == NULL || argv[1][0] == '\0') {
+    if (argv[1][0] == '\0') {
         fprintf(stderr, "Le nom du client ne peut pas être vide.\n");
         return 1;
     }
