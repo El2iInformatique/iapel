@@ -9,6 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
+        /* Police personnalisée BrittanySignature */
+        @font-face {
+            font-family: 'BrittanySignature';
+            src: url('{{ asset('fonts/BrittanySignature.ttf') }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         :root {
             --primary-purple: #8B5A96;
             --primary-dark: #6B4575;
@@ -473,13 +482,13 @@
         }
 
         .fullname-signature {
-            font-family: 'Brush Script MT', 'Dancing Script', 'Great Vibes', cursive;
-            font-size: 2.5rem;
-            font-weight: bold;
+            font-family: 'BrittanySignature', 'Brush Script MT', 'Dancing Script', 'Great Vibes', cursive;
+            font-size: 3rem;
+            font-weight: normal;
             color: #000000; /* Noir pour meilleure lisibilité */
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
             letter-spacing: 1px;
-            transform: rotate(-3deg);
+            transform: rotate(-2deg);
             position: relative;
             padding: 1rem 2rem;
         }
