@@ -9,6 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
+        /* Police personnalisée BrittanySignature */
+        @font-face {
+            font-family: 'BrittanySignature';
+            src: url('{{ asset('fonts/BrittanySignature.ttf') }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         :root {
             --primary-purple: #8B5A96;
             --primary-dark: #6B4575;
@@ -327,6 +336,179 @@
             gap: 0.5rem;
         }
 
+        /* Nouveaux styles pour le système de double signature */
+        .signature-type-selector {
+            display: flex;
+            background: var(--neutral-100);
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            gap: 0.5rem;
+        }
+
+        .signature-type-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--neutral-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .signature-type-btn.active {
+            background: var(--white);
+            color: var(--primary-purple);
+            box-shadow: var(--shadow-sm);
+            font-weight: 600;
+        }
+
+        .signature-type-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--neutral-700);
+        }
+
+        .signature-method {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .signature-method.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Styles pour la signature par nom et prénom */
+        .fullname-section {
+            background: linear-gradient(135deg, #faf9fc 0%, var(--neutral-50) 100%);
+            border: 1px solid #e8e5eb;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .fullname-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: var(--neutral-700);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--neutral-300);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-purple);
+            box-shadow: 0 0 0 3px rgba(139, 90, 150, 0.1);
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-dark) 100%);
+            border: none;
+            color: var(--white);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            height: fit-content;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 90, 150, 0.4);
+        }
+
+        .fullname-preview {
+            background: var(--white);
+            border: 2px dashed var(--neutral-300);
+            border-radius: 12px;
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fullname-preview.has-signature {
+            border-color: var(--success-green);
+            border-style: solid;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+        }
+
+        .fullname-signature {
+            font-family: 'BrittanySignature', 'Brush Script MT', 'Dancing Script', 'Great Vibes', cursive;
+            font-size: 3rem;
+            font-weight: normal;
+            color: #000000; /* Noir pour meilleure lisibilité */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            letter-spacing: 1px;
+            transform: rotate(-2deg);
+            position: relative;
+            padding: 1rem 2rem;
+        }
+
+        .fullname-signature::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #000000, transparent); /* Ligne noire */
+        }
+
+        .preview-placeholder {
+            color: var(--neutral-400);
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
         .signature-canvas {
             border: 2px dashed var(--neutral-300);
             border-radius: 12px;
@@ -421,6 +603,29 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: var(--shadow-sm);
+        }
+
+        /* Responsive pour les nouvelles fonctionnalités */
+        @media (max-width: 768px) {
+            .signature-type-selector {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: stretch;
+            }
+            
+            .generate-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .fullname-signature {
+                font-size: 2rem;
+            }
         }
 
         .footer-branding {
@@ -622,26 +827,74 @@
                         <i class="bi bi-pen-fill"></i>
                         <span>Votre signature</span>
                     </h3>
-                    
-                    <div style="position: relative;">
-                        <canvas id="signature-pad" class="signature-canvas" style="width: 100%; height: 200px;"></canvas>
-                        <div id="signature-placeholder" class="signature-placeholder">
-                            <i class="bi bi-pencil" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                            Cliquez et dessinez votre signature dans cette zone
+
+                    <!-- Sélecteur de type de signature -->
+                    <div class="signature-type-selector">
+                        <button class="signature-type-btn active" data-target="#manual-signature">
+                            <i class="bi bi-pencil"></i>
+                            <span>Signature manuelle</span>
+                        </button>
+                        <button class="signature-type-btn" data-target="#fullname-signature">
+                            <i class="bi bi-type"></i>
+                            <span>Signature par nom et prénom</span>
+                        </button>
+                    </div>
+
+                    <!-- Méthode de signature manuelle -->
+                    <div id="manual-signature" class="signature-method active">
+                        <div style="position: relative;">
+                            <canvas id="signature-pad" class="signature-canvas" style="width: 100%; height: 200px;"></canvas>
+                            <div id="signature-placeholder" class="signature-placeholder">
+                                <i class="bi bi-pencil" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                Cliquez et dessinez votre signature dans cette zone
+                            </div>
+                        </div>
+                        <input type="hidden" name="signature" id="signature">
+                        <div class="signature-controls">
+                            <button type="button" class="clear-button" id="clear-signature">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                <span>Effacer</span>
+                            </button>
+                            <button type="button" class="sign-button" id="submit-signature">
+                                <i class="bi bi-check-lg"></i>
+                                <span>Signer électroniquement</span>
+                            </button>
                         </div>
                     </div>
-                    
-                    <input type="hidden" name="signature" id="signature">
-                    
-                    <div class="signature-controls">
-                        <button type="button" class="clear-button" id="clear-signature">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                            <span>Effacer</span>
-                        </button>
-                        <button type="button" class="sign-button" id="submit-signature">
-                            <i class="bi bi-check-lg"></i>
-                            <span>Signer électroniquement</span>
-                        </button>
+
+                    <!-- Méthode de signature par nom et prénom -->
+                    <div id="fullname-signature" class="signature-method">
+                        <div class="fullname-section">
+                            <div class="fullname-input-group">
+                                <div class="input-row">
+                                    <div class="form-group">
+                                        <label for="firstname" class="form-label">Prénom</label>
+                                        <input type="text" id="firstname" class="form-input" placeholder="Ex: Jean">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastname" class="form-label">Nom</label>
+                                        <input type="text" id="lastname" class="form-input" placeholder="Ex: Dupont">
+                                    </div>
+                                </div>
+                                <button type="button" class="generate-btn" id="generate-fullname" style="width: 100%;">
+                                    <i class="bi bi-magic"></i>
+                                    <span>Générer la signature</span>
+                                </button>
+                            </div>
+                            <div class="fullname-preview" id="fullname-preview">
+                                <div class="preview-placeholder">Votre signature apparaîtra ici</div>
+                            </div>
+                            <div class="signature-controls">
+                                <button type="button" class="clear-button" id="clear-fullname">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    <span>Effacer</span>
+                                </button>
+                                <button type="button" class="sign-button" id="submit-fullname">
+                                    <i class="bi bi-check-lg"></i>
+                                    <span>Signer électroniquement</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -930,6 +1183,118 @@
                     element.style.opacity = '1';
                     element.style.transform = 'translateY(0)';
                 }, index * 150);
+            });
+
+            // Gestion du système de double signature
+            const signatureTypeButtons = document.querySelectorAll('.signature-type-btn');
+            const signatureMethods = document.querySelectorAll('.signature-method');
+
+            signatureTypeButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    signatureTypeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const target = this.getAttribute('data-target');
+                    signatureMethods.forEach(method => {
+                        if (method.id === target.substring(1)) {
+                            method.classList.add('active');
+                        } else {
+                            method.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            // Gestion de la signature par nom et prénom
+            const firstnameInput = document.getElementById('firstname');
+            const lastnameInput = document.getElementById('lastname');
+            const generateFullnameButton = document.getElementById('generate-fullname');
+            const fullnamePreview = document.getElementById('fullname-preview');
+            const clearFullnameButton = document.getElementById('clear-fullname');
+            const submitFullnameButton = document.getElementById('submit-fullname');
+
+            generateFullnameButton.addEventListener('click', function () {
+                const firstname = firstnameInput.value.trim();
+                const lastname = lastnameInput.value.trim();
+                if (firstname && lastname) {
+                    const fullname = `${firstname} ${lastname}`;
+                    fullnamePreview.innerHTML = `<div class="fullname-signature">${fullname}</div>`;
+                    fullnamePreview.classList.add('has-signature');
+                } else {
+                    fullnamePreview.innerHTML = `<div class="preview-placeholder">Votre signature apparaîtra ici</div>`;
+                    fullnamePreview.classList.remove('has-signature');
+                }
+            });
+
+            clearFullnameButton.addEventListener('click', function () {
+                firstnameInput.value = '';
+                lastnameInput.value = '';
+                fullnamePreview.innerHTML = `<div class="preview-placeholder">Votre signature apparaîtra ici</div>`;
+                fullnamePreview.classList.remove('has-signature');
+            });
+
+            submitFullnameButton.addEventListener('click', function () {
+                const firstname = firstnameInput.value.trim();
+                const lastname = lastnameInput.value.trim();
+                if (!firstname || !lastname) {
+                    alert('Veuillez entrer votre prénom et nom avant de soumettre.');
+                    return;
+                }
+
+                // Désactiver le bouton et changer son état
+                submitFullnameButton.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <span>Traitement en cours...</span>
+                `;
+                submitFullnameButton.disabled = true;
+
+                const infoModal_signature = new bootstrap.Modal(document.getElementById("info_modal_signature"));
+                infoModal_signature.show();
+
+                fetch("{{ url('/signature-fullname/' . $token) }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({ 
+                        firstname: firstname,
+                        lastname: lastname
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur réseau: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Données reçues:", data);
+                    submitFullnameButton.innerHTML = `
+                        <i class="bi bi-check-lg"></i>
+                        <span>Signature validée !</span>
+                    `;
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                })
+                .catch(error => {
+                    console.error("Erreur lors de la signature par nom complet :", error);
+                    submitFullnameButton.innerHTML = `
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>Erreur de signature</span>
+                    `;
+                    submitFullnameButton.style.backgroundColor = "#ef4444";
+                    setTimeout(() => {
+                        submitFullnameButton.innerHTML = `
+                            <i class="bi bi-check-lg"></i>
+                            <span>Signer électroniquement</span>
+                        `;
+                        submitFullnameButton.disabled = false;
+                        submitFullnameButton.style.backgroundColor = "";
+                    }, 5000);
+                    infoModal_signature.hide();
+                });
             });
 
             // Debug - vérifier que tout est bien initialisé

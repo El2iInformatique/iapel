@@ -140,3 +140,5 @@ python-script-test/.ipynb_checkpoints/
 # Garde les images mais pas les fichiers temporaires
 public/tmp/
 public/storage/
+
+config/secrets.php
