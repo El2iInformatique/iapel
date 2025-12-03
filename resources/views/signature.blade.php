@@ -380,8 +380,8 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Styles pour la signature par initiales */
-        .initials-section {
+        /* Styles pour la signature par nom et prénom */
+        .fullname-section {
             background: linear-gradient(135deg, #faf9fc 0%, var(--neutral-50) 100%);
             border: 1px solid #e8e5eb;
             border-radius: 12px;
@@ -389,7 +389,7 @@
             margin-bottom: 1rem;
         }
 
-        .initials-input-group {
+        .fullname-input-group {
             display: flex;
             flex-direction: column;
             gap: 1rem;
@@ -452,11 +452,11 @@
             box-shadow: 0 4px 12px rgba(139, 90, 150, 0.4);
         }
 
-        .initials-preview {
+        .fullname-preview {
             background: var(--white);
             border: 2px dashed var(--neutral-300);
             border-radius: 12px;
-            min-height: 150px;
+            min-height: 180px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -466,20 +466,32 @@
             overflow: hidden;
         }
 
-        .initials-preview.has-signature {
+        .fullname-preview.has-signature {
             border-color: var(--success-green);
             border-style: solid;
-            background: #f0fdf4;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
         }
 
-        .initials-signature {
-            font-family: 'Brush Script MT', cursive, 'Dancing Script', cursive;
-            font-size: 3rem;
+        .fullname-signature {
+            font-family: 'Brush Script MT', 'Dancing Script', 'Great Vibes', cursive;
+            font-size: 2.5rem;
             font-weight: bold;
             color: var(--primary-purple);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            letter-spacing: 2px;
-            transform: rotate(-5deg);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            letter-spacing: 1px;
+            transform: rotate(-3deg);
+            position: relative;
+            padding: 1rem 2rem;
+        }
+
+        .fullname-signature::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--primary-purple), transparent);
         }
 
         .preview-placeholder {
@@ -602,7 +614,7 @@
                 justify-content: center;
             }
             
-            .initials-signature {
+            .fullname-signature {
                 font-size: 2rem;
             }
         }
@@ -813,9 +825,9 @@
                             <i class="bi bi-pencil"></i>
                             <span>Signature manuelle</span>
                         </button>
-                        <button class="signature-type-btn" data-target="#initials-signature">
+                        <button class="signature-type-btn" data-target="#fullname-signature">
                             <i class="bi bi-type"></i>
-                            <span>Signature par initiales</span>
+                            <span>Signature par nom et prénom</span>
                         </button>
                     </div>
 
@@ -841,30 +853,34 @@
                         </div>
                     </div>
 
-                    <!-- Méthode de signature par initiales -->
-                    <div id="initials-signature" class="signature-method">
-                        <div class="initials-section">
-                            <div class="initials-input-group">
+                    <!-- Méthode de signature par nom et prénom -->
+                    <div id="fullname-signature" class="signature-method">
+                        <div class="fullname-section">
+                            <div class="fullname-input-group">
                                 <div class="input-row">
                                     <div class="form-group">
-                                        <label for="initials" class="form-label">Vos initiales</label>
-                                        <input type="text" id="initials" class="form-input" maxlength="3" placeholder="Ex: ABC">
+                                        <label for="firstname" class="form-label">Prénom</label>
+                                        <input type="text" id="firstname" class="form-input" placeholder="Ex: Jean">
                                     </div>
-                                    <button type="button" class="generate-btn" id="generate-initials">
-                                        <i class="bi bi-magic"></i>
-                                        <span>Générer</span>
-                                    </button>
+                                    <div class="form-group">
+                                        <label for="lastname" class="form-label">Nom</label>
+                                        <input type="text" id="lastname" class="form-input" placeholder="Ex: Dupont">
+                                    </div>
                                 </div>
+                                <button type="button" class="generate-btn" id="generate-fullname" style="width: 100%;">
+                                    <i class="bi bi-magic"></i>
+                                    <span>Générer la signature</span>
+                                </button>
                             </div>
-                            <div class="initials-preview" id="initials-preview">
-                                <div class="preview-placeholder">Vos initiales apparaîtront ici</div>
+                            <div class="fullname-preview" id="fullname-preview">
+                                <div class="preview-placeholder">Votre signature apparaîtra ici</div>
                             </div>
                             <div class="signature-controls">
-                                <button type="button" class="clear-button" id="clear-initials">
+                                <button type="button" class="clear-button" id="clear-fullname">
                                     <i class="bi bi-arrow-counterclockwise"></i>
                                     <span>Effacer</span>
                                 </button>
-                                <button type="button" class="sign-button" id="submit-initials">
+                                <button type="button" class="sign-button" id="submit-fullname">
                                     <i class="bi bi-check-lg"></i>
                                     <span>Signer électroniquement</span>
                                 </button>
@@ -1180,54 +1196,62 @@
                 });
             });
 
-            // Gestion de la signature par initiales
-            const initialsInput = document.getElementById('initials');
-            const generateInitialsButton = document.getElementById('generate-initials');
-            const initialsPreview = document.getElementById('initials-preview');
-            const clearInitialsButton = document.getElementById('clear-initials');
-            const submitInitialsButton = document.getElementById('submit-initials');
+            // Gestion de la signature par nom et prénom
+            const firstnameInput = document.getElementById('firstname');
+            const lastnameInput = document.getElementById('lastname');
+            const generateFullnameButton = document.getElementById('generate-fullname');
+            const fullnamePreview = document.getElementById('fullname-preview');
+            const clearFullnameButton = document.getElementById('clear-fullname');
+            const submitFullnameButton = document.getElementById('submit-fullname');
 
-            generateInitialsButton.addEventListener('click', function () {
-                const initials = initialsInput.value.trim().toUpperCase();
-                if (initials) {
-                    initialsPreview.innerHTML = `<div class="initials-signature">${initials}</div>`;
-                    initialsPreview.classList.add('has-signature');
+            generateFullnameButton.addEventListener('click', function () {
+                const firstname = firstnameInput.value.trim();
+                const lastname = lastnameInput.value.trim();
+                if (firstname && lastname) {
+                    const fullname = `${firstname} ${lastname}`;
+                    fullnamePreview.innerHTML = `<div class="fullname-signature">${fullname}</div>`;
+                    fullnamePreview.classList.add('has-signature');
                 } else {
-                    initialsPreview.innerHTML = `<div class="preview-placeholder">Vos initiales apparaîtront ici</div>`;
-                    initialsPreview.classList.remove('has-signature');
+                    fullnamePreview.innerHTML = `<div class="preview-placeholder">Votre signature apparaîtra ici</div>`;
+                    fullnamePreview.classList.remove('has-signature');
                 }
             });
 
-            clearInitialsButton.addEventListener('click', function () {
-                initialsInput.value = '';
-                initialsPreview.innerHTML = `<div class="preview-placeholder">Vos initiales apparaîtront ici</div>`;
-                initialsPreview.classList.remove('has-signature');
+            clearFullnameButton.addEventListener('click', function () {
+                firstnameInput.value = '';
+                lastnameInput.value = '';
+                fullnamePreview.innerHTML = `<div class="preview-placeholder">Votre signature apparaîtra ici</div>`;
+                fullnamePreview.classList.remove('has-signature');
             });
 
-            submitInitialsButton.addEventListener('click', function () {
-                const initials = initialsInput.value.trim().toUpperCase();
-                if (!initials) {
-                    alert('Veuillez entrer vos initiales avant de soumettre.');
+            submitFullnameButton.addEventListener('click', function () {
+                const firstname = firstnameInput.value.trim();
+                const lastname = lastnameInput.value.trim();
+                if (!firstname || !lastname) {
+                    alert('Veuillez entrer votre prénom et nom avant de soumettre.');
                     return;
                 }
 
                 // Désactiver le bouton et changer son état
-                submitInitialsButton.innerHTML = `
+                submitFullnameButton.innerHTML = `
                     <div class="loading-spinner"></div>
                     <span>Traitement en cours...</span>
                 `;
-                submitInitialsButton.disabled = true;
+                submitFullnameButton.disabled = true;
 
                 const infoModal_signature = new bootstrap.Modal(document.getElementById("info_modal_signature"));
                 infoModal_signature.show();
 
-                fetch("{{ url('/signature-initials/' . $token) }}", {
+                fetch("{{ url('/signature-fullname/' . $token) }}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRF-TOKEN": "{{ csrf_token() }}"
                     },
-                    body: JSON.stringify({ initials: initials })
+                    body: JSON.stringify({ 
+                        firstname: firstname,
+                        lastname: lastname
+                    })
                 })
                 .then(response => {
                     if (!response.ok) {
@@ -1237,7 +1261,7 @@
                 })
                 .then(data => {
                     console.log("Données reçues:", data);
-                    submitInitialsButton.innerHTML = `
+                    submitFullnameButton.innerHTML = `
                         <i class="bi bi-check-lg"></i>
                         <span>Signature validée !</span>
                     `;
@@ -1246,19 +1270,19 @@
                     }, 1500);
                 })
                 .catch(error => {
-                    console.error("Erreur lors de la signature par initiales :", error);
-                    submitInitialsButton.innerHTML = `
+                    console.error("Erreur lors de la signature par nom complet :", error);
+                    submitFullnameButton.innerHTML = `
                         <i class="bi bi-exclamation-triangle"></i>
                         <span>Erreur de signature</span>
                     `;
-                    submitInitialsButton.style.backgroundColor = "#ef4444";
+                    submitFullnameButton.style.backgroundColor = "#ef4444";
                     setTimeout(() => {
-                        submitInitialsButton.innerHTML = `
+                        submitFullnameButton.innerHTML = `
                             <i class="bi bi-check-lg"></i>
                             <span>Signer électroniquement</span>
                         `;
-                        submitInitialsButton.disabled = false;
-                        submitInitialsButton.style.backgroundColor = "";
+                        submitFullnameButton.disabled = false;
+                        submitFullnameButton.style.backgroundColor = "";
                     }, 5000);
                     infoModal_signature.hide();
                 });

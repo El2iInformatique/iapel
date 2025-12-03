@@ -126,7 +126,7 @@ Route::post('/generate-download-pdf', [PdfController::class, 'generateDownloadPD
 //Routes pour la signature des devis
 Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('signature.show');
 Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('signature.sign');
-Route::post('/signature-initials/{token}', [SignatureController::class, 'signWithInitials'])->name('signature.signInitials');
+Route::post('/signature-fullname/{token}', [SignatureController::class, 'signWithFullName'])->name('signature.signFullName');
 
 Route::get('/devis/{client}/{uid}', function ($client, $uid) {
     $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid . '.pdf');

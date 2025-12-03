@@ -252,15 +252,16 @@ class SignatureController extends Controller
         \Log::info("DEBUG: Fichiers temporaires supprimés - Processus de signature terminé avec succès");
     }
 
-    // Gérer la signature par initiales
-    public function signWithInitials(Request $request, $token)
+    // Gérer la signature par nom et prénom complets
+    public function signWithFullName(Request $request, $token)
     {
-        \Log::info("DEBUG: Début du processus de signature par initiales pour le token : " . $token);
+        \Log::info("DEBUG: Début du processus de signature par nom et prénom pour le token : " . $token);
         
         $request->validate([
-            'initials' => 'required|string|max:3' // Initiales (maximum 3 caractères)
+            'firstname' => 'required|string|max:50',
+            'lastname' => 'required|string|max:50'
         ]);
-        \Log::info("DEBUG: Validation des initiales réussie");
+        \Log::info("DEBUG: Validation du nom et prénom réussie");
 
         $tokenEntry = Token::where('token', $token)
             ->first();
@@ -283,16 +284,16 @@ class SignatureController extends Controller
         $tokenEntry->save();
         \Log::info("DEBUG: Token marqué comme utilisé");
 
-        // Générer une signature basée sur les initiales
-        $initials = strtoupper($request->input('initials'));
+        // Générer une signature basée sur le nom et prénom
+        $firstname = ucfirst(strtolower(trim($request->input('firstname'))));
+        $lastname = ucfirst(strtolower(trim($request->input('lastname'))));
         
-        // Créer une image de signature basée sur les initiales
+        // Créer un répertoire s'il n'existe pas
         $uid = $tokenEntry->devis_id;
         $document = 'devis';
         $nomDoc = $uid . '_' . $token;
         $client = $tokenEntry->organisation_id;
         
-        // Créer un répertoire s'il n'existe pas
         $signatureDir = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc);
         if (!file_exists($signatureDir)) {
             mkdir($signatureDir, 0755, true);
@@ -300,9 +301,9 @@ class SignatureController extends Controller
         
         $signaturePath = $signatureDir . '/' . $nomDoc . '_signature.png';
         
-        // Générer l'image de signature avec les initiales
-        $this->generateInitialsSignature($initials, $signaturePath);
-        \Log::info("DEBUG: Signature par initiales générée", ['signaturePath' => $signaturePath]);
+        // Générer l'image de signature avec le nom et prénom complets
+        $this->generateFullNameSignature($firstname, $lastname, $signaturePath);
+        \Log::info("DEBUG: Signature par nom et prénom générée", ['signaturePath' => $signaturePath]);
 
         // Continuer avec le même processus que la signature manuelle
         $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '.pdf');
@@ -332,7 +333,7 @@ class SignatureController extends Controller
 
             // Si avant-dernière page, appliquer signature et date
             if ($i == $pageCount - $tokenEntry->nb_pages) {
-                \Log::info("DEBUG: Application de la signature par initiales sur la page", ['page' => $i]);
+                \Log::info("DEBUG: Application de la signature par nom et prénom sur la page", ['page' => $i]);
                 
                 $ratioConversion = 6.98;
 
@@ -347,7 +348,7 @@ class SignatureController extends Controller
                 $pdf->Write(10, $date_signature);
                 \Log::info("DEBUG: Date ajoutée au PDF", ['date' => $date_signature]);
 
-                // Intégration de la signature par initiales
+                // Intégration de la signature par nom et prénom
                 list($width, $height) = getimagesize($signaturePath);
                 $maxWidth = 31;
                 $maxHeight = 13;
@@ -365,7 +366,7 @@ class SignatureController extends Controller
                 
                 try {
                     $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-                    \Log::info("DEBUG: Image signature par initiales ajoutée au PDF avec succès");
+                    \Log::info("DEBUG: Image signature par nom et prénom ajoutée au PDF avec succès");
                 } catch (\Exception $e) {
                     \Log::error("DEBUG: Erreur lors de l'ajout de l'image", [
                         'error' => $e->getMessage(),
@@ -383,7 +384,7 @@ class SignatureController extends Controller
         $pdf->setPrintFooter(false);
         
         $pdf->Output($outputPath, 'F');
-        \Log::info("DEBUG: PDF signé avec initiales généré", ['outputPath' => $outputPath]);
+        \Log::info("DEBUG: PDF signé avec nom et prénom généré", ['outputPath' => $outputPath]);
 
         // Signature électronique
         $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf');
@@ -395,30 +396,30 @@ class SignatureController extends Controller
         $process->run();
 
         if (!$process->isSuccessful()) {
-            \Log::error("DEBUG: Échec du processus Python pour signature initiales", [
+            \Log::error("DEBUG: Échec du processus Python pour signature nom et prénom", [
                 'exit_code' => $process->getExitCode(),
                 'error_output' => $process->getErrorOutput()
             ]);
             throw new ProcessFailedException($process);
         }
 
-        \Log::info("DEBUG: Signature électronique par initiales réussie");
+        \Log::info("DEBUG: Signature électronique par nom et prénom réussie");
 
         // Suppression des fichiers temporaires
         unlink($outputPath);
         unlink($signaturePath);
-        \Log::info("DEBUG: Processus de signature par initiales terminé avec succès");
+        \Log::info("DEBUG: Processus de signature par nom et prénom terminé avec succès");
         
-        return response()->json(['success' => true, 'message' => 'Signature par initiales réussie']);
+        return response()->json(['success' => true, 'message' => 'Signature par nom et prénom réussie']);
     }
 
     /**
-     * Génère une image de signature basée sur les initiales avec un style manuscrit
+     * Génère une signature élégante et professionnelle à partir du nom et prénom complets
      */
-    private function generateInitialsSignature($initials, $outputPath)
+    private function generateFullNameSignature($firstname, $lastname, $outputPath)
     {
-        // Dimensions de l'image
-        $width = 600;
+        // Dimensions de l'image optimisées pour une signature professionnelle
+        $width = 800;
         $height = 300;
         
         // Créer une image vide avec support alpha pour la transparence
@@ -429,26 +430,29 @@ class SignatureController extends Controller
         imagesavealpha($image, true);
         
         // Définir les couleurs
-        $backgroundColor = imagecolorallocatealpha($image, 255, 255, 255, 127); // Blanc transparent
-        $textColor = imagecolorallocate($image, 0, 0, 0); // Noir
-        $shadowColor = imagecolorallocate($image, 128, 128, 128); // Gris pour l'ombre
+        $backgroundColor = imagecolorallocatealpha($image, 255, 255, 255, 127); // Transparent
+        $textColor = imagecolorallocate($image, 20, 40, 80); // Bleu marine élégant
+        $accentColor = imagecolorallocate($image, 139, 90, 150); // Violet pour accent
+        $shadowColor = imagecolorallocatealpha($image, 100, 100, 100, 60); // Ombre subtile
         
         // Remplir avec le fond transparent
         imagefill($image, 0, 0, $backgroundColor);
         
-        // Essayer d'utiliser une police cursive/manuscrite si disponible
-        $fontPath = null;
+        // Liste de polices cursives/manuscrites disponibles
         $possibleFonts = [
-            // Polices cursives/manuscrites sur différents systèmes
-            '/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf', // Linux
-            '/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf', // Linux
-            '/System/Library/Fonts/Brush Script.ttf', // macOS
-            '/System/Library/Fonts/Bradley Hand Bold.ttf', // macOS
-            '/Windows/Fonts/brushsci.ttf', // Windows Brush Script
-            '/Windows/Fonts/BRITANIC.TTF', // Windows Britannic Bold
-            '/usr/share/fonts/TTF/LiberationSerif-Italic.ttf', // Linux alternative
+            '/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf',
+            '/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf',
+            '/System/Library/Fonts/Bradley Hand Bold.ttf',
+            '/System/Library/Fonts/Brush Script.ttf',
+            '/Windows/Fonts/BRADHITC.TTF',
+            '/Windows/Fonts/CURLZ___.TTF',
+            '/Windows/Fonts/FREESCPT.TTF',
+            '/Windows/Fonts/KUNSTLER.TTF',
+            '/usr/share/fonts/TTF/LiberationSerif-Italic.ttf',
         ];
         
+        $fontPath = null;
         foreach ($possibleFonts as $fontFile) {
             if (file_exists($fontFile)) {
                 $fontPath = $fontFile;
@@ -456,38 +460,52 @@ class SignatureController extends Controller
             }
         }
         
-        $angle = -8; // Rotation plus marquée pour effet manuscrit
-        $fontSize = 80; // Police plus grande
+        $fullName = $firstname . ' ' . $lastname;
         
         if ($fontPath && function_exists('imagettftext')) {
-            // Utiliser une police TrueType avec style manuscrit
+            // Style avec police TrueType élégante
+            $fontSize = 55;
+            $angle = -4; // Légère inclinaison pour effet manuscrit
+            
             try {
-                // Calculer la position pour centrer le texte
-                $textBox = imagettfbbox($fontSize, $angle, $fontPath, $initials);
+                // Calculer les dimensions du texte pour le centrer
+                $textBox = imagettfbbox($fontSize, $angle, $fontPath, $fullName);
                 if ($textBox !== false) {
                     $textWidth = $textBox[4] - $textBox[0];
                     $textHeight = $textBox[1] - $textBox[5];
                     $x = ($width - $textWidth) / 2 - $textBox[0];
                     $y = ($height - $textHeight) / 2 - $textBox[5];
                 } else {
-                    $x = $width / 2 - (strlen($initials) * 35);
-                    $y = $height / 2 + 35;
+                    $x = $width / 2 - (strlen($fullName) * 20);
+                    $y = $height / 2 + 20;
                 }
                 
-                // Ajouter une ombre légère pour plus de profondeur
-                imagettftext($image, $fontSize, $angle, $x + 3, $y + 3, $shadowColor, $fontPath, $initials);
-                // Texte principal
-                imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $initials);
+                // Ajouter une ombre portée subtile pour la profondeur
+                imagettftext($image, $fontSize, $angle, $x + 2, $y + 2, $shadowColor, $fontPath, $fullName);
                 
-                \Log::info("DEBUG: Police TrueType manuscrite utilisée", [
-                    'fontPath' => $fontPath,
+                // Texte principal avec dégradé simulé (deux passages)
+                imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $fullName);
+                
+                // Ajouter une ligne décorative sous la signature
+                $lineY = $y + 20;
+                $lineStartX = $x;
+                $lineEndX = $x + $textWidth;
+                
+                // Ligne principale
+                $this->drawSmoothLine($image, $lineStartX, $lineY, $lineEndX, $lineY, $accentColor, 2);
+                
+                // Flourish décoratif au début
+                $this->drawFlourishStart($image, $lineStartX - 10, $lineY, $accentColor);
+                
+                \Log::info("DEBUG: Signature élégante créée avec police TrueType", [
+                    'font' => $fontPath,
+                    'fullName' => $fullName,
                     'fontSize' => $fontSize,
-                    'angle' => $angle,
-                    'style' => 'avec ombre'
+                    'style' => 'professionnel avec flourish'
                 ]);
                 
             } catch (\Exception $e) {
-                \Log::warning("DEBUG: Erreur avec police TrueType, fallback vers style manuscrit personnalisé", [
+                \Log::warning("DEBUG: Erreur avec police TrueType, fallback vers style personnalisé", [
                     'error' => $e->getMessage()
                 ]);
                 $fontPath = null;
@@ -495,130 +513,85 @@ class SignatureController extends Controller
         }
         
         if (!$fontPath) {
-            // Créer un style manuscrit personnalisé avec la police système
-            $this->createHandwrittenStyle($image, $initials, $textColor, $width, $height);
+            // Fallback : créer une signature élégante avec police système
+            $this->createElegantHandwrittenSignature($image, $fullName, $textColor, $accentColor, $width, $height);
         }
         
-        // Sauvegarder l'image
+        // Sauvegarder l'image en PNG haute qualité
         imagepng($image, $outputPath, 0);
         imagedestroy($image);
         
         // Vérification finale
         if (file_exists($outputPath)) {
             $fileSize = filesize($outputPath);
-            \Log::info("DEBUG: Signature manuscrite créée", [
-                'initials' => $initials,
+            \Log::info("DEBUG: Signature professionnelle créée", [
+                'fullName' => $fullName,
                 'outputPath' => $outputPath,
                 'fileSize' => $fileSize . ' bytes',
-                'style' => $fontPath ? 'police cursive' : 'manuscrit personnalisé'
+                'style' => $fontPath ? 'police cursive professionnelle' : 'manuscrit élégant personnalisé'
             ]);
         }
     }
     
     /**
-     * Crée un style manuscrit personnalisé en dessinant les lettres à la main
+     * Crée une signature manuscrite élégante avec un style professionnel
      */
-    private function createHandwrittenStyle($image, $initials, $textColor, $width, $height)
+    private function createElegantHandwrittenSignature($image, $fullName, $textColor, $accentColor, $width, $height)
     {
-        $letters = str_split(strtoupper($initials));
-        $letterWidth = $width / (count($letters) + 1);
-        $baseY = $height / 2;
+        // Pour le fallback, on utilise une approche calligraphique simplifiée
+        $centerX = $width / 2;
+        $centerY = $height / 2;
         
-        foreach ($letters as $index => $letter) {
-            $x = $letterWidth * ($index + 1);
-            $y = $baseY + rand(-20, 20); // Variation verticale pour effet manuscrit
-            
-            // Dessiner chaque lettre avec un style manuscrit
-            $this->drawHandwrittenLetter($image, $letter, $x, $y, $textColor);
-        }
+        // Dessiner le nom en style calligraphique
+        $fontSize = 5; // Police système grande taille
+        $textWidth = imagefontwidth($fontSize) * strlen($fullName);
+        $textHeight = imagefontheight($fontSize);
         
-        \Log::info("DEBUG: Style manuscrit personnalisé appliqué", [
-            'letters' => $letters,
-            'letterCount' => count($letters),
-            'technique' => 'dessin vectoriel personnalisé'
+        $x = ($width - $textWidth) / 2;
+        $y = ($height - $textHeight) / 2;
+        
+        // Ombre
+        imagestring($image, $fontSize, $x + 2, $y + 2, $fullName, imagecolorallocatealpha($image, 100, 100, 100, 60));
+        
+        // Texte principal
+        imagestring($image, $fontSize, $x, $y, $fullName, $textColor);
+        
+        // Ligne décorative
+        $lineY = $y + $textHeight + 10;
+        imageline($image, $x, $lineY, $x + $textWidth, $lineY, $accentColor);
+        
+        \Log::info("DEBUG: Signature élégante créée avec police système", [
+            'fullName' => $fullName,
+            'technique' => 'calligraphie système avec décoration'
         ]);
     }
     
     /**
-     * Dessine une lettre avec un style manuscrit personnalisé
+     * Dessine une ligne lisse avec antialiasing
      */
-    private function drawHandwrittenLetter($image, $letter, $centerX, $centerY, $color)
+    private function drawSmoothLine($image, $x1, $y1, $x2, $y2, $color, $thickness)
     {
-        $thickness = 4; // Épaisseur du trait
+        imagesetthickness($image, $thickness);
+        imageline($image, $x1, $y1, $x2, $y2, $color);
+        imagesetthickness($image, 1);
+    }
+    
+    /**
+     * Dessine un flourish décoratif au début de la signature
+     */
+    private function drawFlourishStart($image, $x, $y, $color)
+    {
+        // Petite courbe décorative
+        $points = [
+            $x - 15, $y - 5,
+            $x - 10, $y - 10,
+            $x - 5, $y - 8,
+            $x, $y
+        ];
         
-        // Dessiner chaque lettre avec des courbes manuscrites
-        switch ($letter) {
-            case 'A':
-                // Trait gauche
-                $this->drawThickLine($image, $centerX - 30, $centerY + 40, $centerX - 10, $centerY - 40, $color, $thickness);
-                // Trait droit
-                $this->drawThickLine($image, $centerX + 10, $centerY - 40, $centerX + 30, $centerY + 40, $color, $thickness);
-                // Barre horizontale
-                $this->drawThickLine($image, $centerX - 15, $centerY, $centerX + 15, $centerY, $color, $thickness);
-                break;
-                
-            case 'B':
-                // Trait vertical
-                $this->drawThickLine($image, $centerX - 25, $centerY - 40, $centerX - 25, $centerY + 40, $color, $thickness);
-                // Courbe supérieure
-                $this->drawCurve($image, $centerX - 25, $centerY - 40, $centerX + 20, $centerY - 20, $centerX - 25, $centerY, $color, $thickness);
-                // Courbe inférieure
-                $this->drawCurve($image, $centerX - 25, $centerY, $centerX + 25, $centerY + 20, $centerX - 25, $centerY + 40, $color, $thickness);
-                break;
-                
-            case 'C':
-                // Arc de cercle
-                $this->drawArc($image, $centerX, $centerY, 50, 70, 30, 330, $color, $thickness);
-                break;
-                
-            default:
-                // Pour les autres lettres, dessiner un style générique élégant
-                // Trait principal avec courbe
-                $this->drawCurve($image, $centerX - 20, $centerY + 30, $centerX, $centerY - 30, $centerX + 20, $centerY + 20, $color, $thickness);
-                // Flourish décoratif
-                $this->drawCurve($image, $centerX - 15, $centerY - 20, $centerX + 5, $centerY - 35, $centerX + 25, $centerY - 15, $color, 2);
-                break;
-        }
-    }
-    
-    /**
-     * Dessine une ligne épaisse
-     */
-    private function drawThickLine($image, $x1, $y1, $x2, $y2, $color, $thickness)
-    {
-        for ($i = 0; $i < $thickness; $i++) {
-            imageline($image, $x1 + $i, $y1, $x2 + $i, $y2, $color);
-            imageline($image, $x1, $y1 + $i, $x2, $y2 + $i, $color);
-        }
-    }
-    
-    /**
-     * Dessine une courbe manuscrite
-     */
-    private function drawCurve($image, $x1, $y1, $x2, $y2, $x3, $y3, $color, $thickness)
-    {
-        // Dessiner une courbe de Bézier simplifiée
-        for ($t = 0; $t <= 1; $t += 0.01) {
-            $x = (1 - $t) * (1 - $t) * $x1 + 2 * (1 - $t) * $t * $x2 + $t * $t * $x3;
-            $y = (1 - $t) * (1 - $t) * $y1 + 2 * (1 - $t) * $t * $y2 + $t * $t * $y3;
-            
-            // Dessiner un point épais
-            for ($i = 0; $i < $thickness; $i++) {
-                for ($j = 0; $j < $thickness; $j++) {
-                    imagesetpixel($image, $x + $i, $y + $j, $color);
-                }
-            }
-        }
-    }
-    
-    /**
-     * Dessine un arc avec épaisseur
-     */
-    private function drawArc($image, $centerX, $centerY, $width, $height, $start, $end, $color, $thickness)
-    {
-        for ($i = 0; $i < $thickness; $i++) {
-            imagearc($image, $centerX + $i, $centerY, $width, $height, $start, $end, $color);
-            imagearc($image, $centerX, $centerY + $i, $width, $height, $start, $end, $color);
+        // Dessiner la courbe avec plusieurs segments
+        for ($i = 0; $i < count($points) - 2; $i += 2) {
+            imageline($image, $points[$i], $points[$i+1], $points[$i+2], $points[$i+3], $color);
         }
     }
 }
