@@ -350,8 +350,10 @@ class SignatureController extends Controller
 
                 // Intégration de la signature par nom et prénom
                 list($width, $height) = getimagesize($signaturePath);
-                $maxWidth = 31;
-                $maxHeight = 13;
+                
+                // TAILLE AUGMENTÉE pour meilleure lisibilité dans le PDF
+                $maxWidth = 50;  // Augmentation de 31 à 50mm
+                $maxHeight = 20; // Augmentation de 13 à 20mm
                 
                 if ($width > $height) {
                     $newWidth = $maxWidth;
@@ -363,6 +365,13 @@ class SignatureController extends Controller
                 
                 $xImage = $xSignature / $ratioConversion; 
                 $yImage = $ySignature / $ratioConversion;
+                
+                \Log::info("DEBUG: Dimensions signature dans PDF", [
+                    'maxWidth' => $maxWidth,
+                    'maxHeight' => $maxHeight,
+                    'newWidth' => $newWidth,
+                    'newHeight' => $newHeight
+                ]);
                 
                 try {
                     $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
@@ -419,8 +428,8 @@ class SignatureController extends Controller
     private function generateFullNameSignature($firstname, $lastname, $outputPath)
     {
         // Dimensions de l'image optimisées pour une signature professionnelle
-        $width = 900;
-        $height = 350;
+        $width = 1200;  // Augmenté pour meilleure qualité
+        $height = 400;   // Augmenté pour meilleure qualité
         
         // Créer une image vide avec support alpha pour la transparence
         $image = imagecreatetruecolor($width, $height);
@@ -438,25 +447,43 @@ class SignatureController extends Controller
         // Remplir avec le fond transparent
         imagefill($image, 0, 0, $backgroundColor);
         
-        // Liste de polices cursives/manuscrites disponibles
+        // Liste de polices PRIORISÉE POUR UBUNTU/LINUX SERVER
         $possibleFonts = [
+            // Ubuntu/Debian - Polices par défaut les plus courantes
             '/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf',
-            '/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf',
+            '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
             '/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
             '/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf',
-            '/System/Library/Fonts/Bradley Hand Bold.ttf',
-            '/System/Library/Fonts/Brush Script.ttf',
-            '/Windows/Fonts/BRADHITC.TTF',
-            '/Windows/Fonts/CURLZ___.TTF',
-            '/Windows/Fonts/FREESCPT.TTF',
-            '/Windows/Fonts/KUNSTLER.TTF',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+            // Chemins alternatifs pour certaines distributions
             '/usr/share/fonts/TTF/LiberationSerif-Italic.ttf',
+            '/usr/share/fonts/TTF/LiberationSerif-Regular.ttf',
+            '/usr/share/fonts/TTF/DejaVuSerif-Italic.ttf',
+            '/usr/share/fonts/TTF/DejaVuSerif.ttf',
+            // Polices Ubuntu spécifiques
+            '/usr/share/fonts/truetype/ubuntu/Ubuntu-Italic.ttf',
+            '/usr/share/fonts/truetype/ubuntu/Ubuntu-Regular.ttf',
+            // Windows (au cas où en développement local)
+            'C:/Windows/Fonts/times.ttf',
+            'C:/Windows/Fonts/timesi.ttf',
+            'C:/Windows/Fonts/georgia.ttf',
+            'C:/Windows/Fonts/georgiai.ttf',
+            // macOS (au cas où)
+            '/System/Library/Fonts/Times New Roman Italic.ttf',
+            '/System/Library/Fonts/Georgia Italic.ttf',
         ];
         
         $fontPath = null;
+        $fontName = 'Non détectée';
+        
         foreach ($possibleFonts as $fontFile) {
             if (file_exists($fontFile)) {
                 $fontPath = $fontFile;
+                $fontName = basename($fontFile);
+                \Log::info("DEBUG: Police trouvée", ['font' => $fontPath]);
                 break;
             }
         }
@@ -464,9 +491,9 @@ class SignatureController extends Controller
         $fullName = $firstname . ' ' . $lastname;
         
         if ($fontPath && function_exists('imagettftext')) {
-            // Style avec police TrueType élégante - TAILLE AUGMENTÉE
-            $fontSize = 72; // Augmentation de 55 à 72 pour plus de lisibilité
-            $angle = -3; // Légère inclinaison pour effet manuscrit
+            // POLICE PLUS GRANDE ET PLUS LISIBLE
+            $fontSize = 90; // 90pt pour excellente lisibilité
+            $angle = -2; // Inclinaison très subtile pour effet élégant
             
             try {
                 // Calculer les dimensions du texte pour le centrer
@@ -477,33 +504,38 @@ class SignatureController extends Controller
                     $x = ($width - $textWidth) / 2 - $textBox[0];
                     $y = ($height - $textHeight) / 2 - $textBox[5];
                 } else {
-                    $x = $width / 2 - (strlen($fullName) * 25);
-                    $y = $height / 2 + 25;
+                    $x = $width / 2 - (strlen($fullName) * 30);
+                    $y = $height / 2 + 30;
                 }
                 
                 // Ajouter une ombre portée très subtile pour la profondeur
                 imagettftext($image, $fontSize, $angle, $x + 2, $y + 2, $shadowColor, $fontPath, $fullName);
                 
-                // Texte principal en noir pur
+                // Texte principal en noir pur - TRAIT ÉPAISSI
                 imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $fullName);
+                // Deuxième passage pour épaissir légèrement
+                imagettftext($image, $fontSize, $angle, $x + 0.5, $y, $textColor, $fontPath, $fullName);
                 
                 // Ajouter une ligne décorative sous la signature
-                $lineY = $y + 25;
+                $lineY = $y + 30;
                 $lineStartX = $x;
                 $lineEndX = $x + $textWidth;
                 
-                // Ligne principale noire
-                $this->drawSmoothLine($image, $lineStartX, $lineY, $lineEndX, $lineY, $lineColor, 2);
+                // Ligne principale noire - ÉPAISSIE
+                $this->drawSmoothLine($image, $lineStartX, $lineY, $lineEndX, $lineY, $lineColor, 3);
                 
                 // Flourish décoratif au début
-                $this->drawFlourishStart($image, $lineStartX - 10, $lineY, $lineColor);
+                $this->drawFlourishStart($image, $lineStartX - 15, $lineY, $lineColor);
                 
                 \Log::info("DEBUG: Signature élégante créée avec police TrueType", [
-                    'font' => $fontPath,
+                    'font' => $fontName,
+                    'fontPath' => $fontPath,
                     'fullName' => $fullName,
                     'fontSize' => $fontSize,
+                    'dimensions' => $width . 'x' . $height,
                     'color' => 'noir pur',
-                    'style' => 'professionnel avec flourish'
+                    'style' => 'professionnel avec flourish',
+                    'os' => 'Ubuntu/Linux'
                 ]);
                 
             } catch (\Exception $e) {
@@ -516,6 +548,9 @@ class SignatureController extends Controller
         
         if (!$fontPath) {
             // Fallback : créer une signature élégante avec police système
+            \Log::warning("DEBUG: Aucune police TrueType trouvée, utilisation du fallback", [
+                'searched_paths' => array_slice($possibleFonts, 0, 5)
+            ]);
             $this->createElegantHandwrittenSignature($image, $fullName, $textColor, $lineColor, $width, $height);
         }
         
@@ -531,8 +566,9 @@ class SignatureController extends Controller
                 'outputPath' => $outputPath,
                 'fileSize' => $fileSize . ' bytes',
                 'dimensions' => $width . 'x' . $height,
+                'font' => $fontName,
                 'color' => 'noir pur',
-                'style' => $fontPath ? 'police cursive professionnelle' : 'manuscrit élégant personnalisé'
+                'style' => $fontPath ? 'police professionnelle' : 'manuscrit élégant personnalisé'
             ]);
         }
     }
