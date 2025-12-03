@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <time.h>
-#define SIZE_CLIENT_SECRET 10
+#define SIZE_CLIENT_SECRET 11  // 3 lettres + "_SECRET" (7 lettres) + '\0' = 11
 #define BASIC_PATH "/var/www/iapel/"
 
 static void to_upper(char *str)
