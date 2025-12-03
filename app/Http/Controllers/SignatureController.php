@@ -419,8 +419,8 @@ class SignatureController extends Controller
     private function generateFullNameSignature($firstname, $lastname, $outputPath)
     {
         // Dimensions de l'image optimisées pour une signature professionnelle
-        $width = 800;
-        $height = 300;
+        $width = 900;
+        $height = 350;
         
         // Créer une image vide avec support alpha pour la transparence
         $image = imagecreatetruecolor($width, $height);
@@ -431,9 +431,9 @@ class SignatureController extends Controller
         
         // Définir les couleurs
         $backgroundColor = imagecolorallocatealpha($image, 255, 255, 255, 127); // Transparent
-        $textColor = imagecolorallocate($image, 20, 40, 80); // Bleu marine élégant
-        $accentColor = imagecolorallocate($image, 139, 90, 150); // Violet pour accent
-        $shadowColor = imagecolorallocatealpha($image, 100, 100, 100, 60); // Ombre subtile
+        $textColor = imagecolorallocate($image, 0, 0, 0); // Noir pur pour meilleure lisibilité
+        $lineColor = imagecolorallocate($image, 0, 0, 0); // Ligne noire
+        $shadowColor = imagecolorallocatealpha($image, 50, 50, 50, 40); // Ombre très subtile
         
         // Remplir avec le fond transparent
         imagefill($image, 0, 0, $backgroundColor);
@@ -443,6 +443,7 @@ class SignatureController extends Controller
             '/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf',
             '/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf',
             '/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf',
             '/System/Library/Fonts/Bradley Hand Bold.ttf',
             '/System/Library/Fonts/Brush Script.ttf',
             '/Windows/Fonts/BRADHITC.TTF',
@@ -463,9 +464,9 @@ class SignatureController extends Controller
         $fullName = $firstname . ' ' . $lastname;
         
         if ($fontPath && function_exists('imagettftext')) {
-            // Style avec police TrueType élégante
-            $fontSize = 55;
-            $angle = -4; // Légère inclinaison pour effet manuscrit
+            // Style avec police TrueType élégante - TAILLE AUGMENTÉE
+            $fontSize = 72; // Augmentation de 55 à 72 pour plus de lisibilité
+            $angle = -3; // Légère inclinaison pour effet manuscrit
             
             try {
                 // Calculer les dimensions du texte pour le centrer
@@ -476,31 +477,32 @@ class SignatureController extends Controller
                     $x = ($width - $textWidth) / 2 - $textBox[0];
                     $y = ($height - $textHeight) / 2 - $textBox[5];
                 } else {
-                    $x = $width / 2 - (strlen($fullName) * 20);
-                    $y = $height / 2 + 20;
+                    $x = $width / 2 - (strlen($fullName) * 25);
+                    $y = $height / 2 + 25;
                 }
                 
-                // Ajouter une ombre portée subtile pour la profondeur
+                // Ajouter une ombre portée très subtile pour la profondeur
                 imagettftext($image, $fontSize, $angle, $x + 2, $y + 2, $shadowColor, $fontPath, $fullName);
                 
-                // Texte principal avec dégradé simulé (deux passages)
+                // Texte principal en noir pur
                 imagettftext($image, $fontSize, $angle, $x, $y, $textColor, $fontPath, $fullName);
                 
                 // Ajouter une ligne décorative sous la signature
-                $lineY = $y + 20;
+                $lineY = $y + 25;
                 $lineStartX = $x;
                 $lineEndX = $x + $textWidth;
                 
-                // Ligne principale
-                $this->drawSmoothLine($image, $lineStartX, $lineY, $lineEndX, $lineY, $accentColor, 2);
+                // Ligne principale noire
+                $this->drawSmoothLine($image, $lineStartX, $lineY, $lineEndX, $lineY, $lineColor, 2);
                 
                 // Flourish décoratif au début
-                $this->drawFlourishStart($image, $lineStartX - 10, $lineY, $accentColor);
+                $this->drawFlourishStart($image, $lineStartX - 10, $lineY, $lineColor);
                 
                 \Log::info("DEBUG: Signature élégante créée avec police TrueType", [
                     'font' => $fontPath,
                     'fullName' => $fullName,
                     'fontSize' => $fontSize,
+                    'color' => 'noir pur',
                     'style' => 'professionnel avec flourish'
                 ]);
                 
@@ -514,7 +516,7 @@ class SignatureController extends Controller
         
         if (!$fontPath) {
             // Fallback : créer une signature élégante avec police système
-            $this->createElegantHandwrittenSignature($image, $fullName, $textColor, $accentColor, $width, $height);
+            $this->createElegantHandwrittenSignature($image, $fullName, $textColor, $lineColor, $width, $height);
         }
         
         // Sauvegarder l'image en PNG haute qualité
@@ -528,6 +530,8 @@ class SignatureController extends Controller
                 'fullName' => $fullName,
                 'outputPath' => $outputPath,
                 'fileSize' => $fileSize . ' bytes',
+                'dimensions' => $width . 'x' . $height,
+                'color' => 'noir pur',
                 'style' => $fontPath ? 'police cursive professionnelle' : 'manuscrit élégant personnalisé'
             ]);
         }
@@ -536,13 +540,13 @@ class SignatureController extends Controller
     /**
      * Crée une signature manuscrite élégante avec un style professionnel
      */
-    private function createElegantHandwrittenSignature($image, $fullName, $textColor, $accentColor, $width, $height)
+    private function createElegantHandwrittenSignature($image, $fullName, $textColor, $lineColor, $width, $height)
     {
-        // Pour le fallback, on utilise une approche calligraphique simplifiée
+        // Pour le fallback, on utilise une approche avec police système plus grande
         $centerX = $width / 2;
         $centerY = $height / 2;
         
-        // Dessiner le nom en style calligraphique
+        // Dessiner le nom en style élégant - TAILLE AUGMENTÉE
         $fontSize = 5; // Police système grande taille
         $textWidth = imagefontwidth($fontSize) * strlen($fullName);
         $textHeight = imagefontheight($fontSize);
@@ -550,19 +554,23 @@ class SignatureController extends Controller
         $x = ($width - $textWidth) / 2;
         $y = ($height - $textHeight) / 2;
         
-        // Ombre
-        imagestring($image, $fontSize, $x + 2, $y + 2, $fullName, imagecolorallocatealpha($image, 100, 100, 100, 60));
+        // Ombre très subtile
+        $shadowColor = imagecolorallocatealpha($image, 50, 50, 50, 40);
+        imagestring($image, $fontSize, $x + 2, $y + 2, $fullName, $shadowColor);
         
-        // Texte principal
+        // Texte principal en noir pur
         imagestring($image, $fontSize, $x, $y, $fullName, $textColor);
         
-        // Ligne décorative
+        // Ligne décorative noire
         $lineY = $y + $textHeight + 10;
-        imageline($image, $x, $lineY, $x + $textWidth, $lineY, $accentColor);
+        imagesetthickness($image, 2);
+        imageline($image, $x, $lineY, $x + $textWidth, $lineY, $lineColor);
+        imagesetthickness($image, 1);
         
         \Log::info("DEBUG: Signature élégante créée avec police système", [
             'fullName' => $fullName,
-            'technique' => 'calligraphie système avec décoration'
+            'color' => 'noir pur',
+            'technique' => 'police système avec décoration'
         ]);
     }
     
@@ -589,9 +597,11 @@ class SignatureController extends Controller
             $x, $y
         ];
         
+        imagesetthickness($image, 2);
         // Dessiner la courbe avec plusieurs segments
         for ($i = 0; $i < count($points) - 2; $i += 2) {
             imageline($image, $points[$i], $points[$i+1], $points[$i+2], $points[$i+3], $color);
         }
+        imagesetthickness($image, 1);
     }
 }

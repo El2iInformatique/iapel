@@ -476,7 +476,7 @@
             font-family: 'Brush Script MT', 'Dancing Script', 'Great Vibes', cursive;
             font-size: 2.5rem;
             font-weight: bold;
-            color: var(--primary-purple);
+            color: #000000; /* Noir pour meilleure lisibilité */
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
             letter-spacing: 1px;
             transform: rotate(-3deg);
@@ -491,7 +491,7 @@
             left: 10%;
             right: 10%;
             height: 2px;
-            background: linear-gradient(to right, transparent, var(--primary-purple), transparent);
+            background: linear-gradient(to right, transparent, #000000, transparent); /* Ligne noire */
         }
 
         .preview-placeholder {
