@@ -37,7 +37,7 @@ void create_client_secret(char *client_name, char * client_secret)
     }
 }
 
-int basic_validation(char *argv[])
+int basic_validation(char *argv[], int argc)
 {
     if (geteuid() != 0) {
         printf("Ce programme doit être exécuté en tant que root.\n");
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
     char *client_name;
     char *client_secret;
 
-    if (basic_validation(argv))
+    if (basic_validation(argv, argc))
         return 1;
     client_name = argv[1];
     client_secret = malloc(SIZE_CLIENT_SECRET * sizeof(char) + 1);
