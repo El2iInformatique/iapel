@@ -9,5 +9,5 @@
         'apelWEB' => env('APEL_WEB_SECRET'),
         'APEL_Test' => env('APEL_TEST_SECRET'),
         'CHARPENTIER' => env('CHARPENTIER_SECRET'),
+        'Maxou' => env('MAXOU_SECRET'),
     ];
-    

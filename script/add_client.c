@@ -56,7 +56,7 @@ int basic_validation(char *argv[], int argc)
 
 int add_client_to_environment(char *client_name, char *client_secret)
 {
-    int fd = open("/var/www/iapel/.env", O_WRONLY | O_APPEND);
+    int fd = open("/var/www/laravel/.env", O_WRONLY | O_APPEND);
     char buffer[strlen(client_name)];
 
     for (int i = 0; client_name[i] != '\0'; i++)
@@ -72,7 +72,7 @@ int add_client_to_environment(char *client_name, char *client_secret)
 
 int add_client_to_config(char *client_name, char *client_secret)
 {
-    int fd = open("/var/www/iapel/config/secrets.php", O_RDWR);
+    int fd = open("/var/www/laravel/config/secrets.php", O_RDWR);
     char buffer_upper[strlen(client_name) + 1];
     char line[256];
     off_t file_size;
