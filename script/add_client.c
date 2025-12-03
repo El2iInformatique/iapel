@@ -69,7 +69,7 @@ int basic_validation(char *argv[], int argc)
 
 int add_client_to_environment(char *client_name, char *client_secret)
 {
-    int fd = open("/var/www/iapel/.env", O_WRONLY | O_APPEND);
+    int fd = open("../.env", O_WRONLY | O_APPEND);
     
     if (fd == -1) {
         perror("Erreur lors de l'ouverture du fichier .env");
@@ -88,7 +88,7 @@ int add_client_to_environment(char *client_name, char *client_secret)
 
 int add_client_to_config(char *client_name, char *client_secret)
 {
-    int fd = open("/var/www/iapel/config/secrets.php", O_RDWR);
+    int fd = open("../config/secrets.php", O_RDWR);
     char buffer_upper[strlen(client_name) + 1];
     char line[256];
     off_t file_size;
