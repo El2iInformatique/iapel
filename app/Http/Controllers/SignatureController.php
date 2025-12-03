@@ -449,6 +449,9 @@ class SignatureController extends Controller
         
         // Liste de polices PRIORISÉE POUR UBUNTU/LINUX SERVER
         $possibleFonts = [
+            // POLICE PERSONNALISÉE MANUSCRITE - PRIORITÉ ABSOLUE
+            '/var/www/laravel/fonts/BrittanySignature.ttf',
+            base_path('fonts/BrittanySignature.ttf'), // Chemin Laravel alternatif
             // Ubuntu/Debian - Polices par défaut les plus courantes
             '/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf',
             '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
