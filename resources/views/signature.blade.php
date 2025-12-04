@@ -747,10 +747,17 @@
             <!-- En-tête -->
             <div class="header-section">
                 <div class="header-content">
-                    <div class="status-badge">
-                        <i class="bi bi-pen"></i>
-                        <span>En attente de signature</span>
-                    </div>
+                    @if($signable)
+                        <div class="status-badge">
+                            <i class="bi bi-pen"></i>
+                            <span>En attente de signature</span>
+                        </div>
+                    @else
+                        <div class="status-badge" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);">
+                            <i class="bi bi-x-circle"></i>
+                            <span>Devis expiré</span>
+                        </div>
+                    @endif
                     <h1 class="header-title">Signature électronique</h1>
                     <div class="header-subtitle">Devis n°{{ $devis_id }}</div>
                 </div>
@@ -758,16 +765,55 @@
 
             <!-- Contenu principal -->
             <div class="content-section">
-                <!-- Information -->
-                <div class="info-alert">
-                    <div class="info-icon">
-                        <i class="bi bi-info-lg"></i>
+                <!-- Alerte de validité du devis -->
+                @if($signable)
+                    <div class="info-alert" style="background: {{ $temps_restants <= 7 ? 'var(--warning-light)' : '#e0f2fe' }}; border-color: {{ $temps_restants <= 7 ? 'var(--warning-yellow)' : '#0ea5e9' }};">
+                        <div class="info-icon" style="background: {{ $temps_restants <= 7 ? 'var(--warning-yellow)' : '#0ea5e9' }};">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 style="color: {{ $temps_restants <= 7 ? 'var(--warning-yellow)' : '#0ea5e9' }};">
+                                @if($temps_restants > 7)
+                                    Devis valide - {{ $temps_restants }} jours restants
+                                @elseif($temps_restants > 1)
+                                    Attention - Plus que {{ $temps_restants }} jours pour signer
+                                @else
+                                    Dernier jour pour signer ce devis
+                                @endif
+                            </h3>
+                            <p>Ce devis est valable pendant 30 jours à compter de sa date de création. 
+                            @if($temps_restants <= 7)
+                                <strong>Signez-le rapidement pour ne pas perdre cette offre.</strong>
+                            @else
+                                Vous pouvez le consulter et le signer à tout moment.
+                            @endif
+                            </p>
+                        </div>
                     </div>
-                    <div class="info-content">
-                        <h3>Signature électronique sécurisée</h3>
-                        <p>Cette interface vous permet de signer électroniquement votre devis et de donner votre accord en toute simplicité. Veuillez vérifier les informations ci-dessous avant de procéder à la signature.</p>
+                @else
+                    <div class="info-alert" style="background: #fee2e2; border-color: #ef4444;">
+                        <div class="info-icon" style="background: #ef4444;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 style="color: #ef4444;">Devis expiré</h3>
+                            <p>Ce devis n'est plus valide. La période de validité de 30 jours est dépassée. Veuillez contacter APEL - EL2i informatique pour obtenir un nouveau devis.</p>
+                        </div>
                     </div>
-                </div>
+                @endif
+
+                <!-- Information sur la signature -->
+                @if($signable)
+                    <div class="info-alert">
+                        <div class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3>Signature électronique sécurisée</h3>
+                            <p>Cette interface vous permet de signer électroniquement votre devis et de donner votre accord en toute simplicité. Veuillez vérifier les informations ci-dessous avant de procéder à la signature.</p>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Détails du document -->
                 <div class="document-details">
@@ -950,12 +996,77 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // Vérification si le devis est signable
+            const isSignable = {{ $signable ? 'true' : 'false' }};
+            
             let canvas = document.getElementById("signature-pad");
             let signatureInput = document.getElementById("signature");
             let clearButton = document.getElementById("clear-signature");
             let submitButton = document.getElementById("submit-signature");
             let placeholder = document.getElementById("signature-placeholder");
             let signaturePad;
+
+            // Si le devis n'est pas signable, désactiver toute la section signature
+            if (!isSignable) {
+                // Désactiver le canvas
+                canvas.style.cursor = 'not-allowed';
+                canvas.style.opacity = '0.5';
+                canvas.style.pointerEvents = 'none';
+                
+                // Désactiver les boutons de signature manuelle
+                clearButton.disabled = true;
+                clearButton.style.opacity = '0.5';
+                clearButton.style.cursor = 'not-allowed';
+                submitButton.disabled = true;
+                submitButton.style.opacity = '0.5';
+                submitButton.style.cursor = 'not-allowed';
+                submitButton.innerHTML = `
+                    <i class="bi bi-x-circle"></i>
+                    <span>Signature impossible - Devis expiré</span>
+                `;
+                
+                // Désactiver les champs de la signature par nom et prénom
+                const firstnameInput = document.getElementById('firstname');
+                const lastnameInput = document.getElementById('lastname');
+                const generateFullnameButton = document.getElementById('generate-fullname');
+                const clearFullnameButton = document.getElementById('clear-fullname');
+                const submitFullnameButton = document.getElementById('submit-fullname');
+                
+                firstnameInput.disabled = true;
+                firstnameInput.style.opacity = '0.5';
+                firstnameInput.style.cursor = 'not-allowed';
+                
+                lastnameInput.disabled = true;
+                lastnameInput.style.opacity = '0.5';
+                lastnameInput.style.cursor = 'not-allowed';
+                
+                generateFullnameButton.disabled = true;
+                generateFullnameButton.style.opacity = '0.5';
+                generateFullnameButton.style.cursor = 'not-allowed';
+                
+                clearFullnameButton.disabled = true;
+                clearFullnameButton.style.opacity = '0.5';
+                clearFullnameButton.style.cursor = 'not-allowed';
+                
+                submitFullnameButton.disabled = true;
+                submitFullnameButton.style.opacity = '0.5';
+                submitFullnameButton.style.cursor = 'not-allowed';
+                submitFullnameButton.innerHTML = `
+                    <i class="bi bi-x-circle"></i>
+                    <span>Signature impossible - Devis expiré</span>
+                `;
+                
+                // Désactiver les boutons de sélection de type de signature
+                const signatureTypeButtons = document.querySelectorAll('.signature-type-btn');
+                signatureTypeButtons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                });
+                
+                // Arrêter l'exécution ici pour éviter d'initialiser SignaturePad
+                return;
+            }
 
             // Fonction pour redimensionner le canvas correctement
             function resizeCanvas() {

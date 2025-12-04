@@ -32,9 +32,21 @@ class SignatureController extends Controller
         $document = 'devis';
         $client = $tokenEntry->organisation_id;
         $devisName = $uid . '_' . $token;
-        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '_certifie.pdf'); // PDF du devis certifié
+        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '.pdf');
+        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '_certifie.pdf');
 
+        // Calcul du temps restant (devis valide 30 jours)
+        $tempsRestants = 0;
+        $signable = false;
+        
         if (file_exists($pdfPath)) {
+            $dateCreation = \Carbon\Carbon::createFromTimestamp(filemtime($pdfPath));
+            $joursEcoules = $dateCreation->diffInDays(\Carbon\Carbon::now());
+            $tempsRestants = max(0, 30 - $joursEcoules);
+            $signable = $tempsRestants > 0;
+        }
+
+        if (file_exists($pdfCertifiePath)) {
             return view('signature_download', [
                 'token' => $token,
                 'devis_id' => $tokenEntry->devis_id,
@@ -42,7 +54,9 @@ class SignatureController extends Controller
                 'titre' => $tokenEntry->titre,
                 'montant_HT' => $tokenEntry->montant_HT,
                 'montant_TVA' => $tokenEntry->montant_TVA,
-                'montant_TTC' => $tokenEntry->montant_TTC
+                'montant_TTC' => $tokenEntry->montant_TTC,
+                'temps_restants' => $tempsRestants,
+                'signable' => $signable
             ]);
         } else {
             return view('signature', [
@@ -52,7 +66,9 @@ class SignatureController extends Controller
                 'titre' => $tokenEntry->titre,
                 'montant_HT' => $tokenEntry->montant_HT,
                 'montant_TVA' => $tokenEntry->montant_TVA,
-                'montant_TTC' => $tokenEntry->montant_TTC
+                'montant_TTC' => $tokenEntry->montant_TTC,
+                'temps_restants' => $tempsRestants,
+                'signable' => $signable
             ]);
         }
     }
