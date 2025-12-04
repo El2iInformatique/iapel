@@ -41,7 +41,7 @@ class SignatureController extends Controller
         
         if (file_exists($pdfPath)) {
             $dateCreation = \Carbon\Carbon::createFromTimestamp(filemtime($pdfPath));
-            $joursEcoules = $dateCreation->diffInDays(\Carbon\Carbon::now());
+            $joursEcoules = (int) $dateCreation->diffInDays(\Carbon\Carbon::now());
             $tempsRestants = max(0, 30 - $joursEcoules);
             $signable = $tempsRestants > 0;
         }
