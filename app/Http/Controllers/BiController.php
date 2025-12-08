@@ -705,12 +705,13 @@ class BiController extends Controller
                     'status' => $status,
                     'token_rapport' => null, // sera rempli plus bas si on trouve le token
                     'data' => [
-                        "uid" => $r['uid'],
-                        "client" => $jsonData['nom_client'] ?? null,
+                        "nom" => $r['uid'],
+                        "tiers" => $jsonData['nom_client'] ?? null,
                         "intervenant" => $jsonData['intervenant'] ?? null,
                         "description" => $jsonData['description'] ?? null,
                         "date_traitement" => $dateTrait,
                         "date_pdf" => $datePdf,
+                        "par" => null
                     ]
                 ];
 
