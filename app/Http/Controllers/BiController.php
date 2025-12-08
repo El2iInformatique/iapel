@@ -652,6 +652,17 @@ class BiController extends Controller
                 $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
                 $dateConf = $confTs ? \Carbon\Carbon::createFromTimestamp($confTs)->toDateTimeString() : null;
 
+                // Calcul du temps restant (devis valide 30 jours)
+                $tempsRestants = 0;
+                $signable = false;
+                
+                if ($traitTs) {
+                    $dateCreation = \Carbon\Carbon::createFromTimestamp($traitTs);
+                    $joursEcoules = $dateCreation->diffInDays(\Carbon\Carbon::now());
+                    $tempsRestants = max(0, 30 - $joursEcoules);
+                    $signable = $tempsRestants > 0;
+                }
+
                 $documents['devis/' . $folder] = [
                     'path' => 'devis/' . $folder,
                     'status' => $status,
@@ -660,6 +671,8 @@ class BiController extends Controller
                         "tiers" => $d['tiers'],
                         'token' => $d['token'],
                         "date_traitement" => $dateTrait,
+                        "temps_restants" => $tempsRestants,
+                        "signable" => $signable,
                         "date_confirmation" => $dateConf,
                         "par" => null
                     ]
