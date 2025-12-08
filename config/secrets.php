@@ -10,4 +10,5 @@
         'APEL_Test' => env('APEL_TEST_SECRET'),
         'CHARPENTIER' => env('CHARPENTIER_SECRET'),
         'Maxou' => env('MAXOU_SECRET'),
+        'maxoulamenace' => env('MAXOULAMENACE_SECRET'),
     ];
