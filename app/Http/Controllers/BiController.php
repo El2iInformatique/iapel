@@ -599,6 +599,12 @@ class BiController extends Controller
             // Construction d'une map des rapports d'intervention par dossier
             $rapportInterventionTraites = [];
             foreach ($lesRapportInterventionFiles as $file) {
+                // Ignorer le fichier rapport_intervention/rapport_intervention.pdf
+                if (str_ends_with($file, 'rapport_intervention/rapport_intervention.pdf')) {
+                    \Log::info("Fichier ignoré: $file");
+                    continue;
+                }
+                
                 $parts = explode('/', $file);
                 $rapportIndex = array_search('rapport_intervention', $parts);
                 if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) {
