@@ -38,6 +38,9 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     // Génération et affichage des PDFs
     Route::get('/pdf/{token}', [PdfController::class, 'show'])->name('pdf.view')->middleware('VerifToken');
 
+    // Unigned PDF view
+    
+
     // Data d'un document
     Route::get('/open/{token}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
 
@@ -51,6 +54,10 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
 //Route sans protection
 Route::get('/test', function() {
     return view('fake-create-json');
+});
+
+Route::get('/unsigned', function() {
+    return view('unsigned');
 });
 
 Route::get('/68', function () {
