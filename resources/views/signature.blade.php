@@ -924,7 +924,7 @@
                                 </div>
                                 <button type="button" class="generate-btn" id="generate-fullname" style="width: 100%;">
                                     <i class="bi bi-magic"></i>
-                                    <span>Générer la signature</span>
+                                    <span>Afficher la signature</span>
                                 </button>
                             </div>
                             <div class="fullname-preview" id="fullname-preview">
