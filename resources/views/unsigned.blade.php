@@ -36,7 +36,7 @@
     </head>
     <body>
         <div class="pdf-container">
-            <div class="message">Devis non signé</div>
+            <div class="message">Document non signé</div>
         </div>
     </body>
 </html>
