@@ -599,6 +599,12 @@ class BiController extends Controller
             // Construction d'une map des rapports d'intervention par dossier
             $rapportInterventionTraites = [];
             foreach ($lesRapportInterventionFiles as $file) {
+                // Ignorer le fichier rapport_intervention/rapport_intervention.pdf
+                if (str_ends_with($file, 'rapport_intervention/rapport_intervention.pdf')) {
+                    \Log::info("Fichier ignoré: $file");
+                    continue;
+                }
+                
                 $parts = explode('/', $file);
                 $rapportIndex = array_search('rapport_intervention', $parts);
                 if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) {
@@ -652,6 +658,17 @@ class BiController extends Controller
                 $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
                 $dateConf = $confTs ? \Carbon\Carbon::createFromTimestamp($confTs)->toDateTimeString() : null;
 
+                // Calcul du temps restant (devis valide 30 jours)
+                $tempsRestants = 0;
+                $signable = false;
+                
+                if ($traitTs) {
+                    $dateCreation = \Carbon\Carbon::createFromTimestamp($traitTs);
+                    $joursEcoules = $dateCreation->diffInDays(\Carbon\Carbon::now());
+                    $tempsRestants = max(0, 30 - $joursEcoules);
+                    $signable = $tempsRestants > 0;
+                }
+
                 $documents['devis/' . $folder] = [
                     'path' => 'devis/' . $folder,
                     'status' => $status,
@@ -660,6 +677,8 @@ class BiController extends Controller
                         "tiers" => $d['tiers'],
                         'token' => $d['token'],
                         "date_traitement" => $dateTrait,
+                        "temps_restants" => $tempsRestants,
+                        "signable" => $signable,
                         "date_confirmation" => $dateConf,
                         "par" => null
                     ]
@@ -692,12 +711,13 @@ class BiController extends Controller
                     'status' => $status,
                     'token_rapport' => null, // sera rempli plus bas si on trouve le token
                     'data' => [
-                        "uid" => $r['uid'],
-                        "client" => $jsonData['nom_client'] ?? null,
+                        "nom" => $r['uid'],
+                        "tiers" => $jsonData['nom_client'] ?? null,
                         "intervenant" => $jsonData['intervenant'] ?? null,
                         "description" => $jsonData['description'] ?? null,
                         "date_traitement" => $dateTrait,
                         "date_pdf" => $datePdf,
+                        "par" => null
                     ]
                 ];
 
