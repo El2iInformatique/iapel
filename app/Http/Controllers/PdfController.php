@@ -495,7 +495,7 @@ class PdfController extends Controller
         
         $pdf->SetFont('helvetica', 'b', 8);
         $pdf->SetXY(23, 36.70);
-        $pdf->Write(10, ($data['uid'] ?? 'TEST'));    
+        $pdf->Write(10, ($data['dataToken']['uid'] ?? 'TEST'));    
         $pdf->SetXY(31, y: 44);
         $pdf->Write(10, ($data['date_intervention'] ?? date('d/m/Y')));    
         $pdf->SetXY(32, 54);
@@ -521,9 +521,11 @@ class PdfController extends Controller
         $pdf->SetFont('helvetica', '', 9);
 
         $pdf->SetXY(135, 45);
-        $pdf->Write(10, ($data['nom_client'] ?? ''));    
-        $pdf->SetXY(135, 49);
-        $pdf->Write(10, ($data['adresse_facturation'] ?? ''));  
+        $pdf->Write(10, ($data['nom_client'] ?? ''));
+	$pdf->SetFont('helvetica', '', 6.5);    
+        $pdf->SetXY(135, 49);	
+        $pdf->Write(10, ($data['adresse_facturation'] ?? ''));
+	$pdf->SetFont('helvetica', '', 9);  
         $pdf->SetXY(135, 53);
         $pdf->Write(10, $data['cp_facturation'] . ' ' . $data['ville_facturation']);
 
@@ -531,12 +533,8 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(70, 45);
-        $pdf->Write(10, ($data['lieu_intervention'] ?? ''));    
-        $pdf->SetXY(70, 50);
+        $pdf->SetXY(68, 45);
         $pdf->Write(10, ($data['adresse_intervention'] ?? ''));  
-        $pdf->SetXY(70, 55);
-        $pdf->Write(10, $data['cp_intervention'] . ' ' . $data['ville_intervention']);
 
         $pdf->SetFont('helvetica', '', 9);
 

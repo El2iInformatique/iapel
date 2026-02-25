@@ -54,9 +54,8 @@
                                                 <div class="col-md-6 mb-3">
                                                     <div class="mb-3">
                                                         Adresse d'intervention : <br>
-                                                        <strong>{{ $data['lieu_intervention'] }}<br>
-                                                        {{ $data['adresse_intervention'] }}<br>
-                                                        {{ $data['cp_intervention'] }} {{ $data['ville_intervention'] }}</strong>
+                                                        <strong><br>
+                                                        {{ $data['adresse_intervention'] }}<br></strong>
                                                     </div>
                                                     <div class="mb-3">
                                                     <!-- Bouton pour ouvrir l'adresse -->
@@ -524,7 +523,7 @@
 
         function ouvrirNavigation() {
             // Adresse encodée pour l'URL
-            const adresse = encodeURIComponent('{{ $data['adresse_intervention'] }}, {{ $data['cp_intervention'] }} {{ $data['ville_intervention'] }}');
+			const adresse = encodeURIComponent('{{ $data['adresse_intervention'] }}');
 
             // Vérification du type d'appareil
             if (navigator.userAgent.match(/iPhone|iPad|Mac/i)) {

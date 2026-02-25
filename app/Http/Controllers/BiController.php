@@ -122,10 +122,8 @@ class BiController extends Controller
                     'adresse_facturation' => $data['adresse_facturation'] ?? '',
                     'cp_facturation' => $data['cp_facturation'] ?? '',
                     'ville_facturation' => $data['ville_facturation'] ?? '',
-                    'lieu_intervention' => $data['lieu_intervention'] ?? '',
+					'date_intervention' => $data['date_intervention'] ?? '',
                     'adresse_intervention' => $data['adresse_intervention'] ?? '',
-                    'cp_intervention' => $data['cp_intervention'] ?? '',
-                    'ville_intervention' => $data['ville_intervention'] ?? '',
                     'intervenant' => $data['intervenant'] ?? '',
                     'description' => $data['description'] ?? ''
                 ];
