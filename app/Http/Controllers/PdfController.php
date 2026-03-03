@@ -463,7 +463,29 @@ class PdfController extends Controller
 
         Log::info("Test : " . $isAndroid);
 
-        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
+        $pdfCandidates = [
+            storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'),
+            storage_path('app/public/'.$client.'/'.$document.'.pdf'),
+            storage_path('app/public/'.$document.'/'.$document.'.pdf'),
+            storage_path('app/public/'.$document.'.pdf'),
+            base_path($document.'.pdf'),
+        ];
+
+        $pdfPath = null;
+        foreach ($pdfCandidates as $candidate) {
+            if (file_exists($candidate)) {
+                $pdfPath = $candidate;
+                break;
+            }
+        }
+
+        if (!$pdfPath) {
+            return response()->json([
+                'error' => 'Modèle PDF introuvable',
+                'checked_paths' => $pdfCandidates,
+            ], 404);
+        }
+
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
 
         // Lire le fichier JSON

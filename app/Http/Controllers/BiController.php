@@ -73,7 +73,17 @@ class BiController extends Controller
         $uid = $data['uid'];
         $document = $data['document'];
         $client = $data['client'];
+        $clientPath = storage_path('app/public/' . $client);
+        $documentPath = storage_path('app/public/' . $client . '/' . $document);
         $folderPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid);
+
+        if (!File::exists($clientPath)) {
+            File::makeDirectory($clientPath, 0775, true, true);
+        }
+
+        if (!File::exists($documentPath)) {
+            File::makeDirectory($documentPath, 0775, true, true);
+        }
 
         // Vérifier si le dossier existe, sinon le créer
         if (!File::exists($folderPath)) {
@@ -111,6 +121,24 @@ class BiController extends Controller
                     'code_postal' => $data['code_postal'] ?? ''
                 ];
             } else if ($document == 'rapport_intervention') {
+
+                $sourceTemplatePath = base_path('rapport_intervention.pdf');
+                $clientTemplatePath = $clientPath . '/rapport_intervention.pdf';
+                $documentTemplatePath = $documentPath . '/rapport_intervention.pdf';
+
+                if (file_exists($sourceTemplatePath)) {
+                    if (!file_exists($clientTemplatePath)) {
+                        copy($sourceTemplatePath, $clientTemplatePath);
+                    }
+
+                    if (!file_exists($documentTemplatePath)) {
+                        copy($sourceTemplatePath, $documentTemplatePath);
+                    }
+                } else {
+                    Log::warning('Modèle rapport_intervention.pdf introuvable à la racine du projet', [
+                        'source' => $sourceTemplatePath,
+                    ]);
+                }
 
                 $jsonData = [
                     'dataToken' => $dataToken,
