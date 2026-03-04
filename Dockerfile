@@ -13,15 +13,7 @@ RUN npm run build
 
 FROM php:8.2-cli-bookworm AS app
 
-ENV APP_ENV=local \
-    APP_DEBUG=true \
-    APP_URL=http://localhost:8000 \
-    DB_CONNECTION=sqlite \
-    DB_DATABASE=/var/www/html/database/database.sqlite \
-    RUNTIME_SECRETS_DB_DATABASE=/var/lib/runtime-secrets/runtime_secrets.sqlite \
-    SESSION_DRIVER=file \
-    CACHE_STORE=file \
-    QUEUE_CONNECTION=sync
+ENV RUNTIME_SECRETS_DB_DATABASE=/var/lib/runtime-secrets/runtime_secrets.sqlite
 
 WORKDIR /var/www/html
 
@@ -75,4 +67,4 @@ VOLUME ["/var/www/html/storage/app/public", "/var/lib/runtime-secrets"]
 
 EXPOSE 8000
 
-CMD ["sh", "-lc", "if [ ! -f .env ]; then if [ -f .env.example ]; then cp .env.example .env; else printf 'APP_ENV=local\nAPP_DEBUG=true\nAPP_KEY=\n' > .env; fi; fi; if ! grep -q '^APP_KEY=base64:' .env; then php artisan key:generate --force --ansi; fi; mkdir -p $(dirname \"${RUNTIME_SECRETS_DB_DATABASE}\") && touch \"${RUNTIME_SECRETS_DB_DATABASE}\"; php artisan storage:link || true; php artisan migrate --force --no-interaction; php artisan serve --host=0.0.0.0 --port=8000"]
+CMD ["sh", "-lc", "export DB_DATABASE=${DB_DATABASE:-/var/www/html/database/database.sqlite}; export RUNTIME_SECRETS_DB_DATABASE=${RUNTIME_SECRETS_DB_DATABASE:-/var/lib/runtime-secrets/runtime_secrets.sqlite}; if [ ! -f .env ]; then if [ -f .env.example ]; then cp .env.example .env; else printf 'APP_ENV=%s\nAPP_DEBUG=%s\nAPP_URL=%s\nAPP_KEY=\nDB_CONNECTION=sqlite\nDB_DATABASE=%s\n' \"${APP_ENV:-production}\" \"${APP_DEBUG:-false}\" \"${APP_URL:-http://localhost:8000}\" \"${DB_DATABASE}\" > .env; fi; fi; if ! grep -q '^RUNTIME_SECRETS_DB_DATABASE=' .env; then printf '\nRUNTIME_SECRETS_DB_DATABASE=%s\n' \"${RUNTIME_SECRETS_DB_DATABASE}\" >> .env; else sed -i \"s|^RUNTIME_SECRETS_DB_DATABASE=.*$|RUNTIME_SECRETS_DB_DATABASE=${RUNTIME_SECRETS_DB_DATABASE}|\" .env; fi; if ! grep -q '^APP_KEY=' .env; then printf '\nAPP_KEY=\n' >> .env; fi; if [ -n \"${APP_KEY:-}\" ] && printf '%s' \"${APP_KEY}\" | grep -q '^base64:'; then sed -i \"s|^APP_KEY=.*$|APP_KEY=${APP_KEY}|\" .env; fi; if ! grep -q '^APP_KEY=base64:' .env; then GENERATED_KEY=$(php artisan key:generate --show); sed -i \"s|^APP_KEY=.*$|APP_KEY=${GENERATED_KEY}|\" .env; fi; export APP_KEY=$(sed -n 's/^APP_KEY=//p' .env | head -n 1); mkdir -p $(dirname \"${RUNTIME_SECRETS_DB_DATABASE}\") && touch \"${RUNTIME_SECRETS_DB_DATABASE}\"; mkdir -p $(dirname \"${DB_DATABASE}\") && touch \"${DB_DATABASE}\"; php artisan optimize:clear || true; php artisan storage:link || true; php artisan migrate --force --no-interaction; php artisan serve --host=0.0.0.0 --port=8000"]

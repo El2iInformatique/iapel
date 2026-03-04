@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Str;
 
+$runtimeSecretsDatabase = env('RUNTIME_SECRETS_DB_DATABASE', database_path('runtime_secrets.sqlite'));
+
+if (is_string($runtimeSecretsDatabase) && !str_starts_with($runtimeSecretsDatabase, '/')) {
+    $runtimeSecretsDatabase = base_path($runtimeSecretsDatabase);
+}
+
 return [
 
     /*
@@ -45,7 +51,7 @@ return [
         'runtime_secrets' => [
             'driver' => 'sqlite',
             'url' => env('RUNTIME_SECRETS_DB_URL'),
-            'database' => env('RUNTIME_SECRETS_DB_DATABASE', database_path('runtime_secrets.sqlite')),
+            'database' => $runtimeSecretsDatabase,
             'prefix' => '',
             'foreign_key_constraints' => env('RUNTIME_SECRETS_DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,

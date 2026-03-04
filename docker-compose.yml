@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     environment:
       RUNTIME_SECRETS_DB_DATABASE: /var/lib/runtime-secrets/runtime_secrets.sqlite
+    env_file:
+      - .env
     ports:
       - "8080:8000"
     volumes:
