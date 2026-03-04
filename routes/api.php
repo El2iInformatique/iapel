@@ -11,9 +11,7 @@ Route::prefix('api')->group(function () {
     Route::get('/validate-token/{token}', [TokenController::class, 'validateToken']);
     Route::get('/delete-devis/{noToken}', [DevisController::class,'delete']);
     Route::get('/check-devis/{noToken}',[DevisController::class,'check']);
-    Route::get('/tokens', function () {
-        return response()->json(Token::all());
-    });
+    
     Route::post('/upload-pdf', [PdfController::class, 'upload'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     Route::post('/create-json', [BiController::class, 'createJson'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });

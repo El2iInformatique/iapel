@@ -31,6 +31,38 @@ use Illuminate\Support\Facades\Log;
  */
 class PdfController extends Controller
 {
+
+    function reformaterTexte($texte) {
+           // Normalise les retours Windows
+        $texte = str_replace("\r\n", "\n", $texte);
+
+        // Supprime espaces en fin/début de ligne
+        $texte = preg_replace('/[ \t]+$/m', '', $texte);
+        $texte = preg_replace('/^[ \t]+/m', '', $texte);
+
+        
+
+        // Supprime les retours restants
+        $texte = str_replace("\n", ' ', $texte);
+
+        // Supprime les espaces multiples
+        $texte = preg_replace('/\s+/u', ' ', $texte);
+
+        // Supprime espace avant ponctuation
+        $texte = preg_replace('/\s+([.,;!?])/u', '$1', $texte);
+
+        // Assure un seul espace après ponctuation
+        $texte = preg_replace('/([.,;!?])\s*/u', '$1 ', $texte);
+
+        // Met une majuscule au début et après un point
+        $texte = preg_replace_callback('/(^\p{L}|(?<=\.\s)\p{L})/u', function($matches) {
+            return mb_strtoupper($matches[0], 'UTF-8');
+        }, $texte);
+        
+
+        return trim($texte);
+    }
+
     /**
      * @brief Affiche un document PDF à partir d'un token d'accès.
      *
@@ -61,7 +93,8 @@ class PdfController extends Controller
         $filePath = storage_path( $dataToken['paths']);
 
         if (!file_exists($filePath)) {
-            return abort(404, "Fichier JSON introuvable : $filePath");
+            Log::error("[PDF - SHOW] Fichier JSON introuvable pour le token : $token, chemin attendu : $filePath");
+            return abort(404, "Fichier introuvable");
         }
 
         // Lire le contenu existant
@@ -409,7 +442,7 @@ class PdfController extends Controller
                 $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
                 $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
                 file_put_contents($signaturePath, $signatureData);
-                $pdf->Image($signaturePath, 150, 260, 52, 16);
+                $pdf->Image($signaturePath, 150, 260, 50, 16);
 
 
             }
@@ -422,6 +455,16 @@ class PdfController extends Controller
         return response()->file($outputPath, [
             'Content-Disposition' => 'inline; filename="' . $uid . '"'
         ]);
+    }
+
+
+    public function checkExistPdf($jsonPath, $client, $document, $uid): bool {
+        $pdfFile = str_replace('.json', '.pdf', $jsonPath) 
+        ?? storage_path("app/public/{$client}/{$document}/{$uid}/{$uid}.pdf");
+
+        $alreadyExists = !empty($dataToken['pdf_exists']) || file_exists($pdfFile);
+
+        return $alreadyExists;
     }
 
     /**
@@ -461,15 +504,21 @@ class PdfController extends Controller
         $client = $request->query('client');
         $isAndroid = $request->query('isAndroid');
 
-        Log::info("Test : " . $isAndroid);
-
         $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
 
         // Lire le fichier JSON
         $jsonPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.json');
         if (!file_exists($jsonPath)) {
+            Log::error("[PDF - BI] Fichier JSON introuvable pour le bulletin d'intervention : $uid, chemin attendu : $jsonPath");
             return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
+        }
+
+        if ($this->checkExistPdf($jsonPath, $client, $document, $uid)) {
+            Log::info("[PDF - BI] PDF déjà existant pour le bulletin d'intervention : $uid, chemin : " . str_replace('.json', '.pdf', $jsonPath));
+            return response()->file(str_replace('.json', '.pdf', $jsonPath), [
+                'Content-Disposition' => 'inline; filename="' . $uid . '"'
+            ]);
         }
 
          // Remplissage des champs avec des valeurs dynamiques
@@ -493,15 +542,34 @@ class PdfController extends Controller
         }
 
         
+        $pdf->SetFont('helvetica', 'b', 6);
+        $pdf->SetXY(19, 37);
+        $pdf->Write(10, ($this->reformaterTexte($data['dataToken']['uid']) ?? '000'));    
+
         $pdf->SetFont('helvetica', 'b', 8);
-        $pdf->SetXY(23, 36.70);
-        $pdf->Write(10, ($data['dataToken']['uid'] ?? 'TEST'));    
+
         $pdf->SetXY(31, y: 44);
         $pdf->Write(10, ($data['date_intervention'] ?? date('d/m/Y')));    
         $pdf->SetXY(32, 54);
         $pdf->Write(10, ($data['intervenant'] ?? ''));    
-        $pdf->SetXY(29, 59.5);
-        $pdf->Write(10, ($data['equipier'] ?? ''));    
+        
+        $equipier = $data['equipier'] ?? '';
+        $maxWidth = 38; // On prend 38mm pour garder une petite marge de sécurité
+        $fontSize = 6.7; // Taille de base
+
+        $pdf->SetFont('helvetica', 'b', $fontSize);
+
+        // BOUCLE MAGIQUE : Tant que le texte est physiquement trop large, on baisse la police
+        while ($pdf->GetStringWidth($equipier) > $maxWidth && $fontSize > 3) {
+            $fontSize -= 0.3;
+            $pdf->SetFont('helvetica', 'b', $fontSize);
+        }
+
+        $pdf->SetXY(28.2, 63);
+
+        $pdf->Cell($maxWidth, 4, $equipier, 0, 0, 'L', 0, '', 1);
+        $pdf->SetFont('helvetica', '', 6.7);
+   
 
         
         $pdf->SetXY(37.25, 66);
@@ -513,21 +581,18 @@ class PdfController extends Controller
         $pdf->SetXY(139, 71.5);
         $pdf->Write(10, ($data['portable_client'] ?? ''));  
         
-        $pdf->SetFont('helvetica', 'b', 11);
+        $pdf->SetFont('helvetica', 'b', 6.7);
 
-        $pdf->SetXY(15, 88);
+        $pdf->SetXY(14, 85);
         $pdf->MultiCell(180, 10, ($data['description']."\n" ?? ''));
 
         $pdf->SetFont('helvetica', '', 9);
 
         $pdf->SetXY(135, 45);
-        $pdf->Write(10, ($data['nom_client'] ?? ''));
-	$pdf->SetFont('helvetica', '', 6.5);    
-        $pdf->SetXY(135, 49);	
-        $pdf->Write(10, ($data['adresse_facturation'] ?? ''));
-	$pdf->SetFont('helvetica', '', 9);  
-        $pdf->SetXY(135, 53);
-        $pdf->Write(10, $data['cp_facturation'] . ' ' . $data['ville_facturation']);
+        $pdf->Write(10, ($data['nom_client'] ?? ''));  
+	    $pdf->SetFont('helvetica', 'b', 9);  
+        $pdf->SetXY(68, 59.5);
+        $pdf->Write(10, ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? '') . ' ' . ($data['adresse_facturation'] ?? ''));
 
         
 
@@ -536,13 +601,20 @@ class PdfController extends Controller
         $pdf->SetXY(68, 45);
         $pdf->Write(10, ($data['adresse_intervention'] ?? ''));  
 
+        $pdf->SetFont('helvetica', '', 6.3);
+
+        $pdf->SetXY(15, 107);
+        $pdf->MultiCell(180, 10, (($this->reformaterTexte($data['compte_rendu']) ?? '')), 0, 'L');
+
+        $pdf->SetFont('helvetica', '', 6.7);
+
+        $pdf->SetXY(67, 188);
+        $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['materiel']) ?? '')), 0, 'L');
+
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(15, 108);
-        $pdf->MultiCell(180, 10, ($data['compte_rendu']."\n" ?? ''));
-
-        $pdf->SetXY(88, 194);
-        $pdf->MultiCell(70, 10, ($data['materiel']."\n" ?? ''));
+        $pdf->SetXY(67, 224);
+        $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['prevoir']) ?? '')), 0, 'L');
 
         $pdf->SetFont('helvetica', '', 11);
         if (isset($data['intervention_realisable']) && ($data['intervention_realisable'] == 'oui')) {            
@@ -621,45 +693,6 @@ class PdfController extends Controller
             }
         }
 
-        //Gestion des infos complémentaires
-        $countComplement = 0;
-        $x = 88;
-        $y = 194;
-        if (isset($data['complements']) && count($data['complements']) > 0) {
-            foreach ($data['complements'] as $complement) {
-                $countComplement = $countComplement + 1;
-                if ($countComplement <= 2) {
-                    // Affichage des infos complémentaires
-                    if (isset($complement['comment'])) {
-                        $pdf->setXY($x,$y + 71.5);
-                        $pdf->MultiCell(55,10,$complement['comment']. "\n");   
-                    }
-                    if (isset($complement['image'])) {
-                        $imagePath = storage_path('app/public/'.$complement['image']);
-                        if ($imagePath && file_exists($imagePath)) {
-                            list($width, $height) = getimagesize($imagePath); // Récupère la taille originale
-                            $maxWidth = 55;
-                            $maxHeight = 50;
-                            // Calcul du redimensionnement en conservant le ratio
-                            if ($width > $height) {
-                                $newWidth = $maxWidth;
-                                $newHeight = ($height / $width) * $maxWidth;
-                            } else {
-                                $newHeight = $maxHeight;
-                                $newWidth = ($width / $height) * $maxHeight;
-                            }
-                            // Calcul des positions pour centrer dans le carré
-                            $xImage = $x + ($maxWidth - $newWidth) / 2;
-                            $yImage = $y + 28.2 + ($maxHeight - $newHeight) / 2;
-
-                            // Affichage de l'image redimensionnée
-                            $pdf->Image($imagePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
-                        }
-                    }
-                    $x = $x + 58.5;
-                }
-            }
-        }
 
         if (isset($data['signature'])) {
             $signatureBase64 = $data['signature'];
@@ -681,8 +714,8 @@ class PdfController extends Controller
                 $newWidth = ($width / $height) * $maxHeight;
             }
             // Calcul des positions pour centrer dans le carré
-            $xImage = 14 + ($maxWidth - $newWidth) ;
-            $yImage = 197 + ($maxHeight - $newHeight);
+            $xImage = 12 + ($maxWidth - $newWidth) ;
+            $yImage = 188 + ($maxHeight - $newHeight);
 
             if ($isAndroid === "1") {
                 $newWidth /= 1.5;
@@ -701,67 +734,182 @@ class PdfController extends Controller
         }
 
         $pdf->SetFont('helvetica', 'i', 12);
-        $pdf->SetXY( 57, 213);
-        $pdf->Write(12, $data['fait-le']);
+        $pdf->SetXY( 40, 205);
+        $pdf->Write(12, $data['fait-le'] ?? date('d/m/Y'));
 
         $pdf->SetFont('helvetica', 'i', 14);
-        $pdf->SetXY( 15, 232);
-        $pdf->Write(12, $data['intervenant']);
+        $pdf->SetXY( 14, 220);
+        $pdf->Write(12, $data['intervenant'] ?? 'Intervenant');
 
 
-        $x_complement_client = 10; //alignement x des complement client 
-        $y_complement_client = 20; //alignement y des complement client 
+        $tpl2Idx = $pdf->importPage(2);
+        $pdf->addPage();
+        $pdf->useTemplate($tpl2Idx);
 
-        if ($data['complement_client'] && count($data['complement_client']) > 0) {
+        $pdf->Ln(8);
 
-            $pdf->AddPage(); 
-            $pdf->SetFont('helvetica', 'b', 9);
+        // ====== CONTENU ======
+        $pdf->SetFont('helvetica', 'b', 9.5);
 
-            // boucle sur les complement client 
-            foreach ($data['complement_client'] as $item) { // Donne a $item un tableau avec item et question
-                
-                if ($item['type'] === 'text') {
-                    $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
-                    $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
+        // Le constat
+        $pdf->SetXY( 15, 40);
+        $pdf->Write(8, "Le constat :");
+        $pdf->Ln(6);
+        $pdf->SetFont('helvetica', 9);
+        $pdf->SetXY(18, 48);
+        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['constat']) ?? '')), 0, 'L');
+        $pdf->Ln(12);
 
-                    $pdf->SetXY( $x_complement_client + 85, $y_complement_client);
-                    $pdf->MultiCell(100,10,$item['value'] . "\n");  
-                    
+        // Les vérifications
+        $pdf->SetFont('helvetica', 'b', 9.5);
+        $pdf->SetXY( 15, 85);
+        $pdf->Write(8, "Les vérifications :");
+        $pdf->Ln(6);
+        $pdf->SetFont('helvetica', 9);
+        $pdf->SetXY( 18, 93);
+        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['verification']) ?? '')), 0, 'L');
+        $pdf->Ln(12);
+
+        // Les notes particulières
+        $pdf->SetFont('helvetica', 'b', 9.5);
+        $pdf->SetXY( 15, 130);
+        $pdf->Write(8, "Les notes particulières :");
+        $pdf->Ln(6);
+        $pdf->SetFont('helvetica', 9);
+        $pdf->SetXY( 18, 138);
+        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['notes_particulieres']) ?? '')), 0, 'L');
+        $pdf->Ln(12);
+
+        // Les points de vigilance
+        $pdf->SetFont('helvetica', 'b', 9.5);
+        $pdf->SetXY( 15, 175);
+        $pdf->Write(8, "Les points de vigilances :");
+        $pdf->Ln(6);
+        $pdf->SetFont('helvetica', 9);
+        $pdf->SetXY( 18, 183);
+        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['points_vigilances']) ?? '')), 0, 'L');
+        $pdf->Ln(12);
+
+        // Les photos
+        $pdf->SetFont('helvetica', 'b', 9.5);
+        $pdf->SetXY( 15, 220);
+        $pdf->Write(8, "Les photos :");
+        $pdf->Ln(6);
+        $pdf->MultiCell(0, 8, ($data['photos'] ?? ''));
+
+        // Ajoute les compléments sur une page supplémentaire si il y en a plus de 2
+        if (isset($data['complements']) && count($data['complements']) > 0) {
+            $pdf->addPage();
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetTextColor(50, 50, 50);
+            $pdf->Cell(0, 10, 'Compléments supplémentaires', 0, 1, 'L');
+            $pdf->Ln(5);
+        
+            // --- Configuration de la Grille ---
+            $pageWidth = 190;            // Largeur utile de la page (A4 - marges)
+            $numCols = 3;                // Nombre d'images par ligne
+            $margin = 5;                 // Espace entre les photos
+            $cellWidth = ($pageWidth - ($margin * ($numCols - 1))) / $numCols;
+            $imgHeightMax = 45;          // Hauteur max de l'image
+            $commentHeight = 15;         // Espace réservé au commentaire
+            $rowHeight = $imgHeightMax + $commentHeight + 5; // Hauteur totale d'une ligne
+        
+            $startX = 10;
+            $currentX = $startX;
+            $currentY = $pdf->GetY();
+            
+            // On ignore les 2 premiers éléments comme dans ta logique originale
+            $complementsAffiches = $data['complements'];
+        
+            foreach ($complementsAffiches as $index => $complement) {
+                // Vérification du saut de page
+                if ($currentY + $rowHeight > 275) {
+                    $pdf->addPage();
+                    $currentY = 20;
                 }
-                else  {
-                    $pdf->Text($x_complement_client, $y_complement_client, $item['question']);
-                    $pdf->Text($x_complement_client + 80, $y_complement_client, ':');
-
-                    $imagePath = storage_path('app/public/'.$item['value']);
-                    if ($imagePath && file_exists($imagePath)) {
-                        list($width, $height) = getimagesize($imagePath); // Récupère la taille originale
-                        $maxWidth = 55;
-                        $maxHeight = 50;
-                        // Calcul du redimensionnement en conservant le ratio
-                        if ($width > $height) {
-                            $newWidth = $maxWidth;
-                            $newHeight = ($height / $width) * $maxWidth;
-                        } else {
-                            $newHeight = $maxHeight;
-                            $newWidth = ($width / $height) * $maxHeight;
+        
+                if (isset($complement['image'])) {
+                    $imagePath = storage_path('app/public/' . $complement['image']);
+                    
+                    if (file_exists($imagePath)) {
+                        // On dessine l'image
+                        // Le paramètre 'T' et 'true' avec le redimensionnement proportionnel automatique
+                        $pdf->Image($imagePath, $currentX, $currentY, $cellWidth, $imgHeightMax, '', '', 'T', true, 300, '', false, false, 0, 'CM', false, false);
+        
+                        // --- Ajout du commentaire sous l'image ---
+                        if (!empty($complement['comment'])) {
+                            $pdf->SetFont('helvetica', '', 8);
+                            $pdf->SetXY($currentX, $currentY + $imgHeightMax + 1);
+                            // MultiCell permet de gérer les retours à la ligne si le texte est long
+                            $pdf->MultiCell($cellWidth, 4, $complement['comment'], 0, 'C', false, 1);
                         }
-                        // Calcul des positions pour centrer dans le carré
-                        $xImage = $x_complement_client + ($maxWidth - $newWidth) / 2;
-                        $yImage = $y_complement_client + 5 + ($maxHeight - $newHeight) / 2;
-
-                        // Affichage de l'image redimensionnée
-                        $pdf->Image($imagePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);  
-                        
-                        $y_complement_client = $yImage + $newHeight + 8;
                     }
                 }
-
-                $y_complement_client += 8;
-                
+        
+                // Calcul de la position du prochain élément
+                if (($index + 1) % $numCols == 0) {
+                    // On change de ligne
+                    $currentX = $startX;
+                    $currentY += $rowHeight;
+                } else {
+                    // On se décale vers la droite
+                    $currentX += $cellWidth + $margin;
+                }
             }
+        }
 
-            //$pdf->Text($x_complement_client, $y_complement_client, 'Test');
 
+        if (!empty($data['complement_client'])) {
+            $pdf->AddPage();
+            
+            // --- Titre de la section ---
+            $pdf->SetFont('helvetica', 'B', 12);
+            $pdf->SetTextColor(50, 50, 50);
+            $pdf->Cell(0, 10, 'Informations complémentaires client', 0, 1, 'L');
+            $pdf->Ln(2);
+        
+            foreach ($data['complement_client'] as $item) {
+                // --- Vérification de l'espace restant ---
+                // Si moins de 40mm restent, on change de page pour éviter de couper un bloc
+                if ($pdf->GetY() > 250) {
+                    $pdf->AddPage();
+                }
+        
+                // --- Question (en gras) ---
+                $pdf->SetFont('helvetica', 'B', 9);
+                $pdf->SetTextColor(100, 100, 100);
+                $pdf->MultiCell(0, 6, mb_strtoupper($item['question']), 0, 'L');
+                
+                // --- Réponse (Valeur) ---
+                $pdf->SetTextColor(0, 0, 0);
+                $pdf->SetFont('helvetica', '', 10);
+        
+                if ($item['type'] === 'text') {
+                    // Affichage du texte avec une petite indentation
+                    $pdf->SetX(15); 
+                    $pdf->MultiCell(0, 6, $item['value'], 0, 'L');
+                    $pdf->Ln(2);
+                } else {
+                    // Cas d'une image
+                    $imagePath = storage_path('app/public/' . $item['value']);
+                    if (file_exists($imagePath)) {
+                        $pdf->Ln(1);
+                        $currentY = $pdf->GetY();
+                        
+                        // On affiche l'image (max 60mm de large, 40mm de haut)
+                        // Le 'M' aligne l'image proprement
+                        $pdf->Image($imagePath, 15, $currentY, 0, 40, '', '', 'T', true, 300, '', false, false, 0, 'L', false, false);
+                        
+                        // On décale le curseur Y après l'image pour la suite
+                        $pdf->SetY($currentY + 42); 
+                    }
+                }
+        
+                // Petite ligne de séparation subtile
+                $pdf->SetDrawColor(230, 230, 230);
+                $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
+                $pdf->Ln(4);
+            }
         }
 
         // Aplatir le PDF en l'empêchant d'être modifié
