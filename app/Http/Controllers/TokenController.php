@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use App\Services\SecretStore;
 
 
 
@@ -35,12 +36,10 @@ class TokenController extends Controller
             return response()->json(['error' => 'No secret token provided.'], 403);
         }
 
-        $secretToken = config("secrets.$request->organisation_id");
-        $adminToken = config('secrets.admin');
-
+        $secretStore = app(SecretStore::class);
         $providedToken = $request->header('secret-token');
 
-        if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
+        if (!$secretStore->isAuthorized($providedToken, $request->organisation_id)) {
             return response()->json(['error' => 'Not authorized.'], 403);
         }
 
@@ -86,29 +85,6 @@ class TokenController extends Controller
 
 
     public static function generateTokenRapport(Request $request, $path){
-
-        /*
-            if (!$request->hasHeader('secret-token')) {
-                return response()->json(['error' => 'No secret token provided.'], 403);
-            }
-    
-            $secretToken = config("secrets.$request->organisation_id");
-            $adminToken = config('secrets.admin');
-    
-            $providedToken = $request->header('secret-token');
-    
-            if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
-                return response()->json(['error' => 'Not authorized.'], 403);
-            }
-    
-            Log::info('Début de la génération du token', ['request_data' => $request->all()]);
-            
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return response()->json(['error' => 'Invalid JSON'], 400);
-            }
-        */
-
-
         $token = Str::random(60);
 
         TokenLinksRapport::generateTokenRapport($token, $path);
@@ -142,12 +118,10 @@ class TokenController extends Controller
             return response()->json(['error' => 'No token provided.'], 403);
         }
 
-        $secretToken = config("secrets.$client");
-        $adminToken = config('secrets.admin');
-
+        $secretStore = app(SecretStore::class);
         $providedToken = $request->header('secret-token');
 
-        if (!hash_equals($providedToken,     $secretToken) && !hash_equals($providedToken, $adminToken)) {
+        if (!$secretStore->isAuthorized($providedToken, $client)) {
             return response()->json(['error' => 'Not authorized.'], 403);
         }
 

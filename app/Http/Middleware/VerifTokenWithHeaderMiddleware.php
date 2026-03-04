@@ -10,6 +10,7 @@ use App\Models\TokenLinksRapport;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
+use App\Services\SecretStore;
 
 
 class VerifTokenWithHeaderMiddleware
@@ -56,13 +57,14 @@ class VerifTokenWithHeaderMiddleware
 
         $secretToken = $request->header('secret-token');
 
-        $adminPassword = config('secrets.admin');
-        $clientPassword = config('secrets.' . $client) ?? "nulls";
+        $secretStore = app(SecretStore::class);
+        $adminPassword = $secretStore->get('admin');
+        $clientPassword = $secretStore->get($client);
 
         Log::info("Secret token : " . $secretToken);
 
 
-        if (!hash_equals($clientPassword,$secretToken) && !hash_equals($adminPassword, $secretToken)) {
+        if (!$secretStore->isAuthorized($secretToken, $client)) {
             return false;
         }
 

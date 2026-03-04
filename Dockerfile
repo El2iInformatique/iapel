@@ -18,6 +18,7 @@ ENV APP_ENV=local \
     APP_URL=http://localhost:8000 \
     DB_CONNECTION=sqlite \
     DB_DATABASE=/var/www/html/database/database.sqlite \
+    RUNTIME_SECRETS_DB_DATABASE=/var/lib/runtime-secrets/runtime_secrets.sqlite \
     SESSION_DRIVER=file \
     CACHE_STORE=file \
     QUEUE_CONNECTION=sync
@@ -65,12 +66,13 @@ RUN composer install \
     --no-progress \
     --optimize-autoloader \
     && composer dump-autoload --optimize --no-scripts \
-    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/testing storage/framework/views storage/app/public bootstrap/cache database \
+    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/testing storage/framework/views storage/app/public bootstrap/cache database /var/lib/runtime-secrets \
     && touch database/database.sqlite \
+    && touch /var/lib/runtime-secrets/runtime_secrets.sqlite \
     && chown -R www-data:www-data storage bootstrap/cache database
 
-VOLUME ["/var/www/html/storage/app/public"]
+VOLUME ["/var/www/html/storage/app/public", "/var/lib/runtime-secrets"]
 
 EXPOSE 8000
 
-CMD ["sh", "-lc", "if [ ! -f .env ]; then if [ -f .env.example ]; then cp .env.example .env; else printf 'APP_ENV=local\nAPP_DEBUG=true\nAPP_KEY=\n' > .env; fi; fi; if ! grep -q '^APP_KEY=base64:' .env; then php artisan key:generate --force --ansi; fi; php artisan storage:link || true; php artisan migrate --force --no-interaction; php artisan serve --host=0.0.0.0 --port=8000"]
+CMD ["sh", "-lc", "if [ ! -f .env ]; then if [ -f .env.example ]; then cp .env.example .env; else printf 'APP_ENV=local\nAPP_DEBUG=true\nAPP_KEY=\n' > .env; fi; fi; if ! grep -q '^APP_KEY=base64:' .env; then php artisan key:generate --force --ansi; fi; mkdir -p $(dirname \"${RUNTIME_SECRETS_DB_DATABASE}\") && touch \"${RUNTIME_SECRETS_DB_DATABASE}\"; php artisan storage:link || true; php artisan migrate --force --no-interaction; php artisan serve --host=0.0.0.0 --port=8000"]

@@ -402,3 +402,73 @@ php artisan storage:link
 
 - Propriétaire: [El2iInformatique](https://github.com/El2iInformatique)
 - Projet: iapel
+
+---
+
+## Procédure première installation (Docker)
+
+Cette procédure permet de démarrer rapidement le projet en local avec Docker Compose.
+
+1) Construire et démarrer les conteneurs:
+```bash
+docker compose up --build -d
+```
+
+2) Vérifier que le service est bien démarré:
+```bash
+docker compose ps
+docker compose logs app --tail=100
+```
+
+3) Ouvrir l’application:
+- URL: `http://localhost:8080`
+
+4) Vérifier la réponse HTTP (optionnel):
+```bash
+curl -I http://localhost:8080
+```
+
+Notes importantes:
+- Le volume `runtime_secrets_data` persiste la base dédiée des secrets runtime.
+- Les secrets ajoutés via Artisan (`secrets:set`) restent présents même après recréation du conteneur.
+- Si vous modifiez le code, reconstruisez l’image:
+```bash
+docker compose up --build -d --force-recreate
+```
+
+---
+
+## Ajouter un nouveau client
+
+### 1) Choisir l’identifiant client
+
+L’identifiant client (exemple: `MON_CLIENT`) doit être exactement celui utilisé par vos appels API côté intégrateur (champ organisation/client).
+
+### 2) Ajouter/mettre à jour le secret d’accès du client (sans redémarrage)
+
+```bash
+docker compose exec app php artisan secrets:set MON_CLIENT "mot_de_passe_client" --updated-by=ops
+```
+
+Vous pouvez vérifier côté DB dédiée des secrets:
+```bash
+docker compose exec app sqlite3 /var/lib/runtime-secrets/runtime_secrets.sqlite "SELECT key, updated_by, datetime(updated_at) FROM runtime_secrets WHERE key='MON_CLIENT';"
+```
+
+### 3) Préparer l’arborescence de stockage du client (recommandé)
+
+```bash
+docker compose exec app sh -lc "mkdir -p storage/app/public/MON_CLIENT && [ -f storage/app/public/MON_CLIENT/documents.json ] || echo '[]' > storage/app/public/MON_CLIENT/documents.json"
+```
+
+### Commandes utiles de rotation
+
+- Changer un secret client:
+```bash
+docker compose exec app php artisan secrets:set MON_CLIENT "nouveau_secret" --updated-by=ops
+```
+
+- Supprimer un secret runtime (retour fallback config si présent):
+```bash
+docker compose exec app php artisan secrets:forget MON_CLIENT
+```

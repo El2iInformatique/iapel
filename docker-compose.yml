@@ -4,8 +4,13 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    environment:
+      RUNTIME_SECRETS_DB_DATABASE: /var/lib/runtime-secrets/runtime_secrets.sqlite
     ports:
       - "8080:8000"
     volumes:
       - ./storage/app/public:/var/www/html/storage/app/public
-      - ./.env:/var/www/html/.env:ro
+      - runtime_secrets_data:/var/lib/runtime-secrets
+
+volumes:
+  runtime_secrets_data:

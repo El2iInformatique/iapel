@@ -6,6 +6,7 @@ use App\Models\layou_client;
 use App\Http\Controllers\TokenController;
 use App\Models\Token;
 use App\Models\TokenLinksRapport;
+use App\Services\SecretStore;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -233,12 +234,10 @@ class BiController extends Controller
             return response()->json(['error' => 'No token provided.'], 403);
         }
 
-        $secretToken = config("secrets.$client");
-        $adminToken = config('secrets.admin');
-
+        $secretStore = app(SecretStore::class);
         $providedToken = $request->header('secret-token');
 
-        if (!hash_equals($providedToken,     $secretToken) && !hash_equals($providedToken, $adminToken)) {
+        if (!$secretStore->isAuthorized($providedToken, $client)) {
             return response()->json(['error' => 'Not authorized.'], 403);
         }
 
@@ -530,22 +529,16 @@ class BiController extends Controller
                 return response()->json(['error' => 'No token provided.'], 403);
             }
 
-            $secretToken = config("secrets.$entreprise");
-            $adminToken = config('secrets.admin');
+            $secretStore = app(SecretStore::class);
             $providedToken = $request->header('secret-token');
 
             // Vérifier que les tokens ne sont pas null avant hash_equals
-            if (!$secretToken && !$adminToken) {
+            if (!$secretStore->get($entreprise) && !$secretStore->get('admin')) {
                 \Log::error("[Client: $entreprise] Aucun token configuré pour ce client");
                 return response()->json(['error' => 'Client not configured.'], 403);
             }
 
-            $isAuthorized = false;
-            if ($secretToken && hash_equals($providedToken, $secretToken)) {
-                $isAuthorized = true;
-            } elseif ($adminToken && hash_equals($providedToken, $adminToken)) {
-                $isAuthorized = true;
-            }
+            $isAuthorized = $secretStore->isAuthorized($providedToken, $entreprise);
 
             if (!$isAuthorized) {
                 \Log::warning("[Client: $entreprise] Tentative d'accès avec token invalide");

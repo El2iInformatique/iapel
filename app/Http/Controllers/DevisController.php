@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Token;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\File;
+use App\Services\SecretStore;
 
 /**
  * @class DevisController
@@ -53,12 +54,10 @@ class DevisController extends Controller
             return response()->json(['error'=>'No secret token provided.'], 403);  
         }
         
-        $secretToken = config("secrets.$token->organisation_id"); 
-        $adminToken = config('secrets.admin'); 
-
+        $secretStore = app(SecretStore::class);
         $providedToken = $request->header('secret-token');
 
-        if(!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)){
+        if (!$secretStore->isAuthorized($providedToken, $token->organisation_id)) {
             return response()->json(['error'=>'Not authorized.'], 403);
         }
 
@@ -121,12 +120,10 @@ class DevisController extends Controller
             return response()->json(['error'=>'No secret token provided.'], 403);  
         }
         
-        $secretToken = config("secrets.$token->organisation_id"); 
-        $adminToken = config('secrets.admin'); 
-
+        $secretStore = app(SecretStore::class);
         $providedToken = $request->header('secret-token');
 
-        if(!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)){
+        if (!$secretStore->isAuthorized($providedToken, $token->organisation_id)) {
             return response()->json(['error'=>'Not authorized.'], 403);
         }
 
