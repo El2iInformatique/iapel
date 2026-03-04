@@ -9,7 +9,6 @@ use App\Models\TokenLinksRapport;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -45,6 +44,7 @@ class BiController extends Controller
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
+            \Log::error("[Client: $client] Fichier JSON introuvable pour le client : $client, chemin attendu : $filePath");
             return response()->json(['error' => 'Fichier introuvable'], 404);
         }
 
@@ -53,6 +53,16 @@ class BiController extends Controller
         $data = json_decode($json, true); // true => convertir en tableau associatif
 
         return response()->json($data);
+    }
+
+
+    public function checkExistPdf($jsonPath, $dataToken): bool {
+        $pdfFile = str_replace('.json', '.pdf', $jsonPath) 
+        ?? storage_path("app/public/{$dataToken['client']}/{$dataToken['document']}/{$dataToken['uid']}/{$dataToken['uid']}.pdf");
+
+        $alreadyExists = !empty($dataToken['pdf_exists']) || file_exists($pdfFile);
+
+        return $alreadyExists;
     }
 
     /**
@@ -67,6 +77,26 @@ class BiController extends Controller
     // fonction de création du JSON et du TOKEN d'identification du fichier
     public function createJson(Request $request)
     {
+
+        if (!$request->hasHeader('secret-token')) {
+            return response()->json(['error' => 'No secret token provided.'], 401);
+        }
+
+        $secretToken = config("secrets.$request->organisation_id", null);
+        $adminToken = config('secrets.admin');
+
+        $providedToken = $request->header('secret-token');
+  
+        if ($secretToken) {
+            if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
+                return response()->json(['error' => 'Not authorized.'], 401);
+            }
+        } else {
+            if (!hash_equals($providedToken, $adminToken)) {
+                return response()->json(['error' => 'Not authorized.'], 401);
+            }
+        }
+
 
         $data = $request->input();
 
@@ -134,7 +164,7 @@ class BiController extends Controller
             if (!$token) {
                 return response()->json([
                     'error' => 'Token non généré',
-                ]);
+                ], 500);
             }
             file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT));
 
@@ -142,7 +172,7 @@ class BiController extends Controller
                 'message' => 'Token généré avec succès',
                 'token' => $token,
                 'bi_url' => url('/bi/' . $token),
-            ]);
+            ], 200);
 
         } catch (\Exception $e) {
             Log::error('Erreur lors de la création du fichier JSON : ' . $e->getMessage());
@@ -167,7 +197,8 @@ class BiController extends Controller
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
-            abort(404, 'Fichier JSON introuvable');
+            Log::error("[BI - DOWNLOAD] Fichier JSON introuvable pour le token : $token, chemin attendu : $filePath");
+            abort(404, 'Fichier introuvable');
         }
 
         // Lire et décoder le fichier JSON
@@ -181,6 +212,7 @@ class BiController extends Controller
         $filePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
         if (!file_exists($filePath)) {
+            Log::error("[Client: $client] Fichier PDF introuvable pour le token : $token, chemin attendu : $filePath");
             return response()->json(['error' => 'Fichier introuvable'], 404);
         }
 
@@ -202,6 +234,7 @@ class BiController extends Controller
     public function check($client, $document, $uid, Request $request)
     {
         if (!$request->hasHeader('secret-token')) {
+            Log::warning("[Client: $client] Accès refusé pour le client : $client, document : $document, uid : $uid, raison : absence de token secret dans la requête.");
             return response()->json(['error' => 'No token provided.'], 403);
         }
 
@@ -236,12 +269,25 @@ class BiController extends Controller
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
+        // Vérifier si le token existe - si le token n'existe pas, on affiche une page d'erreur 404
+        if (!$dataToken) {
+            Log::error("[BI - SHOW] Token introuvable : $token");
+            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+        }
+
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
-            abort(404, 'Fichier JSON introuvable');
+            Log::error("[BI - SHOW] Fichier JSON introuvable pour le token : $token, chemin attendu : $filePath");
+            abort(404, 'Fichier introuvable');
+        }
+
+        if ($this->checkExistPdf($filePath, $dataToken)) {
+            $client = $dataToken['client'] ?? 'unknown_client';
+            Log::warning("[Client: $client] Accès refusé pour le token : $token, fichier PDF déjà généré, chemin JSON : $filePath");
+            abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
         }
 
         // Lire et décoder le fichier JSON
@@ -259,14 +305,7 @@ class BiController extends Controller
             return view($document, compact('data', 'token', 'uid', 'client', 'document'));
         } else {
 
-            $client_layout = layou_client::where('nom_client', $client)->first();
-
-            if (!$client_layout) {
-                return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
-            }
-            else {
-                return view('bi', compact('data', 'token', 'uid', 'client', 'document', 'client_layout'));
-            }
+        return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
 
         }
     }
@@ -284,12 +323,24 @@ class BiController extends Controller
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
+        if (!$dataToken) {
+            Log::error("[BI - SUBMIT] Token introuvable : $token");
+            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+        }
+
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier JSON existe
         if (!file_exists($filePath)) {
-            abort(404, "Fichier JSON introuvable : $filePath");
+            Log::error("[BI - SUBMIT] Fichier JSON introuvable pour le token : $token, chemin attendu : $filePath");
+            abort(404, "Fichier introuvable");
+        }
+
+        if ($this->checkExistPdf($filePath, $dataToken)) {
+            $client = $dataToken['client'] ?? 'unknown_client';
+            Log::warning("[Client: $client] Soumission refusée pour le token : $token, fichier PDF déjà généré, chemin JSON : $filePath");
+            abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
         }
 
         // Lire le contenu existant
@@ -306,19 +357,25 @@ class BiController extends Controller
             $data['materiel'] = $request->input('materiel');
             $data['intervention_suite'] = $request->input('intervention_suite');
             $data['materiel'] = $request->input('materiel');
+            $data['prevoir'] = $request->input('prevoir');
             $data['facturable'] = $request->input('facturable');
             $data['terminee'] = $request->input('terminee');
             $data['absent'] = $request->input('absent');
             $data['fait-le'] = $request->input('fait-le');
             $data['devis_a_faire'] = $request->input('devis_a_faire');
 
-            if ($request->hasFile('photo_avant')) {
-                $imagePath = $request->file('photo_avant')->store($biPath, 'public');
-                $data['photo_avant'] = $imagePath;
+            // Traitement Photo Avant
+            if ($request->hasFile('photo_avant') && $request->file('photo_avant')->isValid()) {
+                $file = $request->file('photo_avant');
+                
+                // On stocke le fichier et on récupère sont chemin
+                $data['photo_avant'] = $file->store($biPath, 'public');
             }
-            if ($request->hasFile('photo_apres')) {
-                $imagePath = $request->file('photo_apres')->store($biPath, 'public');
-                $data['photo_apres'] = $imagePath;
+
+            // Traitement Photo Après
+            if ($request->hasFile('photo_apres') && $request->file('photo_apres')->isValid()) {
+                $file = $request->file('photo_apres');
+                $data['photo_apres'] = $file->store($biPath, 'public');
             }
 
             $data['complements'] = [];
@@ -334,35 +391,16 @@ class BiController extends Controller
                 }
             }
 
-            // Ajout des complement du client dans le json
-            $data['complement_client'] = [];
-
-            foreach ($request->all() as $key => $value) {
-
-                if ($request->hasfile($key) && str_starts_with($key, 'item')) {
-                    $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
-
-                    $imagePath = $request->file($key)->store($biPath, 'public');
-                    $data['complement_client'][] = [
-                        'value' => $imagePath,
-                        'question' => $question,
-                        'type' => 'img'
-                    ];
-                }
-                else if (str_starts_with($key, 'item')) {
-                    $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
-
-                    $data['complement_client'][] = [
-                        'value' => $value,
-                        'question' => $question,
-                        'type' => 'text'
-                    ];
-                }
-            }
+            $data["constat"] = $request->input('constat');
+            $data["verification"] = $request->input('verification');
+            $data["notes_particulieres"] = $request->input('notes_particulieres');
+            $data["points_vigilances"] = $request->input('points_vigilances');
 
             if ($request->input('signature')) {
                 $data['signature'] = $request->input('signature');
             }
+
+            $data['pdf_exists'] = true; // Marquer que le PDF a été généré
 
         } else if (str_starts_with($document, 'cerfa_15497')) {
             // Mettre à jour les données avec les nouvelles valeurs du formulaire
@@ -804,12 +842,18 @@ class BiController extends Controller
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
+        if (!$dataToken) {
+            Log::error("[BI - DELETE] Token introuvable : $token");
+            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+        }
+
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier JSON existe
         if (!file_exists($filePath)) {
-            abort(404, "Fichier JSON introuvable : $filePath");
+            Log::error("[BI - DELETE] Fichier JSON introuvable pour le token : $token, chemin attendu : $filePath");
+            abort(404, "Fichier introuvable");
         }
 
         try {

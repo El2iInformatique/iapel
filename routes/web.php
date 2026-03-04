@@ -50,12 +50,6 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
 });
 
 
-
-//Route sans protection
-Route::get('/test', function() {
-    return view('fake-create-json');
-});
-
 Route::get('/unsigned', function() {
     return view('unsigned');
 });
@@ -88,21 +82,37 @@ Route::get('/getToken/{client}/{document}/{uid}',[TokenController::class,'getTok
 
 
 Route::post('/upload-visuel', function(Request $request) {
-    if ($request->hasFile('image')) {
-        $file = $request->file('image');
-        $client = $request->input('client');
-        $document = $request->input('document');
-        $uid = $request->input('uid');
-        $name = 'compressed_' . time() . '_' . $file->getClientOriginalName();
-        $path = $file->storeAs($client.'/'.$document.'/'.$uid, $name, 'public');
+    // 1. Validation de sécurité
+    if (!$request->hasFile('image')) {
+        return response()->json(['success' => false, 'message' => 'Aucune image'], 400);
+    }
 
+    //Illuminate\Support\Facades\Log
+
+    $file = $request->file('image');
+    $client = $request->input('client');
+    $document = $request->input('document');
+    $uid = $request->input('uid');
+
+    // 2. Construction du chemin
+    $name = 'compressed_' . time() . '_' . $file->getClientOriginalName() . ".jpg";
+
+    $folder = "{$client}/{$document}/{$uid}/"; // On ajoute 'uploads' pour mieux organiser
+    //Illuminate\Support\Facades\Log
+
+    // 3. Stockage sur le disque 'public' (storage/app/public)
+    $path = $file->storeAs($folder, $name, 'public');
+
+    if ($path) {
         return response()->json([
             'success' => true,
-            'name' => $name, // On retourne uniquement le nom
-            'url' => asset('storage/'.$client.'/'.$document.'/'.$uid.'/'. $name) // URL publique de l'image
+            'name' => $name,
+            // Génère l'URL correcte via le lien symbolique
+            'url' => asset('storage/' . $path) 
         ]);
     }
-    return response()->json(['success' => false], 400);
+
+    return response()->json(['success' => false, 'message' => 'Erreur lors du stockage'], 500);
 });
 
 Route::post('/delete-visuel', function(Request $request) {
@@ -110,6 +120,9 @@ Route::post('/delete-visuel', function(Request $request) {
     $client = $request->input('client');
     $document = $request->input('document');
     $uid = $request->input('uid');
+
+    Illuminate\Support\Facades\Log::info("Folder : {$client}/{$document}/{$uid}/ | Name : {$name}");
+
     if ($name) {
         Storage::disk('public')->delete($client.'/'.$document.'/'.$uid.'/' . $name);
         return response()->json(['success' => true]);

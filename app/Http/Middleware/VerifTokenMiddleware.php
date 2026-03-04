@@ -24,7 +24,8 @@ class VerifTokenMiddleware
         Log::info("Demande de verification du token : " . $token);
 
         if (!TokenController::isValideTokenRapport($token)) {
-            abort(404, 'Token invalide');
+            Log::error("[VerifTokenMiddleware - HANDLE] Token introuvable : $token");
+            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
         }
 
         return $next($request);
