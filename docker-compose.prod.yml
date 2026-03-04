@@ -9,11 +9,13 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
+      DB_DATABASE: /var/lib/app-db/database.sqlite
       RUNTIME_SECRETS_DB_DATABASE: /var/lib/runtime-secrets/runtime_secrets.sqlite
     expose:
       - "8000"
     volumes:
       - ./storage/app/public:/var/www/html/storage/app/public
+      - app_db_data:/var/lib/app-db
       - runtime_secrets_data:/var/lib/runtime-secrets
 
   caddy:
@@ -32,6 +34,7 @@ services:
       - caddy_config:/config
 
 volumes:
+  app_db_data:
   runtime_secrets_data:
   caddy_data:
   caddy_config:

@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
+      DB_DATABASE: /var/lib/app-db/database.sqlite
       RUNTIME_SECRETS_DB_DATABASE: /var/lib/runtime-secrets/runtime_secrets.sqlite
     env_file:
       - .env
@@ -12,7 +13,9 @@ services:
       - "8080:8000"
     volumes:
       - ./storage/app/public:/var/www/html/storage/app/public
+      - app_db_data:/var/lib/app-db
       - runtime_secrets_data:/var/lib/runtime-secrets
 
 volumes:
+  app_db_data:
   runtime_secrets_data:

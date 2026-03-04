@@ -429,6 +429,7 @@ curl -I http://localhost:8080
 ```
 
 Notes importantes:
+- Le volume `app_db_data` persiste la base SQLite principale (`DB_DATABASE`).
 - Le volume `runtime_secrets_data` persiste la base dédiée des secrets runtime.
 - Les secrets ajoutés via Artisan (`secrets:set`) restent présents même après recréation du conteneur.
 - Si vous modifiez le code, reconstruisez l’image:
