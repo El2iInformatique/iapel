@@ -472,3 +472,62 @@ docker compose exec app php artisan secrets:set MON_CLIENT "nouveau_secret" --up
 ```bash
 docker compose exec app php artisan secrets:forget MON_CLIENT
 ```
+
+---
+
+## Environnement production (Docker + Caddy)
+
+Cette stack de production est séparée du local pour éviter tout impact sur le développement.
+
+Fichiers ajoutés:
+- `docker-compose.prod.yml`
+- `deploy/Caddyfile`
+- `.env.prod.example`
+
+### 1) Préparer l’environnement production
+
+Copier le template puis adapter les variables:
+
+```bash
+cp .env.prod.example .env.prod
+```
+
+Variables importantes dans `.env.prod`:
+- `SERVER_NAME` : domaine public (ex: `app.mon-domaine.fr`)
+- `ACME_EMAIL` : email pour les certificats TLS Caddy
+- `APP_URL` : URL publique HTTPS
+- `APP_KEY` : clé Laravel (base64)
+
+Générer une clé Laravel si nécessaire:
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm app php artisan key:generate --show
+```
+
+Puis copier la valeur dans `APP_KEY=` de `.env.prod`.
+
+### 2) Démarrer en production
+
+```bash
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+### 3) Vérifier l’état
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs caddy --tail=100
+docker compose -f docker-compose.prod.yml logs app --tail=100
+```
+
+### 4) Gestion des secrets clients en production
+
+```bash
+docker compose -f docker-compose.prod.yml exec app php artisan secrets:set MON_CLIENT "mot_de_passe_client" --updated-by=ops
+```
+
+### Notes
+
+- Le local reste inchangé avec `docker compose up -d` (fichier `docker-compose.yml`).
+- La prod utilise Caddy comme reverse proxy TLS (HTTPS automatique).
+- Le volume `runtime_secrets_data` persiste les secrets runtime chiffrés.

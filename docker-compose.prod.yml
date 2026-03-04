@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      RUNTIME_SECRETS_DB_DATABASE: /var/lib/runtime-secrets/runtime_secrets.sqlite
+    expose:
+      - "8000"
+    volumes:
+      - ./storage/app/public:/var/www/html/storage/app/public
+      - runtime_secrets_data:/var/lib/runtime-secrets
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    env_file:
+      - .env.prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  runtime_secrets_data:
+  caddy_data:
+  caddy_config:
