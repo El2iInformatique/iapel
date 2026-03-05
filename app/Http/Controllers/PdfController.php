@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Log;
 class PdfController extends Controller
 {
 
-    function reformaterTexte($texte) {
+    public function reformaterTexte($texte) {
            // Normalise les retours Windows
         $texte = str_replace("\r\n", "\n", $texte);
 
@@ -93,7 +93,13 @@ class PdfController extends Controller
         $filePath = storage_path( $dataToken['paths']);
 
         if (!file_exists($filePath)) {
-            Log::error("[PDF - SHOW] Fichier JSON introuvable pour le token : $token, chemin attendu : $filePath");
+            \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
             return abort(404, "Fichier introuvable");
         }
 
@@ -171,7 +177,13 @@ class PdfController extends Controller
 
             file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT));
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la création du fichier JSON : ' . $e->getMessage());
+            \Log::error("[CONFIG CLIENT] CREATION DU FICHIER JSON", [
+                'path' => $jsonPath,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'message' => $e->getMessage()
+            ]);
         }
 
         // Création du PDF
@@ -457,14 +469,27 @@ class PdfController extends Controller
         ]);
     }
 
+    
+    public function checkExistAndIsValidePdf($jsonPath, $client, $document, $uid): bool 
+    {
+        //return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
 
-    public function checkExistPdf($jsonPath, $client, $document, $uid): bool {
-        $pdfFile = str_replace('.json', '.pdf', $jsonPath) 
-        ?? storage_path("app/public/{$client}/{$document}/{$uid}/{$uid}.pdf");
-
-        $alreadyExists = !empty($dataToken['pdf_exists']) || file_exists($pdfFile);
-
-        return $alreadyExists;
+        $pdfFile = $jsonPath 
+            ? str_replace('.json', '.pdf', $jsonPath) 
+            : storage_path("app/public/{$client}/{$document}/{$uid}/{$uid}.pdf");
+    
+        if (!File::exists($pdfFile)) {
+            return false;
+        }
+    
+        $header = file_get_contents($pdfFile, false, null, 0, 5);
+        
+        $fileSize = File::size($pdfFile);
+        $footer = ($fileSize > 6) ? file_get_contents($pdfFile, false, null, $fileSize - 6) : '';
+    
+        $isValidPdf = str_starts_with($header, '%PDF-') && str_contains($footer, '%%EOF');
+        
+        return $isValidPdf;
     }
 
     /**
@@ -510,12 +535,24 @@ class PdfController extends Controller
         // Lire le fichier JSON
         $jsonPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.json');
         if (!file_exists($jsonPath)) {
-            Log::error("[PDF - BI] Fichier JSON introuvable pour le bulletin d'intervention : $uid, chemin attendu : $jsonPath");
+            \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
+                'client' => $client,
+                'uid' => $uid,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $jsonPath
+            ]);
             return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
         }
 
-        if ($this->checkExistPdf($jsonPath, $client, $document, $uid)) {
-            Log::info("[PDF - BI] PDF déjà existant pour le bulletin d'intervention : $uid, chemin : " . str_replace('.json', '.pdf', $jsonPath));
+        if ($this->checkExistAndIsValidePdf($jsonPath, $client, $document, $uid)) {
+            \Log::info("[DOCUMENT] FICHIER PDF DEJA EXISTANT", [
+                'client' => $client,
+                'document' => $document,
+                'uid' => $uid,
+                'chemin' => $jsonPath
+            ]);
             return response()->file(str_replace('.json', '.pdf', $jsonPath), [
                 'Content-Disposition' => 'inline; filename="' . $uid . '"'
             ]);
@@ -526,20 +563,16 @@ class PdfController extends Controller
 
         // Initialiser FPDI
         $pdf = new Fpdi();
+
+        // Evite les lignes au dessous et au dessus du PDF et les marges automatiques
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
         $pdf->SetAutoPageBreak(false);
         $pdf->AddPage();
         $pdf->setSourceFile($pdfPath);
         $tplIdx = $pdf->importPage(1);
         $pdf->useTemplate($tplIdx);
-
-        // Affichage logo de l'entreprise / client en haut de la page
-        $logoPath = storage_path('app/public/'.$client.'/logo.png');
-
-        if ($logoPath && file_exists($logoPath)) {
-
-            $pdf->Image($logoPath, 10, 12, 118, 25, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-            
-        }
 
         
         $pdf->SetFont('helvetica', 'b', 6);
@@ -919,44 +952,6 @@ class PdfController extends Controller
             'Content-Disposition' => 'inline; filename="' . $uid . '"'
         ]);
     }
-
-    /**
-     * @brief Formate un texte long en respectant les contraintes de longueur par ligne.
-     *
-     * Cette méthode utilitaire découpe intelligemment les textes longs :
-     * - Première ligne limitée à 52 caractères.
-     * - Lignes suivantes limitées à 108 caractères chacune.
-     * - Préservation de l'intégrité du texte sans coupure de mots.
-     *
-     * @param string $texte Le texte à formater et découper.
-     *
-     * @return array Tableau contenant les lignes formatées prêtes pour l'affichage PDF.
-     *
-     * @note Méthode privée utilisée pour optimiser l'affichage des textes longs dans les PDF.
-     * @note Les limites de caractères sont calibrées pour l'affichage optimal dans les modèles PDF.
-     * @example formatTexte("Un très long texte...") retourne ["Un très long...", "...suite du texte"]
-     */
-    private function formatTexte($texte) {
-        $texte = trim($texte);
-        $resultat = [];
-    
-        // Première ligne : max 40 caractères
-        if (strlen($texte) <= 52) {
-            $resultat[] = $texte;
-        } else {
-            $resultat[] = substr($texte, 0, 52);
-            $reste = substr($texte, offset: 50);
-    
-            // Lignes suivantes : max 100 caractères
-            while (strlen($reste) > 0) {
-                $resultat[] = substr($reste, 0, 108);
-                $reste = substr($reste, 108);
-            }
-        }
-    
-        // Retourne le texte avec des retours à la ligne
-        return $resultat;
-    }
     
 
     /**
@@ -1003,11 +998,29 @@ class PdfController extends Controller
             return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
         }
 
+        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
+
+        if ($this->checkExistAndIsValidePdf($jsonPath, $client, $document, $uid)) {
+            \Log::info("[DOCUMENT] FICHIER PDF DEJA EXISTANT", [
+                'client' => $client,
+                'document' => $document,
+                'uid' => $uid,
+                'chemin' => $jsonPath
+            ]);
+            return response()->file(str_replace('.json', '.pdf', $jsonPath), [
+                'Content-Disposition' => 'inline; filename="' . $uid . '"'
+            ]);
+        }
+
          // Remplissage des champs avec des valeurs dynamiques
         $data = json_decode(file_get_contents($jsonPath), true);
 
         // Initialiser FPDI
         $pdf = new Fpdi();
+
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
         $pdf->SetAutoPageBreak(false);
         $pdf->AddPage();
         $pdf->setSourceFile($pdfPath);
@@ -1016,22 +1029,22 @@ class PdfController extends Controller
 
         
         // Définir la police et la taille du texte
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont('helvetica', '', 8);
 
-        $pdf->SetXY(15, 32);
-        $pdf->Write(10, ($uid ?? ''));
+        $pdf->SetXY(13, 32);
+        $pdf->MultiCell(30,0, ($uid ?? ''));
 
         // Définir la police et la taille du texte
-        $pdf->SetFont('helvetica', '', 8);
+        $pdf->SetFont('helvetica', '', 9);
         $pdf->SetTextColor(0, 0, 0); // Texte noir
 
         // Écrire les données dans le PDF (adapter les positions X et Y)
         $largeur = 60;
-        $pdf->SetXY(45, 32.5);
+        $pdf->SetXY(44, 32.5);
         $operateur = ($data['operateur'] ?? "") . "\n";
         $pdf->MultiCell($largeur, 10, $operateur);
 
-        $pdf->SetXY(125, 35);
+        $pdf->SetXY(121, 33);
         $detenteur = ($data['detenteur'] ?? "") . "\n";
         $pdf->MultiCell($largeur, 10, $detenteur);
 
@@ -1039,35 +1052,36 @@ class PdfController extends Controller
         $pdf->Write(10, ($data['numero_attestation_capacite'] ?? ''));
 
         $pdf->SetXY(45, 60);
-        $pdf->Write(10, ($data['identification'] ?? ''));
+        $identification = ($data['identification'] ?? "") . "\n";
+        $pdf->MultiCell(75, 2, $identification);
 
-        $pdf->SetXY(172, 53);
+        $pdf->SetXY(170, 53);
         $pdf->Write(10, ($data['denomination'] ?? ''));
 
-        $pdf->SetXY(170, 58);
+        $pdf->SetXY(167, 58);
         $pdf->Write(10, ($data['charge'] ?? ''));
 
-        $pdf->SetXY(170, 63);
+        $pdf->SetXY(166, 63);
         $pdf->Write(10, ($data['tonnage'] ?? ''));
 
         if ($data['nature_intervention'] == "assemblage") {
-            $pdf->SetXY(54, 68);
+            $pdf->SetXY(54.5, 68.5);
             $pdf->Write(10, 'X');    
         }
         elseif ($data['nature_intervention'] == "mise_service") {
-            $pdf->SetXY(54, 73);
+            $pdf->SetXY(54.7, 73.3);
             $pdf->Write(10, 'X');    
         }
         elseif ($data['nature_intervention'] == "modification") {
-            $pdf->SetXY(54, 78);
+            $pdf->SetXY(54.7, 78);
             $pdf->Write(10, 'X');    
         }
         elseif ($data['nature_intervention'] == "maintenance") {
-            $pdf->SetXY(54, 83);
+            $pdf->SetXY(54.7, 83);
             $pdf->Write(10, 'X');    
         }
         elseif ($data['nature_intervention'] == "controle_periodique") {
-            $pdf->SetXY(116, 68);
+            $pdf->SetXY(116, 68.5);
             $pdf->Write(10, 'X');    
         }
         elseif ($data['nature_intervention'] == "controle_non_periodique") {
@@ -1083,29 +1097,29 @@ class PdfController extends Controller
             $pdf->Write(10, 'X');    
         }
 
-        $pdf->SetXY(153, 83);
+        $pdf->SetXY(151, 82);
         $pdf->Write(10, ($data['autre_valeur'] ?? ''));
 
-        $pdf->SetXY(75, 94);
+        $pdf->SetXY(74, 94);
         $pdf->Write(10, ($data['identification_controle'] ?? ''));
 
         list($year,$month,$day) = explode('-', $data['date_controle']);
-        $pdf->SetXY(153, 94);
+        $pdf->SetXY(152, 94);
         $pdf->Write(10, ($day ?? ''));
-        $pdf->SetXY(165, 94);
+        $pdf->SetXY(163, 94);
         $pdf->Write(10, ($month ?? ''));
-        $pdf->SetXY(177, 94);
+        $pdf->SetXY(175, 94);
         $pdf->Write(10, ($year ?? ''));
 
         
         $pdf->SetFont('dejavusans', '', 9);
         if ($data['detection_fuites'] == 'non') {
-            $pdf->SetXY(148.8, 100.7);
+            $pdf->SetXY(147.9, 100.5);
         }
         else {
-            $pdf->SetXY(116.7, 100.7);
+            $pdf->SetXY(116.5, 100.5);
         }
-        $pdf->Write(10, '●');
+        $pdf->Write(9, '●');
         
         $pdf->SetFont('helvetica', '', 8);    
 
@@ -1123,7 +1137,7 @@ class PdfController extends Controller
             $pdf->Write(10, 'X');     
         }
         elseif ($data['hcfc'] == '300') {
-            $x = 169.5;  
+            $x = 168.5;  
             $y = 109.5;
             $pdf->SetXY($x, $y);
             $pdf->Write(10, 'X');       
@@ -1142,7 +1156,7 @@ class PdfController extends Controller
             $pdf->Write(10, 'X');     
         }
         elseif ($data['hfc_pfc'] == '500') {
-            $x = 169.5;
+            $x = 168.5;
             $y = 114;
             $pdf->SetXY($x, $y);
             $pdf->Write(10, 'X');  
@@ -1161,7 +1175,7 @@ class PdfController extends Controller
             $pdf->Write(10, 'X');     
         }
         elseif ($data['hfo'] == '100') {
-            $x = 169.5;
+            $x = 168.5;
             $y = 119;
             $pdf->SetXY($x, $y);
             $pdf->Write(10, 'X');  
@@ -1180,8 +1194,8 @@ class PdfController extends Controller
             $pdf->Write(10, 'X');   
         }
         elseif ($data['equipement_sans_detection'] == 'sans3') {
-            $x = 169.5;
-            $y = 123;
+            $x = 168.5;
+            $y = 123.2;
             $pdf->SetXY($x, $y);
             $pdf->Write(10, 'X');   
         } 
@@ -1198,19 +1212,19 @@ class PdfController extends Controller
             $pdf->SetXY($x, $y);
             $pdf->Write(10, 'X');   
         }
-        elseif ($data['equipement_avec_detection'] == 'avec3') {
-            $x = 169.5;
+        elseif ($data['equipement_avec_detection'] == 'avec6') {
+            $x = 168.5;
             $y = 128;
             $pdf->SetXY($x, $y);
             $pdf->Write(10, 'X');   
         }
         
         if ($data['constat_fuites'] == 'oui') {
-            $pdf->SetXY(22.5, 149.5);
+            $pdf->SetXY(22.5, 149.7);
             $pdf->Write(10, 'X');
 
             // gestion de la localisation des fuites
-            $largeur = 120;
+            $largeur = 100;
             $pdf->SetXY(60, 139.5);
             $pdf->MultiCell($largeur, 10, ($data['localisation_fuite_1']."\n" ?? ''));
             if ($data['reparation_fuite_1'] == 'reparation_fuite_1_fait') {
@@ -1240,59 +1254,59 @@ class PdfController extends Controller
                 $pdf->Write(10, 'X');   
             }
             elseif ($data['reparation_fuite_3'] == 'reparation_fuite_3_A_Faire') { 
-                $pdf->SetXY(173.5, 156);
+                $pdf->SetXY(173.5, 155.5);
                 $pdf->Write(10, 'X');   
             }
         }
         else {
-            $pdf->SetXY(22.5, 151.5);
+            $pdf->SetXY(22.5, 153.5);
             $pdf->Write(10, 'X');
         }
 
-        $pdf->SetXY(90, 165);
+        $pdf->SetXY(74, 165);
         $pdf->Write(10, $data['quantite_chargee_totale']);
-        $pdf->SetXY(90, 169.5);
+        $pdf->SetXY(74, 169.5);
         $pdf->Write(10, $data['quantite_chargee_A']);
-        $pdf->SetXY(75, 174.2);
+        $pdf->SetXY(74, 174.2);
         $pdf->Write(10, $data['fluide_A']);
-        $pdf->SetXY(90, 179);
+        $pdf->SetXY(88.5, 179);
         $pdf->Write(10, $data['quantite_chargee_B']);
-        $pdf->SetXY(90, 184);
+        $pdf->SetXY(88.5, 184);
         $pdf->Write(10, $data['quantite_chargee_C']);
 
-        $pdf->SetXY(184, 165);
+        $pdf->SetXY(181, 165);
         $pdf->Write(10, $data['quantite_recuperee_totale']);
-        $pdf->SetXY(184, 169.5);
+        $pdf->SetXY(181, 169.5);
         $pdf->Write(10, $data['quantite_recuperee_D']);
-        $pdf->SetXY(170, 174.2);
+        $pdf->SetXY(166, 174.2);
         $pdf->Write(10, $data['BSFF']);
-        $pdf->SetXY(184, 179);
+        $pdf->SetXY(181, 179);
         $pdf->Write(10, $data['quantite_recuperee_E']);
-        $pdf->SetXY(155, 184);
+        $pdf->SetXY(151, 184);
         $pdf->Write(10, $data['identification_E']);
 
         if ($data['fluide_non_inflammable'] == 'UN1078') {
-            $pdf->SetXY(13.5, 197.5);
+            $pdf->SetXY(15, 197.5);
             $pdf->Write(10, 'X');   
         }
         elseif ($data['fluide_non_inflammable'] == 'autre_cas_non_inflammable') { 
             $pdf->SetXY(108, 197.5);
             $pdf->Write(10, 'X');   
             
-            $pdf->SetXY(166 , 197.4);
-            $pdf->Write(10, $data['autre_fluide_non_inflammable']);   
+            $pdf->SetXY(164.5 , 197.4);
+            $pdf->Write(10, strtolower( $data['autre_fluide_non_inflammable']));   
         }
 
         if ($data['fluide_inflammable'] == 'UN3161') {
-            $pdf->SetXY(13.5, 207);
+            $pdf->SetXY(15.5, 207);
             $pdf->Write(10, 'X');   
         }
         elseif ($data['fluide_inflammable'] == 'autre_cas_inflammable') { 
             $pdf->SetXY(108, 207);
             $pdf->Write(10, 'X');   
             
-            $pdf->SetXY(160, 207);
-            $pdf->Write(10, $data['autre_fluide_inflammable']);   
+            $pdf->SetXY(159, 207);
+            $pdf->Write(10, strtolower($data['autre_fluide_inflammable']));   
         }
        
         
@@ -1300,7 +1314,7 @@ class PdfController extends Controller
         $pdf->SetXY(13, 218.5);
         $pdf->MultiCell($largeur, 10, ($data['installation_destination_fluide']."\n" ?? ''));
 
-        $pdf->SetXY(13, 232.5);
+        $pdf->SetXY(13, 231.5);
         $pdf->MultiCell($largeur, 10, ($data['observations']."\n" ?? '')); 
         
 
@@ -1316,7 +1330,7 @@ class PdfController extends Controller
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
         $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_operateur.png');
         file_put_contents($signaturePath, $signatureData);
-        $pdf->Image($signaturePath, 65, 274, 32, 8);
+        $pdf->Image($signaturePath, 75, 275, 28, 6);
         
         $pdf->SetXY(125, 258);
         $pdf->Write(10, ($data['nom_signataire_detenteur'] ?? ''));   
@@ -1329,7 +1343,7 @@ class PdfController extends Controller
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
         $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_detenteur.png');
         file_put_contents($signaturePath, $signatureData);
-        $pdf->Image($signaturePath, 145, 274, 32, 8);
+        $pdf->Image($signaturePath, 155, 275, 28, 6);
 
         // Aplatir le PDF en l'empêchant d'être modifié
         $pdf->Output($outputPath,'F'); 
@@ -1408,7 +1422,7 @@ class PdfController extends Controller
             'devis_id' => $token->devis_id,
             'nom_fichier' => $newFilename,
             'organisation' => $token->organisation_id,
-            'chemin_complet' => $finalPath
+            'chemin_complet' => $finalPath,
         ]);
 
         return response()->json([
