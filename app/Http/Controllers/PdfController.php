@@ -608,12 +608,12 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', '', 6.7);
 
-        $pdf->SetXY(67, 192);
+        $pdf->SetXY(67, 193);
         $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['materiel']) ?? '')), 0, 'L');
 
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(67, 226);
+        $pdf->SetXY(67, 228);
         $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['prevoir']) ?? '')), 0, 'L');
 
         $pdf->SetFont('helvetica', '', 11);
@@ -728,17 +728,17 @@ class PdfController extends Controller
                 $newHeight /= 1.3;
             }
             
-            $pdf->Image($signaturePath, $xImage + 2, $yImage + 6, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
+            $pdf->Image($signaturePath, $xImage + 2, $yImage + 7, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
 
                                   
         }
 
         $pdf->SetFont('helvetica', 'i', 12);
-        $pdf->SetXY( 40, 209);
+        $pdf->SetXY( 40, 210);
         $pdf->Write(12, $data['fait-le'] ?? date('d/m/Y'));
 
         $pdf->SetFont('helvetica', 'i', 14);
-        $pdf->SetXY( 14, 224);
+        $pdf->SetXY( 14, 226);
         $pdf->Write(12, $data['intervenant'] ?? 'Intervenant');
 
 
