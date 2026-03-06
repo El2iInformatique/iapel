@@ -42,26 +42,16 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     
 
     // Data d'un document
-    Route::get('/open/{token}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
+    Route::get('/open/{token}', [BiController::class, 'open'])->middleware('VerifTokenAndSecretToken');
 
     // Suppression d'un document
-    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('HeaderVerifToken');
+    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('VerifTokenAndSecretToken');
     
 });
 
 
-
-//Route sans protection
-Route::get('/test', function() {
-    return view('fake-create-json');
-});
-
 Route::get('/unsigned', function() {
     return view('unsigned');
-});
-
-Route::get('/68', function () {
-    return redirect()->away('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 });
 
 Route::get('/', function () {
@@ -78,31 +68,47 @@ Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
 // Téléchargement du document d'intervention réalisé
 Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken');
 // Fonction de vérification de l'état du document d'intervention
-Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check']);
+Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check'])->middleware('VerifSecretToken');
 // Listing de tous les documents enregistrés pour un client
-Route::get('/list/{client}', [BiController::class, 'listSavedDocs']);
+Route::get('/list/{client}', [BiController::class, 'listSavedDocs'])->middleware('VerifSecretToken');
 // Affichage d'un PDF de devis
 Route::get('/pdf-devis/{token}',[PdfController::class,'viewDevis']);
 
-Route::get('/getToken/{client}/{document}/{uid}',[TokenController::class,'getToken']);
+Route::get('/getToken/{client}/{document}/{uid}',[TokenController::class,'getToken'])->middleware('VerifSecretToken');
 
 
 Route::post('/upload-visuel', function(Request $request) {
-    if ($request->hasFile('image')) {
-        $file = $request->file('image');
-        $client = $request->input('client');
-        $document = $request->input('document');
-        $uid = $request->input('uid');
-        $name = 'compressed_' . time() . '_' . $file->getClientOriginalName();
-        $path = $file->storeAs($client.'/'.$document.'/'.$uid, $name, 'public');
+    // 1. Validation de sécurité
+    if (!$request->hasFile('image')) {
+        return response()->json(['success' => false, 'message' => 'Aucune image'], 400);
+    }
 
+    //Illuminate\Support\Facades\Log
+
+    $file = $request->file('image');
+    $client = $request->input('client');
+    $document = $request->input('document');
+    $uid = $request->input('uid');
+
+    // 2. Construction du chemin
+    $name = 'compressed_' . time() . '_' . $file->getClientOriginalName() . ".jpg";
+
+    $folder = "{$client}/{$document}/{$uid}/"; // On ajoute 'uploads' pour mieux organiser
+    //Illuminate\Support\Facades\Log
+
+    // 3. Stockage sur le disque 'public' (storage/app/public)
+    $path = $file->storeAs($folder, $name, 'public');
+
+    if ($path) {
         return response()->json([
             'success' => true,
-            'name' => $name, // On retourne uniquement le nom
-            'url' => asset('storage/'.$client.'/'.$document.'/'.$uid.'/'. $name) // URL publique de l'image
+            'name' => $name,
+            // Génère l'URL correcte via le lien symbolique
+            'url' => asset('storage/' . $path) 
         ]);
     }
-    return response()->json(['success' => false], 400);
+
+    return response()->json(['success' => false, 'message' => 'Erreur lors du stockage'], 500);
 });
 
 Route::post('/delete-visuel', function(Request $request) {
@@ -110,6 +116,9 @@ Route::post('/delete-visuel', function(Request $request) {
     $client = $request->input('client');
     $document = $request->input('document');
     $uid = $request->input('uid');
+
+    Illuminate\Support\Facades\Log::info("Folder : {$client}/{$document}/{$uid}/ | Name : {$name}");
+
     if ($name) {
         Storage::disk('public')->delete($client.'/'.$document.'/'.$uid.'/' . $name);
         return response()->json(['success' => true]);
@@ -122,10 +131,8 @@ Route::post('/delete-visuel', function(Request $request) {
 Route::get('/generate-cerfa_15497', [PdfController::class, 'generateCerfa']);
 Route::get('/generate-cerfa_15497_1', [PdfController::class, 'generateCerfa']);
 Route::get('/generate-cerfa_15497_2', [PdfController::class, 'generateCerfa']);
-Route::get('/generate-cerfa_13948-03', [PdfController::class, 'generateAttestationTVA']);
 Route::get('/generate-rapport_intervention', [PdfController::class, 'generateBi']);
 
-Route::post('/generate-cerfa_13948-03', [PdfController::class, 'generateAttestationTVA']);
 
 Route::post('/generate-download-pdf', [PdfController::class, 'generateDownloadPDF']);
 
@@ -145,6 +152,8 @@ Route::get('/devis/{client}/{uid}', function ($client, $uid) {
         'Content-Type' => 'application/pdf',
     ]);
 });
+
+
 Route::get('/download-devis/{client}/{filename}', function ($client, $uid) {
     $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid .'_certifie.pdf');
     if (!file_exists($filePath)) {

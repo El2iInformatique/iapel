@@ -31,20 +31,11 @@ class TokenController extends Controller
             'nb_pages' => 'required|numeric|min:0',
         ]);
 
-        if (!$request->hasHeader('secret-token')) {
-            return response()->json(['error' => 'No secret token provided.'], 403);
-        }
-
-        $secretToken = config("secrets.$request->organisation_id");
-        $adminToken = config('secrets.admin');
-
-        $providedToken = $request->header('secret-token');
-
-        if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
-            return response()->json(['error' => 'Not authorized.'], 403);
-        }
-
-        Log::info('Début de la génération du token', ['request_data' => $request->all()]);
+        \Log::info("[DOCUMENT] DEBUT GENERATION TOKEN", [
+            'organisation_id' => $request->organisation_id,
+            'devis_id' => $request->devis_id,
+            'request_data' => $request->all()
+        ]);
 
         $coords = json_decode($request->input('coords'), true);
 
@@ -120,14 +111,16 @@ class TokenController extends Controller
     {
         $tokenRecord = TokenLinksRapport::where('token', $token)->first();
 
-        if (!$tokenRecord) {
+        if (!$tokenRecord)
             return false;
-        }
 
         $expiresAt = Carbon::parse($tokenRecord->expires_at);
 
         if ($expiresAt->lessThan(now())) {
-            Log::info('Token invalide : date depasser');
+            \Log::info("[TOKEN] DATE DEPASSER", [
+                'token' => $tokenRecord->token,
+                'client' => $tokenRecord->client
+            ]);
 
             $tokenRecord->delete();
             return false;
@@ -137,19 +130,6 @@ class TokenController extends Controller
     }
 
     public function getToken(Request $request, $client, $document, $uid){
-
-        if (!$request->hasHeader('secret-token')) {
-            return response()->json(['error' => 'No token provided.'], 403);
-        }
-
-        $secretToken = config("secrets.$client");
-        $adminToken = config('secrets.admin');
-
-        $providedToken = $request->header('secret-token');
-
-        if (!hash_equals($providedToken,     $secretToken) && !hash_equals($providedToken, $adminToken)) {
-            return response()->json(['error' => 'Not authorized.'], 403);
-        }
 
         $tokenEntry = TokenLinksRapport::where('paths', 'app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json')->first();
 

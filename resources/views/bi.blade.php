@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Favicon principal -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -106,48 +107,57 @@
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="equipier" class="form-label">Equipier :</label>
-                                                    <input type="text" class="form-control" id="equipier" name="equipier" value="{{ $data['equipier'] ?? '' }}">
+                                                    <input type="text" class="form-control" id="equipier" name="equipier" value="{{ $data['equipier'] ?? '' }}" maxlength="40">
                                                 </div>
                                             </div>    
-                                            <div class="row"> 
+                                            <div class="row">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="photo_avant" class="form-label">Photo avant l'intervention :</label>
                                                     <div class="mb-3">
                                                         <input type="file" id="photo_avant" name="photo_avant" accept="image/*" class="d-none">
-                                                        <button type="button" class="btn btn-primary" onclick="document.getElementById('photo_avant').click();">
+                                                        <button type="button" id="btn_photo_avant" class="btn btn-primary">
                                                             📷 Télécharger ou prendre une Photo
                                                         </button>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <img id="photo_avant_apercu" src="" alt="Aperçu" class="img-fluid d-none" style="max-width: 350px; border: 1px solid #ddd; padding: 5px;">
+                                                        <img id="photo_avant_apercu" src="" alt="Aperçu" class="img-fluid d-none" style="width: 100%; max-width: 350px; height: auto; object-fit: cover; border: 1px solid #ddd; padding: 5px;">
                                                     </div>
                                                 </div>
+                                                
                                                 <div class="col-md-6 mb-3">
                                                     <label for="photo_apres" class="form-label">Photo après l'intervention :</label>
                                                     <div class="mb-3">
                                                         <input type="file" id="photo_apres" name="photo_apres" accept="image/*" capture="environment" class="d-none">
-                                                        <button type="button" class="btn btn-primary" onclick="document.getElementById('photo_apres').click();">
+                                                        <button type="button" id="btn_photo_apres" class="btn btn-primary">
                                                             📷 Télécharger ou prendre une Photo
                                                         </button>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <img id="photo_apres_apercu" src="" alt="Aperçu" class="img-fluid d-none" style="max-width: 350px; border: 1px solid #ddd; padding: 5px;">
+                                                        <img id="photo_apres_apercu" src="" alt="Aperçu" class="img-fluid d-none" style="width: 100%; max-width: 350px; height: auto; object-fit: cover; border: 1px solid #ddd; padding: 5px;">
                                                     </div>
                                                 </div>
-                                            </div>   
+                                            </div>
                                             
                                             <div class="row">
                                                 <div class="mb-3">
                                                     <label for="compte_rendu" class="form-label">Compte-rendu d'intervention :</label>
-                                                    <textarea class="form-control" id="compte_rendu" name="compte_rendu" rows="5"></textarea>
+                                                    <textarea class="form-control" id="compte_rendu" name="compte_rendu" rows="5" maxlength="500"></textarea>
                                                 </div>
                                             </div>   
                                             <div class="row">
                                                 <div class="mb-3">
                                                     <label for="materiel" class="form-label">Matériel consommé ou à commander :</label>
-                                                    <textarea class="form-control" id="materiel" name="materiel" rows="5"></textarea>
+                                                    <textarea class="form-control" id="materiel" name="materiel" rows="5" maxlength="500"></textarea>
                                                 </div>
-                                            </div>  
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="mb-3">
+                                                    <label for="prevoir" class="form-label">A prévoir et observation complémentaire :</label>
+                                                    <textarea class="form-control" id="prevoir" name="prevoir" rows="5" maxlength="500"></textarea>
+                                                </div>
+                                            </div>
+
 
                                             <div class="row"> 
                                                 <div class="col-md-6 mb-3">                                                    
@@ -212,27 +222,52 @@
                                     </div>
                                 </div>
 
-                                <!-- Test si le client a une partie supplémentaire -->
-                                @if (isset($client_layout))
+
+                                <!-- Quatrième section : Complément de l'intervention -->
                                 <div class="accordion-item">
-                                    <h2 class="accordion-header" id="accordion_header_customisation">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_customisation" aria-expanded="false" aria-controls="accordion_collapse_customisation">
-                                            <h5>4 - Particularité</h5>
+                                    <h2 class="accordion-header" id="accordion_header_info_complementaire">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_info_complementaire" aria-expanded="false" aria-controls="accordion_collapse_info_complementaire">
+                                            <h5>4 - Informations complémentaires  </h5>
                                         </button>
                                     </h2>
-                                    <div id="accordion_collapse_customisation" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
+                                    <div id="accordion_collapse_info_complementaire" class="accordion-collapse collapse" aria-labelledby="accordion_header_info_complementaire" data-bs-parent="#accordion_bi">
                                         <div class="accordion-body">
-                                            <!-- Layout modifier du client-->
 
-                                            @include('custom/'. $client_layout['nom_layout'])
+                                            <div class="row">
+                                                <div class="mb-3">
+                                                    <label for="compte_rendu" class="form-label">Le constat : </label>
+                                                    <textarea class="form-control" id="constat" name="constat" rows="5" maxlength="500"></textarea>
+                                                </div>
 
-                                            <div id="complements_apercu" class="mt-3 row"></div>
-                                            
+                                                <div class="row">
+                                                    <div class="mb-3">
+                                                        <label for="compte_rendu" class="form-label"> Les vérifications :</label>
+                                                        <textarea class="form-control" id="verification" name="verification" rows="5" maxlength="500"></textarea>
+                                                    </div>
+                                                </div>   
+
+                                                <div class="row">
+                                                    <div class="mb-3">
+                                                        <label for="compte_rendu" class="form-label">Les notes particulières :</label>
+                                                        <textarea class="form-control" id="notes_particulieres" name="notes_particulieres" rows="5" maxlength="500"></textarea>
+                                                    </div>
+                                                </div>  
+
+                                                <div class="row">
+                                                    <div class="mb-3">
+                                                        <label for="compte_rendu" class="form-label">Les points de vigilances : </label>
+                                                        <textarea class="form-control" id="points_vigilances" name="points_vigilances" rows="5" maxlength="500"></textarea>
+                                                    </div>
+                                                </div>
+
+
+                                            </div>  
+                                             
                                         </div>
                                     </div>
                                 </div>
-                                @endif
 
+                                
                             </diV>
 
                             <hr>
@@ -277,7 +312,8 @@
 
         document.getElementById("complement").addEventListener("change", function(event) {
 
-            if (nombrePhoto === 2) {
+            if (nombrePhoto === 40) {
+                alert("Vous avez atteint le nombre maximum de photos (40). Veuillez supprimer des photos existantes avant d'en ajouter de nouvelles.");
                 return;
             }
 
@@ -287,8 +323,6 @@
 
             // 🔍 Récupérer les fichiers stockés
             let storedFiles = JSON.parse(sessionStorage.getItem("storedFiles") || "[]");
-
-            console.log("Avant ajout, fichiers stockés:", storedFiles);
 
             for (const file of files) {
                 if (!file.type.startsWith("image/")) continue;
@@ -338,6 +372,8 @@
                                 method: "POST",
                                 body: formData,
                                 headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json' // Force Laravel à répondre en JSON même s'il y a une erreur
                                 }
                             })
                             .then(response => response.json())
@@ -357,7 +393,7 @@
                                         <div class="card">
                                             <img src="${data.url}" class="card-img-top" alt="" style="height: 400px; object-fit: contain;">
                                             <div class="card-body">
-                                                <textarea class="form-control" placeholder="Ajouter un commentaire..." name="comments[]" rows="5"></textarea>
+                                                <textarea class="form-control" placeholder="Ajouter un commentaire..." name="comments[]" rows="5" maxlength="100"></textarea>
                                                 <input type="hidden" name="images[]" value="${imageName}">
                                                 <button type="button" class="btn btn-danger btn-sm mt-2" onclick="supprimerComplement(this, '${imageName}')">Supprimer</button>
                                             </div>
@@ -388,8 +424,9 @@
             // Facultatif : Supprimer aussi l'image du serveur via une requête AJAX
             fetch("/delete-visuel", {
                 method: "POST",
-                body: JSON.stringify({ client: "{{ $client }}", document: "{{ $document }}", uid: "{{ $uid}}", name: fileName }),
+                body: JSON.stringify({ client: "{{ $client }}", document: "{{ $document }}", uid: "{{ $uid }}", name: fileName }),
                 headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     "Content-Type": "application/json",
                 }
             })
@@ -400,7 +437,6 @@
                     nombrePhoto -= 1;
                 }
             })
-            .then(data => console.log(data))
             .catch(error => console.error("Erreur lors de la suppression :", error));
         }
 
@@ -408,117 +444,72 @@
 
 
     <script>
-        document.getElementById("photo_avant").addEventListener("change", function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
 
-            const maxWidth = 800; // Largeur max en pixels
-            const maxHeight = 600; // Hauteur max
-            const quality = 0.8; // Compression (1 = meilleure qualité, 0 = plus compressé)
+        function imageConvertor(inputId, previewId) {
+                const file = event.target.files[0];
+                
+                // Sécurité : stop si pas de fichier ou déjà traité
+                if (!file || file._isProcessed) return;
 
-            // Redimensionnement de l'image
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
+                const maxWidth = 800;
+                const maxHeight = 600;
+                const quality = 0.7;
 
-                    let width = img.width;
-                    let height = img.height;
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement("canvas");
+                        let width = img.width;
+                        let height = img.height;
 
-                    // Ajustement des dimensions
-                    if (width > height) {
-                        if (width > maxWidth) {
-                            height *= maxWidth / width;
-                            width = maxWidth;
+                        // Calcul des dimensions proportionnelles
+                        if (width > height) {
+                            if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+                        } else {
+                            if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
                         }
-                    } else {
-                        if (height > maxHeight) {
-                            width *= maxHeight / height;
-                            height = maxHeight;
-                        }
-                    }
 
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext("2d");
 
-                    // Convertir en fichier JPEG
-                    canvas.toBlob(blob => {
-                        const compressedFile = new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() });
+                        // --- LE BLANC COMME NEIGE ---
+                        // On remplit tout le canvas de blanc avant de dessiner
+                        ctx.fillStyle = "#FFFFFF";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                        // Affichage de l'aperçu
-                        const imgPreview = document.getElementById("photo_avant_apercu");
-                        imgPreview.src = URL.createObjectURL(compressedFile);
-                        imgPreview.classList.remove("d-none");
+                        // On dessine l'image par dessus (la transparence laissera voir le blanc)
+                        ctx.drawImage(img, 0, 0, width, height);
 
-                        // Remplacement du fichier dans l'input pour le formulaire
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(compressedFile);
-                        document.getElementById("photo_avant").files = dataTransfer.files;
-                    }, "image/jpeg", quality);
+                        // Conversion en JPEG (le JPEG ne supporte pas la transparence, donc le fond reste blanc)
+                        canvas.toBlob(blob => {
+                            const compressedFile = new File([blob], file.name, { 
+                                type: "image/jpeg", 
+                                lastModified: Date.now() 
+                            });
+
+                            // Marqueur pour éviter la boucle infinie sur l'event change
+                            compressedFile._isProcessed = true;
+
+                            // 1. Mise à jour de l'aperçu
+                            const imgPreview = document.getElementById(previewId);
+                            if(imgPreview) {
+                                imgPreview.src = URL.createObjectURL(compressedFile);
+                                imgPreview.classList.remove("d-none");
+                            }
+
+                            // 2. Remplacement du fichier dans l'input
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(compressedFile);
+                            inputElement.files = dataTransfer.files;
+
+                        }, "image/jpeg", quality);
+                    };
                 };
-            };
-        });
-        
-        document.getElementById("photo_apres").addEventListener("change", function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const maxWidth = 800; // Largeur max en pixels
-            const maxHeight = 600; // Hauteur max
-            const quality = 0.8; // Compression (1 = meilleure qualité, 0 = plus compressé)
-
-            // Redimensionnement de l'image
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-
-                    let width = img.width;
-                    let height = img.height;
-
-                    // Ajustement des dimensions
-                    if (width > height) {
-                        if (width > maxWidth) {
-                            height *= maxWidth / width;
-                            width = maxWidth;
-                        }
-                    } else {
-                        if (height > maxHeight) {
-                            width *= maxHeight / height;
-                            height = maxHeight;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Convertir en fichier JPEG
-                    canvas.toBlob(blob => {
-                        const compressedFile = new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() });
-
-                        // Affichage de l'aperçu
-                        const imgPreview = document.getElementById("photo_apres_apercu");
-                        imgPreview.src = URL.createObjectURL(compressedFile);
-                        imgPreview.classList.remove("d-none");
-
-                        // Remplacement du fichier dans l'input pour le formulaire
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(compressedFile);
-                        document.getElementById("photo_apres").files = dataTransfer.files;
-                    }, "image/jpeg", quality);
-                };
-            };
-        });
+        }
 
 
         function ouvrirNavigation() {
@@ -548,6 +539,24 @@
                     });
                 });
             });
+
+                    // Fonction pour gérer le clic bouton -> input et l'aperçu
+            function setupPhotoUpload(buttonId, inputId, previewId) {
+                const btn = document.getElementById(buttonId);
+                const input = document.getElementById(inputId);
+
+                // 1. Quand on clique sur le bouton, on déclenche l'input masqué
+                btn.addEventListener('click', () => input.click());
+
+                // 2. Quand un fichier est choisi, on l'affiche
+                input.addEventListener('change', function() {
+                    imageConvertor(inputId, previewId);
+                });
+            }
+
+            // Initialisation pour les deux champs
+            setupPhotoUpload('btn_photo_avant', 'photo_avant', 'photo_avant_apercu');
+            setupPhotoUpload('btn_photo_apres', 'photo_apres', 'photo_apres_apercu');
 
             sessionStorage.removeItem("storedFiles");
 
@@ -606,7 +615,6 @@
                     signaturePad.fromData(existingSignatureData);
                 }
 
-                console.log("Canvas redimensionné. CSS: " + displayWidth + "x" + displayHeight + "px. Interne: " + canvas.width + "x" + canvas.height + "px. DPR: " + ratio);
             }
             
             // Désactiver le resize après le premier chargement
@@ -622,10 +630,8 @@
             function saveSignature() {
                 if (!signaturePad.isEmpty()) {
                     signatureInput.value = signaturePad.toDataURL();
-                    console.log("Signature enregistrée !");
                 } else {
                     signatureInput.value = "";
-                    console.log("Aucune signature détectée !");
                 }
             }
 

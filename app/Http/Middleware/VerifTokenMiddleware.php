@@ -20,11 +20,24 @@ class VerifTokenMiddleware
     
     public function handle(Request $request, Closure $next): Response
     {
+        $entreprise = $request->organisation_id ?? $request->client ?? $request->entreprise ?? null;
         $token = $request->route('token');
-        Log::info("Demande de verification du token : " . $token);
+
+        \Log::info("[AUTH] VERIFICATION TOKEN", [
+            'token' => $token,
+            'entreprise' => $entreprise,
+            'route' => $request->fullUrl(),
+            'ip' => $request->ip(),
+        ]);
 
         if (!TokenController::isValideTokenRapport($token)) {
-            abort(404, 'Token invalide');
+            \Log::warning("[AUTH] TOKEN MANQUANT OU INVALIDE", [
+                'token' => $token,
+                'client' => $entreprise,
+                'route' => $request->fullUrl(),
+                'ip' => $request->ip(),
+            ]);
+            abort(401, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
         }
 
         return $next($request);

@@ -9,7 +9,6 @@ use App\Models\TokenLinksRapport;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -45,6 +44,13 @@ class BiController extends Controller
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
+            \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
+                'client' => $client,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
             return response()->json(['error' => 'Fichier introuvable'], 404);
         }
 
@@ -53,6 +59,16 @@ class BiController extends Controller
         $data = json_decode($json, true); // true => convertir en tableau associatif
 
         return response()->json($data);
+    }
+
+
+    public function checkExistPdf($jsonPath, $dataToken): bool {
+        $pdfFile = str_replace('.json', '.pdf', $jsonPath) 
+        ?? storage_path("app/public/{$dataToken['client']}/{$dataToken['document']}/{$dataToken['uid']}/{$dataToken['uid']}.pdf");
+
+        $alreadyExists = !empty($dataToken['pdf_exists']) || file_exists($pdfFile);
+
+        return $alreadyExists;
     }
 
     /**
@@ -67,7 +83,7 @@ class BiController extends Controller
     // fonction de création du JSON et du TOKEN d'identification du fichier
     public function createJson(Request $request)
     {
-
+        // Le secret token est deja verifier dans le middleware VerifSecretToken, pas besoin de le verifier à nouveau
         $data = $request->input();
 
         $uid = $data['uid'];
@@ -96,21 +112,12 @@ class BiController extends Controller
 
               $jsonData = [
                   'dataToken' => $dataToken,
-                    'operateur' => $data['Operateur'] ?? '',
-                    'detenteur' => $data['Detenteur'] ?? ''
+                    'operateur' => $data['operateur'] ?? '',
+                    'detenteur' => $data['detenteur'] ?? ''
                 ];
 
-            } else if ($document == 'cerfa_13948-03') {
-
-              $jsonData = [
-                  'dataToken' => $dataToken,
-                    'nom' => $data['nom'] ?? '',
-                    'prenom' => $data['prenom'] ?? '',
-                    'adresse' => $data['adresse'] ?? '',
-                    'commune' => $data['commune'] ?? '',
-                    'code_postal' => $data['code_postal'] ?? ''
-                ];
-            } else if ($document == 'rapport_intervention') {
+            } 
+            else if ($document == 'rapport_intervention') {
 
                 $jsonData = [
                     'dataToken' => $dataToken,
@@ -134,7 +141,7 @@ class BiController extends Controller
             if (!$token) {
                 return response()->json([
                     'error' => 'Token non généré',
-                ]);
+                ], 500);
             }
             file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT));
 
@@ -142,10 +149,17 @@ class BiController extends Controller
                 'message' => 'Token généré avec succès',
                 'token' => $token,
                 'bi_url' => url('/bi/' . $token),
-            ]);
+            ], 200);
 
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la création du fichier JSON : ' . $e->getMessage());
+            \Log::error("[CONFIG CLIENT] CREATION DU FICHIER JSON", [
+                'client' => $client,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'message' => $e->getMessage()
+            ]);
+            abort(500, 'Erreur lors de la création du fichier JSON');
         }
     }
 
@@ -167,7 +181,14 @@ class BiController extends Controller
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
-            abort(404, 'Fichier JSON introuvable');
+            \Log::error("[TELECHARGEMENT] FICHIER JSON INTROUVABLE", [
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
+            abort(404, 'Fichier introuvable');
         }
 
         // Lire et décoder le fichier JSON
@@ -181,6 +202,13 @@ class BiController extends Controller
         $filePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
         if (!file_exists($filePath)) {
+            \Log::error("[TELECHARGEMENT] FICHIER PDF INTROUVABLE", [
+                'client' => $client,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
             return response()->json(['error' => 'Fichier introuvable'], 404);
         }
 
@@ -201,19 +229,6 @@ class BiController extends Controller
      */
     public function check($client, $document, $uid, Request $request)
     {
-        if (!$request->hasHeader('secret-token')) {
-            return response()->json(['error' => 'No token provided.'], 403);
-        }
-
-        $secretToken = config("secrets.$client");
-        $adminToken = config('secrets.admin');
-
-        $providedToken = $request->header('secret-token');
-
-        if (!hash_equals($providedToken,     $secretToken) && !hash_equals($providedToken, $adminToken)) {
-            return response()->json(['error' => 'Not authorized.'], 403);
-        }
-
         $jsonPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json');
         $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
@@ -236,12 +251,43 @@ class BiController extends Controller
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
+        // Vérifier si le token existe - si le token n'existe pas, on affiche une page d'erreur 404
+        if (!$dataToken) {
+            \Log::error("[DATA_TOKEN] TOKEN INTROUVABLE", [
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__
+            ]);
+            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+        }
+
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier existe
         if (!file_exists($filePath)) {
-            abort(404, 'Fichier JSON introuvable');
+            \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
+            abort(404, 'Fichier introuvable');
+        }
+
+        if ($this->checkExistPdf($filePath, $dataToken)) {
+            $client = $dataToken['client'] ?? 'unknown_client';
+            \Log::warning("[JSON] ACCES REFUSER", [
+                'client' => $client,
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
+            abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
         }
 
         // Lire et décoder le fichier JSON
@@ -259,14 +305,7 @@ class BiController extends Controller
             return view($document, compact('data', 'token', 'uid', 'client', 'document'));
         } else {
 
-            $client_layout = layou_client::where('nom_client', $client)->first();
-
-            if (!$client_layout) {
-                return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
-            }
-            else {
-                return view('bi', compact('data', 'token', 'uid', 'client', 'document', 'client_layout'));
-            }
+        return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
 
         }
     }
@@ -284,12 +323,36 @@ class BiController extends Controller
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
+        if (!$dataToken) {
+            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+        }
+
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier JSON existe
         if (!file_exists($filePath)) {
-            abort(404, "Fichier JSON introuvable : $filePath");
+            \Log::error("[JSON] TOKEN INTROUVABLE", [
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
+            abort(404, "Fichier introuvable");
+        }
+
+        if ($this->checkExistPdf($filePath, $dataToken)) {
+            $client = $dataToken['client'] ?? 'unknown_client';
+            \Log::error("[REFUSE] SOUMISSION REFUSER", [
+                'client' => $client,
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
+            abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
         }
 
         // Lire le contenu existant
@@ -306,19 +369,25 @@ class BiController extends Controller
             $data['materiel'] = $request->input('materiel');
             $data['intervention_suite'] = $request->input('intervention_suite');
             $data['materiel'] = $request->input('materiel');
+            $data['prevoir'] = $request->input('prevoir');
             $data['facturable'] = $request->input('facturable');
             $data['terminee'] = $request->input('terminee');
             $data['absent'] = $request->input('absent');
             $data['fait-le'] = $request->input('fait-le');
             $data['devis_a_faire'] = $request->input('devis_a_faire');
 
-            if ($request->hasFile('photo_avant')) {
-                $imagePath = $request->file('photo_avant')->store($biPath, 'public');
-                $data['photo_avant'] = $imagePath;
+            // Traitement Photo Avant
+            if ($request->hasFile('photo_avant') && $request->file('photo_avant')->isValid()) {
+                $file = $request->file('photo_avant');
+                
+                // On stocke le fichier et on récupère sont chemin
+                $data['photo_avant'] = $file->store($biPath, 'public');
             }
-            if ($request->hasFile('photo_apres')) {
-                $imagePath = $request->file('photo_apres')->store($biPath, 'public');
-                $data['photo_apres'] = $imagePath;
+
+            // Traitement Photo Après
+            if ($request->hasFile('photo_apres') && $request->file('photo_apres')->isValid()) {
+                $file = $request->file('photo_apres');
+                $data['photo_apres'] = $file->store($biPath, 'public');
             }
 
             $data['complements'] = [];
@@ -334,35 +403,16 @@ class BiController extends Controller
                 }
             }
 
-            // Ajout des complement du client dans le json
-            $data['complement_client'] = [];
-
-            foreach ($request->all() as $key => $value) {
-
-                if ($request->hasfile($key) && str_starts_with($key, 'item')) {
-                    $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
-
-                    $imagePath = $request->file($key)->store($biPath, 'public');
-                    $data['complement_client'][] = [
-                        'value' => $imagePath,
-                        'question' => $question,
-                        'type' => 'img'
-                    ];
-                }
-                else if (str_starts_with($key, 'item')) {
-                    $question = $request->input('question-' . $key); // Recupere la question qui se trouve dans un input (hidden)
-
-                    $data['complement_client'][] = [
-                        'value' => $value,
-                        'question' => $question,
-                        'type' => 'text'
-                    ];
-                }
-            }
+            $data["constat"] = $request->input('constat');
+            $data["verification"] = $request->input('verification');
+            $data["notes_particulieres"] = $request->input('notes_particulieres');
+            $data["points_vigilances"] = $request->input('points_vigilances');
 
             if ($request->input('signature')) {
                 $data['signature'] = $request->input('signature');
             }
+
+            $data['pdf_exists'] = true; // Marquer que le PDF a été généré
 
         } else if (str_starts_with($document, 'cerfa_15497')) {
             // Mettre à jour les données avec les nouvelles valeurs du formulaire
@@ -448,34 +498,7 @@ class BiController extends Controller
             } else {
                 $data['signature-detenteur'] = null;
             }
-        } else if ($document == 'cerfa_13948-03') {
-            $data['nom'] = $request->input('nom');
-            $data['prenom'] = $request->input('prenom');
-            $data['adresse'] = $request->input('adresse');
-            $data['code_postal'] = $request->input('code_postal');
-            $data['commune'] = $request->input('commune');
-
-            $data['nature_locaux_type'] = $request->input('nature_locaux_type');
-            $data['nature_locaux_type_autre_valeur'] = $request->input('nature_locaux_type_autre_valeur');
-            $data['nature_locaux_affectation'] = $request->input('nature_locaux_affectation');
-            $data['milliemes'] = $request->input('milliemes');
-            $data['adresse_travaux'] = $request->input('adresse_travaux');
-            $data['code_postal_travaux'] = $request->input('code_postal_travaux');
-            $data['commune_travaux'] = $request->input('commune_travaux');
-            $data['nature_locaux_status'] = $request->input('nature_locaux_status');
-            $data['nature_locaux_status_autre_valeur'] = $request->input('nature_locaux_status_autre_valeur');
-            $data['travaux'] = $request->input('travaux');
-            $data['travaux_2_details'] = $request->input('travaux_2_details');
-
-            $data['fait_a'] = $request->input('fait_a');
-            $data['fait_le'] = $request->input('fait_le');
-
-            if ($request->input('signature')) {
-                $data['signature'] = $request->input('signature');
-            } else {
-                $data['signature'] = null;
-            }
-        }
+        } 
 
         // Sauvegarder les nouvelles données dans le fichier JSON
         file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -497,34 +520,13 @@ class BiController extends Controller
     public function listSavedDocs($entreprise, Request $request): JsonResponse
     {
         try {
-            if (!$request->hasHeader('secret-token')) {
-                \Log::warning("[Client: $entreprise] Tentative d'accès sans token");
-                return response()->json(['error' => 'No token provided.'], 403);
-            }
+             // Le secret token est deja verifier dans le middleware VerifSecretToken, pas besoin de le verifier à nouveau
 
-            $secretToken = config("secrets.$entreprise");
-            $adminToken = config('secrets.admin');
-            $providedToken = $request->header('secret-token');
-
-            // Vérifier que les tokens ne sont pas null avant hash_equals
-            if (!$secretToken && !$adminToken) {
-                \Log::error("[Client: $entreprise] Aucun token configuré pour ce client");
-                return response()->json(['error' => 'Client not configured.'], 403);
-            }
-
-            $isAuthorized = false;
-            if ($secretToken && hash_equals($providedToken, $secretToken)) {
-                $isAuthorized = true;
-            } elseif ($adminToken && hash_equals($providedToken, $adminToken)) {
-                $isAuthorized = true;
-            }
-
-            if (!$isAuthorized) {
-                \Log::warning("[Client: $entreprise] Tentative d'accès avec token invalide");
-                return response()->json(['error' => 'Not authorized.'], 403);
-            }
-
-            \Log::info("[Client: $entreprise] Accès autorisé à listSavedDocs");
+            \Log::info("[ACCES] ACCES AUTORISER - listSavedDocs", [
+                'client' => $entreprise,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+            ]);
 
             $basePath = "$entreprise";
 
@@ -533,10 +535,8 @@ class BiController extends Controller
             // Sépare proprement les fichiers "devis", "rapport_intervention" et les autres
             $lesDevisFiles = array_filter($files, fn($f) => strpos($f, '/devis/') !== false);
             $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
-            $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false);
-
-            \Log::info("[Client: $entreprise] lesDevisFiles: " . json_encode(array_values($lesDevisFiles)));
-            \Log::info("[Client: $entreprise] lesRapportInterventionFiles: " . json_encode(array_values($lesRapportInterventionFiles)));
+            $lesCerfas15497 = array_filter($files, fn($f) => strpos($f, '/cerfa_15497/') !== false);
+            $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false && strpos($f, '/cerfa_15497/') === false);
 
             // Chargement des règles de format (comme dans ta version)
             $formatPath = 'format.json';
@@ -551,10 +551,8 @@ class BiController extends Controller
             foreach ($lesDevisFiles as $file) {
                 $parts = explode('/', $file);
                 $devisIndex = array_search('devis', $parts);
-                if ($devisIndex === false || !isset($parts[$devisIndex + 1])) {
-                    \Log::warning("Chemin devis inattendu: $file");
+                if ($devisIndex === false || !isset($parts[$devisIndex + 1]))
                     continue;
-                }
 
                 $folder = $parts[$devisIndex + 1]; // ex: testn17_PC67...
                 $fileName = end($parts); // ex: testn17_PC67....pdf ou testn17_PC67..._certifie.pdf
@@ -598,17 +596,13 @@ class BiController extends Controller
             $rapportInterventionTraites = [];
             foreach ($lesRapportInterventionFiles as $file) {
                 // Ignorer le fichier rapport_intervention/rapport_intervention.pdf
-                if (str_ends_with($file, 'rapport_intervention/rapport_intervention.pdf')) {
-                    \Log::info("Fichier ignoré: $file");
+                if (str_ends_with($file, 'rapport_intervention/rapport_intervention.pdf')) 
                     continue;
-                }
                 
                 $parts = explode('/', $file);
                 $rapportIndex = array_search('rapport_intervention', $parts);
-                if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) {
-                    \Log::warning("Chemin rapport_intervention inattendu: $file");
+                if ($rapportIndex === false || !isset($parts[$rapportIndex + 1]))
                     continue;
-                }
 
                 $folder = $parts[$rapportIndex + 1]; // ex: uid_folder
                 $fileName = end($parts); // ex: uid.pdf ou uid.json
@@ -640,8 +634,59 @@ class BiController extends Controller
                 }
             }
 
-            \Log::info("[Client: $entreprise] Devis recueillis: " . json_encode($devisTraites));
-            \Log::info("[Client: $entreprise] Rapports intervention recueillis: " . json_encode($rapportInterventionTraites));
+            $cerfas15497Traites = [];
+            foreach ($lesCerfas15497 as $file) {
+                // Ignorer le fichier rapport_intervention/rapport_intervention.pdf
+                if (str_ends_with($file, 'cerfa_15497/cerfa_15497.pdf'))
+                    continue;
+                
+                $parts = explode('/', $file);
+                $rapportIndex = array_search('cerfa_15497', $parts);
+                if ($rapportIndex === false || !isset($parts[$rapportIndex + 1]))
+                    continue;
+
+                $folder = $parts[$rapportIndex + 1]; // ex: uid_folder
+                $fileName = end($parts); // ex: uid.pdf ou uid.json
+
+                if (!isset($cerfas15497Traites[$folder])) {
+                    $cerfas15497Traites[$folder] = [
+                        'uid' => $folder,
+                        'has_json' => false,
+                        'has_pdf' => false,
+                        'json_file' => null,
+                        'pdf_file' => null,
+                        'json_last' => null,
+                        'pdf_last' => null,
+                    ];
+                }
+
+                if (str_ends_with($fileName, '.json')) {
+                    $cerfas15497Traites[$folder]['has_json'] = true;
+                    $cerfas15497Traites[$folder]['json_file'] = $file;
+                    if (Storage::disk('public')->exists($file)) {
+                        $cerfas15497Traites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
+                    }
+                } elseif (str_ends_with($fileName, '.pdf')) {
+                    $cerfas15497Traites[$folder]['has_pdf'] = true;
+                    $cerfas15497Traites[$folder]['pdf_file'] = $file;
+                    if (Storage::disk('public')->exists($file)) {
+                        $cerfas15497Traites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
+                    }
+                }
+            }
+
+            \Log::info("[DEVIS] DEVIS RECUEILLIS", [
+                'client' => $entreprise,
+                'devis' => json_encode($devisTraites),
+            ]);
+            \Log::info("[BI] RAPPORTS INTERVENTIONS RECUEILLIS", [
+                'client' => $entreprise,
+                'bi' => json_encode($rapportInterventionTraites)
+            ]);
+            \Log::info("[CERFA] CERFAS RECUEILLIS", [
+                'client' => $entreprise,
+                'cerfas' => json_encode($cerfas15497Traites)
+            ]);
 
             // Création de l'index documents pour retour
             $documents = [];
@@ -700,7 +745,14 @@ class BiController extends Controller
                         $jsonContent = Storage::disk('public')->get($r['json_file']);
                         $jsonData = json_decode($jsonContent, true);
                     } catch (\Exception $e) {
-                        \Log::warning("Erreur lecture JSON rapport intervention: " . $e->getMessage());
+                        \Log::error("[BI] LECTURE JSON", [
+                            'client' => $entreprise,
+                            'fonction' => __FUNCTION__,
+                            'fichier' => basename(__FILE__),
+                            'ligne' => __LINE__,
+                            'json_file' => $r['json_file'],
+                            'message' => $e->getMessage()
+                        ]);
                     }
                 }
 
@@ -725,6 +777,59 @@ class BiController extends Controller
                     $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
                     if ($tokenRapport) {
                         $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token;
+                    }
+                }
+            }
+
+            foreach ($cerfas15497Traites as $folder => $r) {
+                $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
+                
+                $traitTs = $r['json_last'];
+                $pdfTs = $r['pdf_last'];
+
+                $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
+                $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
+
+                // Récupérer les données du JSON si disponible
+                $jsonData = null;
+                if ($r['has_json'] && $r['json_file']) {
+                    try {
+                        $jsonContent = Storage::disk('public')->get($r['json_file']);
+                        $jsonData = json_decode($jsonContent, true);
+                    } catch (\Exception $e) {
+                        \Log::error("[CERFA] LECTURE JSON", [
+                            'client' => $entreprise,
+                            'fonction' => __FUNCTION__,
+                            'fichier' => basename(__FILE__),
+                            'ligne' => __LINE__,
+                            'json_file' => $r['json_file'],
+                            'message' => $e->getMessage()
+                        ]);
+                    }
+                }
+
+                $documents['cerfa_15497/' . $folder] = [
+                    'path' => 'cerfa_15497/' . $folder,
+                    'status' => $status,
+                    'token_rapport' => null, // sera rempli plus bas si on trouve le token
+                    'data' => [
+                        "nom" => $r['uid'],
+                        "tiers" => $jsonData['nom_client'] ?? null,
+                        "operateur" => $jsonData['operateur'] ?? null,
+                        "detenteur" => $jsonData['detenteur'] ?? null,
+                        "nature_intervention" => $jsonData['nature_intervention'] ?? null,
+                        "date_traitement" => $dateTrait,
+                        "date_pdf" => $datePdf,
+                        "par" => null
+                    ]
+                ];
+
+                // Chercher le token associé
+                if ($r['json_file']) {
+                    $pathToken = "app/public/" . $r['json_file'];
+                    $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
+                    if ($tokenRapport) {
+                        $documents['cerfa_15497/' . $folder]["token_rapport"] = $tokenRapport->token;
                     }
                 }
             }
@@ -758,7 +863,8 @@ class BiController extends Controller
                         $jsonData = json_decode($jsonContent, true);
 
                         $pathToken = "app/public/" . $file;
-                        $token = TokenLinksRapport::where('paths', $pathToken)->first()["token"] ?? null;
+                        $dataToken = TokenLinksRapport::where('paths', $pathToken)->first();
+                        $token = $dataToken["token"] ?? null;
                         $documents[$dirPath]["token_rapport"] = $token;
 
                         if (isset($formatRules[$docType])) {
@@ -786,7 +892,13 @@ class BiController extends Controller
             $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
             return response()->json($filteredDocs);
         } catch (\Exception $e) {
-            \Log::error("[Client: $entreprise] Erreur dans listSavedDocs: " . $e->getMessage());
+            \Log::error("[CATCH] ERREUR INCONNUE", [
+                'client' => $entreprise,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'message' => $e->getMessage()
+            ]);
             return response()->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
         }
     }
@@ -804,12 +916,23 @@ class BiController extends Controller
     {
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
+        if (!$dataToken) {
+            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+        }
+
         // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
 
         // Vérifier si le fichier JSON existe
         if (!file_exists($filePath)) {
-            abort(404, "Fichier JSON introuvable : $filePath");
+            \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
+                'token' => $token,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $filePath
+            ]);
+            abort(404, "Fichier introuvable");
         }
 
         try {
