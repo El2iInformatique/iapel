@@ -42,20 +42,16 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     
 
     // Data d'un document
-    Route::get('/open/{token}', [BiController::class, 'open'])->middleware('HeaderVerifToken');
+    Route::get('/open/{token}', [BiController::class, 'open'])->middleware('VerifTokenAndSecretToken');
 
     // Suppression d'un document
-    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('HeaderVerifToken');
+    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('VerifTokenAndSecretToken');
     
 });
 
 
 Route::get('/unsigned', function() {
     return view('unsigned');
-});
-
-Route::get('/68', function () {
-    return redirect()->away('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 });
 
 Route::get('/', function () {
@@ -72,13 +68,13 @@ Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
 // Téléchargement du document d'intervention réalisé
 Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken');
 // Fonction de vérification de l'état du document d'intervention
-Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check']);
+Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check'])->middleware('VerifSecretToken');
 // Listing de tous les documents enregistrés pour un client
-Route::get('/list/{client}', [BiController::class, 'listSavedDocs']);
+Route::get('/list/{client}', [BiController::class, 'listSavedDocs'])->middleware('VerifSecretToken');
 // Affichage d'un PDF de devis
 Route::get('/pdf-devis/{token}',[PdfController::class,'viewDevis']);
 
-Route::get('/getToken/{client}/{document}/{uid}',[TokenController::class,'getToken']);
+Route::get('/getToken/{client}/{document}/{uid}',[TokenController::class,'getToken'])->middleware('VerifSecretToken');
 
 
 Route::post('/upload-visuel', function(Request $request) {
@@ -135,10 +131,8 @@ Route::post('/delete-visuel', function(Request $request) {
 Route::get('/generate-cerfa_15497', [PdfController::class, 'generateCerfa']);
 Route::get('/generate-cerfa_15497_1', [PdfController::class, 'generateCerfa']);
 Route::get('/generate-cerfa_15497_2', [PdfController::class, 'generateCerfa']);
-Route::get('/generate-cerfa_13948-03', [PdfController::class, 'generateAttestationTVA']);
 Route::get('/generate-rapport_intervention', [PdfController::class, 'generateBi']);
 
-Route::post('/generate-cerfa_13948-03', [PdfController::class, 'generateAttestationTVA']);
 
 Route::post('/generate-download-pdf', [PdfController::class, 'generateDownloadPDF']);
 
@@ -158,6 +152,8 @@ Route::get('/devis/{client}/{uid}', function ($client, $uid) {
         'Content-Type' => 'application/pdf',
     ]);
 });
+
+
 Route::get('/download-devis/{client}/{filename}', function ($client, $uid) {
     $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid .'_certifie.pdf');
     if (!file_exists($filePath)) {

@@ -15,7 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'VerifToken' => \App\Http\Middleware\VerifTokenMiddleware::class,
             'anti-spam' => \App\Http\Middleware\AntiSpamMiddleware::class,
-            'HeaderVerifToken' => \App\Http\Middleware\VerifTokenWithHeaderMiddleware::class,
+            'VerifTokenAndSecretToken' => \App\Http\Middleware\VerifTokenWithHeaderMiddleware::class,
+            'VerifSecretToken' => \App\Http\Middleware\VerifSecretToken::class,
         ]);
 
 

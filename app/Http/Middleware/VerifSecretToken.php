@@ -3,55 +3,41 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use App\Http\Controllers\TokenController;
-use App\Models\TokenLinksRapport;
-
-
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
 
-
-class VerifTokenWithHeaderMiddleware
+class VerifSecretToken
 {
+    
     /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
+    
     public function handle(Request $request, Closure $next): Response
     {
         $entreprise = $request->organisation_id ?? $request->client ?? $request->entreprise ?? null;
-        $token = $request->route('token');
 
-        \Log::info("[AUTH] VERIFICATION TOKEN ET SECRET-TOKEN", [
-            'token' => $token,
+        \Log::info("[AUTH] VERIFICATION SECRET-TOKEN", [
             'entreprise' => $entreprise,
             'route' => $request->fullUrl(),
             'ip' => $request->ip(),
         ]);
 
-        if (!TokenController::isValideTokenRapport($token)) {
-            \Log::warning("[AUTH] TOKEN MANQUANT OU INVALIDE", [
-                'token' => $token,
-                'client' => $entreprise,
-                'route' => $request->fullUrl(),
-                'ip' => $request->ip(),
-            ]);
-            abort(401, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
-        }
-
-        if(!self::verifSecretToken($request)) {
+        if (!self::verifSecretToken($request)) {
             \Log::warning("[AUTH] SECRET-TOKEN MANQUANT OU INVALIDE", [
                 'entreprise' => $entreprise,
                 'route' => $request->fullUrl(),
                 'ip' => $request->ip(),
             ]);
-            abort( 401, 'Not authorized.', ['Content-Type' => 'text/html']);
+            return response()->json(  'Not authorized.',  401,['Content-Type' => 'application/json']);
         }
 
         return $next($request);
     }
+
 
     private function verifSecretToken(Request $request): bool
     {
@@ -76,4 +62,5 @@ class VerifTokenWithHeaderMiddleware
 
         return false;
     }
+
 }
