@@ -10,8 +10,8 @@ use App\Models\TokenLinksRapport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * @class BiController
@@ -81,6 +81,7 @@ class BiController extends Controller
      * @return JsonResponse Contient le token et l’URL d’accès BI.
      */
     // fonction de création du JSON et du TOKEN d'identification du fichier
+    /*
     public function createJson(Request $request)
     {
         // Le secret token est deja verifier dans le middleware VerifSecretToken, pas besoin de le verifier à nouveau
@@ -161,8 +162,124 @@ class BiController extends Controller
             ]);
             abort(500, 'Erreur lors de la création du fichier JSON');
         }
-    }
+    }*/
 
+
+    public function createJson(Request $request)
+    {
+        // Définition des règles de base
+        $baseRules = [
+            'document' => 'required|string|in:cerfa_15497,rapport_intervention',
+            'client'   => 'required|string',
+            'uid'      => 'required|string|max:50',
+        ];
+
+        // Détermination des règles spécifiques selon le type de document
+        $specificRules = [];
+        $documentType = $request->input('document');
+
+        if ($documentType === 'cerfa_15497') {
+            $specificRules = [
+                'operateur' => 'nullable|string',
+                'detenteur' => 'nullable|string',
+            ];
+        } elseif ($documentType === 'rapport_intervention') {
+            $specificRules = [
+                'code_client'          => 'nullable|string',
+                'nom_client'           => 'nullable|string',
+                'email_client'         => 'nullable|email',
+                'telephone_client'     => 'nullable|string',
+                'portable_client'      => 'nullable|string',
+                'adresse_facturation'  => 'nullable|string',
+                'cp_facturation'       => 'nullable|string',
+                'ville_facturation'    => 'nullable|string',
+                'date_intervention'    => 'nullable|date',
+                'adresse_intervention' => 'nullable|string',
+                'lieu_intervention'    => 'nullable|string',
+                'cp_intervention'      => 'nullable|string',
+                'ville_intervention'   => 'nullable|string',
+                'intervenant'          => 'nullable|string',
+                'description'          => 'nullable|string',
+            ];
+        }
+
+        // Initialisation avec des valeurs par défaut pour sécuriser les logs du bloc catch
+        $client = $request->input('client', 'inconnu');
+        $uid    = $request->input('uid', 'inconnu');
+
+        try {
+            $validator = Validator::make($request->all(), array_merge($baseRules, $specificRules));
+
+            if ($validator->fails()) {
+                Log::warning("[VALIDATION] Echec de validation des données d'entrée", [
+                    'client' => $client,
+                    'uid' => $uid,
+                    'errors' => $validator->errors()->toArray(),
+                    'fonction' => __FUNCTION__,
+                    'fichier' => basename(__FILE__),
+                    'ligne' => __LINE__
+                ]);
+                return response()->json([
+                    'error'   => 'Validation échouée',
+                    'details' => $validator->errors()
+                ], 422); 
+            }
+
+            $validated = $validator->validated();
+            
+            // Mise à jour avec les données validées et sûres
+            $uid      = $validated['uid'];
+            $document = $validated['document'];
+            $client   = $validated['client'];
+
+            // Préparation du chemin et des données
+            $relativeFolder = "{$client}/{$document}/{$uid}";
+            $relativeFilePath = "{$relativeFolder}/{$uid}.json";
+
+            $jsonData = [
+                'dataToken' => [
+                    'client'   => $client,
+                    'document' => $document,
+                    'uid'      => $uid,
+                ]
+            ];
+
+            // On fusionne les champs extra (ceux qui ne sont pas dans le bloc dataToken)
+            $extraFields = array_diff_key($validated, array_flip(['uid', 'client', 'document']));
+            $jsonData = array_merge($jsonData, $extraFields);
+
+            // Génération du Token
+            $fullPathForToken = "app/public/{$relativeFilePath}";
+            $token = TokenController::generateTokenRapport($request, $fullPathForToken);
+
+            $stored = Storage::disk('public')->put(
+                $relativeFilePath, 
+                json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            // On s'assure que le fichier a bien été écrit sur le disque
+            if (!$stored) {
+                throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
+            }
+
+            return response()->json([
+                'message' => 'Document créé avec succès',
+                'token'   => $token,
+                'bi_url'  => url("/bi/{$token}"),
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error("[JSON_CREATION_FAILED] Client: {$client}, UID: {$uid}", [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'error' => 'Une erreur technique est survenue lors de la génération du document.'
+            ], 500);
+        }
+    }
+    
     /**
      * @brief Télécharge le fichier PDF correspondant à un token donné.
      *
