@@ -107,7 +107,7 @@
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="equipier" class="form-label">Equipier :</label>
-                                                    <input type="text" class="form-control" id="equipier" name="equipier" value="{{ $data['equipier'] ?? '' }}" maxlength="40">
+                                                    <input type="text" class="form-control" id="equipier" name="equipier" value="{{ $data['equipier'] ?? '' }}" maxlength="30">
                                                 </div>
                                             </div>    
                                             <div class="row">
@@ -458,6 +458,8 @@
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = function(e) {
+                    let inputElement = document.getElementById(inputId);
+
                     const img = new Image();
                     img.src = e.target.result;
                     img.onload = function() {

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 
 
 /**
@@ -63,6 +64,27 @@ class PdfController extends Controller
         return trim($texte);
     }
 
+
+    public function formatDate($date): ?string 
+    {
+        // Si la date est vide, nulle ou n'est pas une chaîne exploitable
+        if (empty($date)) {
+            return null;
+        }
+
+        $date = trim($date);
+        $date = str_replace(['/', '-', '.'], '/', $date);
+
+        try {
+            // On tente de créer l'objet Carbon et on le formate immédiatement
+            return Carbon::parse($date)->format('d/m/Y');
+        } catch (\Exception $e) {
+            // En cas d'erreur (mauvais format), on log et on renvoie null
+            Log::error("Format de date invalide : " . $date);
+            return null;
+        }
+    }
+
     /**
      * @brief Affiche un document PDF à partir d'un token d'accès.
      *
@@ -76,8 +98,8 @@ class PdfController extends Controller
      *
      * @return mixed Vue d'affichage du PDF ou erreur 404.
      *
-     * @throws Exception Si aucun token valide n'est trouvé dans la base.
-     * @throws Exception Si le fichier JSON associé n'existe pas.
+     * @throws \Exception Si aucun token valide n'est trouvé dans la base.
+     * @throws \Exception Si le fichier JSON associé n'existe pas.
      *
      * @note Cette méthode est utilisée pour l'affichage dans le navigateur, pas pour le téléchargement direct.
      * @see TokenLinksRapport Pour la gestion des tokens et leurs liens.
@@ -131,8 +153,8 @@ class PdfController extends Controller
      *
      * @return mixed Téléchargement du PDF généré ou erreur JSON si le fichier source n'existe pas.
      *
-     * @throws Exception Si une erreur survient lors de la création du fichier JSON.
-     * @throws Exception Si le modèle PDF source est introuvable.
+     * @throws \Exception Si une erreur survient lors de la création du fichier JSON.
+     * @throws \Exception Si le modèle PDF source est introuvable.
      *
      * @note Le PDF généré est "aplati" pour empêcher les modifications ultérieures.
      * @warning Cette méthode nécessite que les modèles PDF soient présents dans storage/app/public/.
@@ -445,10 +467,8 @@ class PdfController extends Controller
                 $pdf->SetXY(93, 256);
                 $pdf->Write(10, $data['fait_a']); 
 
-                $pdf->SetXY(130, 256);
-                $fait_le = \DateTime::createFromFormat('Y-m-d', $data['fait_le']);
-                $fait_le = $fait_le ? $fait_le->format('d/m/Y') : '';
-                $pdf->Write(10, $fait_le); 
+                $pdf->SetXY(130, 256);;
+                $pdf->Write(10, ($this->formatDate($data['fait_le']) ?? date('d/m/Y'))); 
 
                 $signatureBase64 = $data['signature'];
                 $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
@@ -582,7 +602,7 @@ class PdfController extends Controller
         $pdf->SetFont('helvetica', 'b', 8);
 
         $pdf->SetXY(31, y: 44);
-        $pdf->Write(10, ($data['date_intervention'] ?? date('d/m/Y')));    
+        $pdf->Write(10, ( $this->formatDate($data['date_intervention']) ?? date('d/m/Y')));    
         $pdf->SetXY(32, 54);
         $pdf->Write(10, ($data['intervenant'] ?? ''));    
         
@@ -614,25 +634,22 @@ class PdfController extends Controller
         $pdf->SetXY(139, 71.5);
         $pdf->Write(10, ($data['portable_client'] ?? ''));  
         
-        $pdf->SetFont('helvetica', 'b', 6.7);
+        $pdf->SetFont('helvetica', '', 6.7);
 
-        $pdf->SetXY(14, 86);
+        $pdf->SetXY(14, 88);
         $pdf->MultiCell(180, 10, ($data['description']."\n" ?? ''));
 
-        $pdf->SetFont('helvetica', '', 9);
-
-        $pdf->SetXY(135, 45);
-        $pdf->Write(10, ($data['nom_client'] ?? ''));  
-	    $pdf->SetFont('helvetica', 'b', 9);  
-        $pdf->SetXY(68, 59.5);
-        $pdf->Write(10, ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? '') . ' ' . ($data['adresse_facturation'] ?? ''));
-
         
-
-        $pdf->SetFont('helvetica', '', 9);
+	    $pdf->SetFont('helvetica', '', 9); 
 
         $pdf->SetXY(68, 45);
-        $pdf->Write(10, ($data['adresse_intervention'] ?? ''));  
+        $pdf->Write(10, ($data['adresse_intervention'] ?? '') . ' ' . ($data['cp_intervention'] ?? '') . ' ' . ($data['ville_intervention'] ?? '') . ' - ' . ($data['lieu_intervention'] ?? ''));  
+
+        $pdf->SetFont('helvetica', '', 9);
+
+        $pdf->SetXY(68, 59.5);
+        $pdf->Write(10, ($data['adresse_facturation'] ?? '') . ' ' . ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? ''));
+
 
         $pdf->SetFont('helvetica', '', 6.3);
 
@@ -641,12 +658,12 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', '', 6.7);
 
-        $pdf->SetXY(67, 193);
+        $pdf->SetXY(67, 194);
         $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['materiel']) ?? '')), 0, 'L');
 
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(67, 228);
+        $pdf->SetXY(67, 229);
         $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['prevoir']) ?? '')), 0, 'L');
 
         $pdf->SetFont('helvetica', '', 11);
@@ -768,7 +785,7 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', 'i', 12);
         $pdf->SetXY( 40, 210);
-        $pdf->Write(12, $data['fait-le'] ?? date('d/m/Y'));
+        $pdf->Write(12, $this->formatDate($data['fait-le']) ?? date('d/m/Y'));
 
         $pdf->SetFont('helvetica', 'i', 14);
         $pdf->SetXY( 14, 226);
@@ -1324,7 +1341,7 @@ class PdfController extends Controller
         $pdf->SetXY(45, 264.5);
         $pdf->Write(10, ($data['qualite_signataire_operateur'] ?? ''));  
         $pdf->SetXY(45, 274);
-        $pdf->Write(10, ($data['date_signature_operateur'] ?? ''));   
+        $pdf->Write(10, ($data['date_signature_operateur'] ?? '')); // Possiblement a refaire pour formater la date dans le format français
 
         $signatureBase64 = $data['signature-operateur'];
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
@@ -1337,7 +1354,7 @@ class PdfController extends Controller
         $pdf->SetXY(125, 264.5);
         $pdf->Write(10, ($data['qualite_signataire_detenteur'] ?? ''));  
         $pdf->SetXY(125, 274);
-        $pdf->Write(10, ($data['date_signature_detenteur'] ?? ''));  
+        $pdf->Write(10, ($data['date_signature_detenteur'] ?? ''));  // Possiblement a refaire pour formater la date dans le format français
 
         $signatureBase64 = $data['signature-detenteur'];
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
@@ -1373,9 +1390,9 @@ class PdfController extends Controller
      *              - Succès : message, path, original_filename
      *              - Erreur : message d'erreur et code HTTP approprié
      *
-     * @throws Exception Si le fichier n'est pas un PDF valide.
-     * @throws Exception Si le token n'existe pas en base.
-     * @throws Exception Si la création du répertoire ou le déplacement du fichier échoue.
+     * @throws \Exception Si le fichier n'est pas un PDF valide.
+     * @throws \Exception Si le token n'existe pas en base.
+     * @throws \Exception Si la création du répertoire ou le déplacement du fichier échoue.
      *
      * @note L'arborescence créée suit le pattern : {organisation_id}/devis/{devis_id}_{token}/
      * @note Tous les uploads sont tracés dans les logs pour audit et sécurité.
@@ -1446,7 +1463,7 @@ class PdfController extends Controller
      *
      * @return mixed Vue 'devis_pdf' avec les données du devis ou erreur 404.
      *
-     * @throws Exception Si le token n'existe pas en base.
+     * @throws \Exception Si le token n'existe pas en base.
      *
      * @note La vue reçoit : client, token, nomDevis, isCertified pour l'affichage conditionnel.
      * @note La vérification de certification recherche un fichier avec suffixe '_certifie.pdf'.
