@@ -72,6 +72,8 @@ class PdfController extends Controller
             return null;
         }
 
+        $date = trim($date, " ");
+
         $date = trim($date);
         $date = str_replace(['/', '-', '.'], '/', $date);
 

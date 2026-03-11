@@ -9,9 +9,9 @@ use App\Models\TokenLinksRapport;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Carbon;
 
 /**
  * @class BiController
@@ -37,6 +37,27 @@ class BiController extends Controller
      * @param string $client Nom du client.
      * @return JsonResponse Liste des documents ou message d’erreur.
      */
+
+     public function formatDate($date): ?string 
+    {
+        // Si la date est vide, nulle ou n'est pas une chaîne exploitable
+        if (empty($date)) {
+            return null;
+        }
+
+        $date = trim($date);
+        $date = str_replace(['/', '-', '.'], '/', $date);
+
+        try {
+            // On tente de créer l'objet Carbon et on le formate immédiatement
+            return Carbon::parse($date)->format('d/m/Y');
+        } catch (\Exception $e) {
+            // En cas d'erreur (mauvais format), on log et on renvoie null
+            Log::error("Format de date invalide : " . $date);
+            return null;
+        }
+    }
+    
     public function getDocuments($client)
     {
         // Récupération du fichier JSON
@@ -323,6 +344,11 @@ class BiController extends Controller
             return view($document, compact('data', 'token', 'uid', 'client', 'document'));
         } else {
 
+        // 
+
+        if (isset($data["date_intervention"])) {
+            $data["date_intervention"] = $this->formatDate($data["date_intervention"]) ?? null;
+        }
         $allOption = ClientController::getOptionsBI($client);
         
         $optionsConstat = [];

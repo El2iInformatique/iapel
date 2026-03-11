@@ -139,7 +139,7 @@ class ClientController extends Controller
                     'intervention_realisable', 'equipier', 'compte_rendu', 'materiel', 
                     'intervention_suite', 'prevoir', 'facturable', 'terminee', 'absent', 
                     'fait-le', 'devis_a_faire', 'constat', 'verification', 
-                    'notes_particulieres', 'points_vigilances', 'signature'
+                    'notes_particulieres', 'points_vigilances', 'signature', "date_intervention"
                 ];
 
                 foreach ($textFields as $field) {

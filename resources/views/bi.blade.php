@@ -78,7 +78,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <strong>{{ $data['adresse_intervention'] }}</strong>
+                                                    <strong>{{ $data['adresse_intervention'] }}</strong><br>
+                                                    {{ $data['cp_intervention'] }} {{ $data['ville_intervention'] }} - {{ $data['lieu_intervention'] }}
                                                 </div>
                                                 <div class="mb-3">
                                                     <button type="button" class="generate-btn" onclick="ouvrirNavigation()">
@@ -88,8 +89,15 @@
                                                 <hr>
                                                 <div class="mb-3">    
                                                     <span class="text-muted">Intervenant :</span> <strong>{{ $data['intervenant'] }}</strong><br>
-                                                    <span class="text-muted">Date :</span>  <strong> {{ $data['date_intervention'] ?? date('d/m/Y') }} </strong>
+                                                    <span class="text-muted">Date prévue :</span>  <strong id="date-intervention-display"> {{ $data['date_intervention'] ?? date('d/m/Y') }} </strong>
                                                 </div>
+                                                <input type="hidden" id="date-intervention-hidden" name="date_intervention" value="{{ $data['date_intervention'] ?? date('d/m/Y') }}">
+                                                <div class="mb-3">
+                                                    <button type="button" class="generate-btn" onclick="modifierDateIntervention()">
+                                                        <i class="bi bi-calendar"></i> Modifier la date
+                                                    </button>
+                                                </div> 
+        
                                             </div>
                                         </div>
                                         <div class="col-md-6 mb-3">
@@ -105,8 +113,10 @@
                                                 <div class="mb-3">
                                                     <strong>{{ $data['nom_client'] }}</strong><br>
                                                     {{ $data['adresse_facturation'] }}<br>
-                                                    {{ $data['cp_facturation'] }} {{ $data['ville_facturation'] }}
+                                                    {{ $data['cp_facturation'] }} {{ $data['ville_facturation'] }}<br>
                                                 </div>
+                                                <div class="mb-3"></div>
+                                                <br>
                                                 <hr>
                                                 <div class="mb-3">
                                                     <span class="text-muted">Code client :</span> <strong>{{ $data['code_client'] }}</strong><br>
@@ -244,7 +254,7 @@
                         <div class="accordion-item mb-3">
                             <h2 class="accordion-header" id="accordion_header_complement">
                                 <button class="accordion-button collapsed rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#accordion_collapse_complement" aria-expanded="false" aria-controls="accordion_collapse_complement">
-                                    <i class="bi bi-images me-2"></i> 3 - Complément
+                                    <i class="bi bi-images me-2"></i> 3 - Supplément Photos
                                 </button>
                             </h2>
                             <div id="accordion_collapse_complement" class="accordion-collapse collapse" aria-labelledby="accordion_header_complement" data-bs-parent="#accordion_bi">
@@ -571,6 +581,103 @@
                 // Google Maps en mode navigation
                 window.open("https://www.google.com/maps/dir/?api=1&destination=" + adresse);
             }
+        }
+
+        function modifierDateIntervention() {
+            // Récupérer les éléments
+            const dateDisplay = document.getElementById('date-intervention-display');
+            const dateInput = document.getElementById('date-intervention-hidden');
+            
+            if (!dateDisplay || !dateInput) {
+                console.error('Éléments de date non trouvés');
+                return;
+            }
+
+            // Récupérer la date actuelle et la convertir au format YYYY-MM-DD
+            const currentDateText = dateDisplay.textContent.trim();
+            const [day, month, year] = currentDateText.split('/');
+            const dateValue = `${year}-${month}-${day}`;
+
+            // Créer et afficher la modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'dateModal';
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('aria-hidden', 'true');
+            
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-calendar"></i> Modifier la date d'intervention
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="newDate" class="form-label">Nouvelle date :</label>
+                                <input type="date" class="form-input" id="newDate" value="${dateValue}">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="button" class="btn btn-primary" id="confirmDateBtn">Confirmer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Afficher la modal
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+
+            // Gérer le clic sur "Confirmer"
+            modal.querySelector('#confirmDateBtn').addEventListener('click', function() {
+                const newDate = modal.querySelector('#newDate').value;
+                
+                if (!newDate) {
+                    alert('Veuillez sélectionner une date');
+                    return;
+                }
+
+                // Convertir le format YYYY-MM-DD en DD/MM/YYYY
+                const [newYear, newMonth, newDay] = newDate.split('-');
+                const formattedDate = `${newDay}/${newMonth}/${newYear}`;
+
+                // Mettre à jour l'affichage
+                dateDisplay.textContent = formattedDate;
+                
+                // Mettre à jour l'input hidden
+                dateInput.value = newDate;
+
+                // Créer une notification de succès
+                const successMsg = document.createElement('div');
+                successMsg.className = 'alert alert-success d-flex align-items-center justify-content-center';
+                successMsg.style.cssText = 'animation: slideDown 0.3s ease-out; position: fixed; top: 10%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; max-width: 400px;';
+                successMsg.innerHTML = '<i class="bi bi-check-circle me-2"></i><strong>Date modifiée</strong> avec succès !';
+                document.body.appendChild(successMsg);
+
+                // Supprimer le message après 3 secondes
+                setTimeout(() => {
+                    successMsg.remove();
+                }, 3000);
+
+                // Fermer la modal
+                bsModal.hide();
+
+                // Supprimer la modal du DOM
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            });
+
+            // Supprimer la modal du DOM quand elle est fermée
+            modal.addEventListener('hidden.bs.modal', function() {
+                modal.remove();
+            });
         }
 
     </script>
