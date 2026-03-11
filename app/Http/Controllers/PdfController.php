@@ -72,6 +72,8 @@ class PdfController extends Controller
             return null;
         }
 
+        $date = trim($date, " ");
+
         $date = trim($date);
         $date = str_replace(['/', '-', '.'], '/', $date);
 
@@ -595,8 +597,8 @@ class PdfController extends Controller
         $pdf->useTemplate($tplIdx);
 
         
-        $pdf->SetFont('helvetica', 'b', 6);
-        $pdf->SetXY(19, 37);
+        $pdf->SetFont('helvetica', 'b', 8);
+        $pdf->SetXY(23, 37);
         $pdf->Write(10, ($this->reformaterTexte($data['dataToken']['uid']) ?? '000'));    
 
         $pdf->SetFont('helvetica', 'b', 8);
@@ -642,12 +644,12 @@ class PdfController extends Controller
         
 	    $pdf->SetFont('helvetica', '', 9); 
 
-        $pdf->SetXY(68, 45);
+        $pdf->SetXY(75, 45);
         $pdf->Write(10, ($data['adresse_intervention'] ?? '') . ' ' . ($data['cp_intervention'] ?? '') . ' ' . ($data['ville_intervention'] ?? '') . ' - ' . ($data['lieu_intervention'] ?? ''));  
 
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(68, 59.5);
+        $pdf->SetXY(75, 59.5);
         $pdf->Write(10, ($data['adresse_facturation'] ?? '') . ' ' . ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? ''));
 
 
@@ -668,28 +670,28 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', '', 11);
         if (isset($data['intervention_realisable']) && ($data['intervention_realisable'] == 'oui')) {            
-            $pdf->SetXY(14.6, 127.6);
+            $pdf->SetXY(15.15, 127.6);
             $pdf->Write(10, 'X');
         }        
         if (isset($data['terminee']) && ($data['terminee'] == 'oui')) {            
-            $pdf->SetXY(14.6, 132.5);
+            $pdf->SetXY(15.15, 143);
             $pdf->Write(10, 'X');
         }
         if (isset($data['intervention_suite']) && ($data['intervention_suite'] == 'oui')) {            
-            $pdf->SetXY(14.6, 137.3);
+            $pdf->SetXY(15.15, 149.7);
             $pdf->Write(10, 'X');
         }
         if (isset($data['facturable']) && ($data['facturable'] == 'oui')) {            
-            $pdf->SetXY(14.6, 142);
+            $pdf->SetXY(15.15, 164.5);
             $pdf->Write(10, 'X');
         }
         if (isset($data['devis_a_faire']) && ($data['devis_a_faire'] == 'oui')) {            
-            $pdf->SetXY(14.6, 146.8);
+            $pdf->SetXY(15.15, 157.3);
             $pdf->Write(10, 'X');
         }
 
         if (isset($data['absent']) && ($data['absent'] == 'oui')) {            
-            $pdf->SetXY(14.6, 160); 
+            $pdf->SetXY(15.15, 133.5); 
             $pdf->Write(10, 'X');
         }
 
@@ -723,8 +725,8 @@ class PdfController extends Controller
             $imagePath = storage_path('app/public/'.$data['photo_apres']);
             if ($imagePath && file_exists($imagePath)) {
                 list($width, $height) = getimagesize($imagePath); // Récupère la taille originale
-                $maxWidth = 62;
-                $maxHeight = 50;
+                $maxWidth = 60;
+                $maxHeight = 48;
                 // Calcul du redimensionnement en conservant le ratio
                 if ($width > $height) {
                     $newWidth = $maxWidth;
@@ -750,41 +752,19 @@ class PdfController extends Controller
             $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
             file_put_contents($signaturePath, $signatureData);
             
-            list($width, $height) = getimagesize($signaturePath); // Récupère la taille 
-
-            $maxWidth = 60;
-            $maxHeight = 18;
-
-            // Calcul du redimensionnement en conservant le ratio
-            if ($width > $height) {
-                $newWidth = $maxWidth;
-                $newHeight = ($height / $width) * $maxWidth;
-            } else {
-                $newHeight = $maxHeight;
-                $newWidth = ($width / $height) * $maxHeight;
-            }
-            // Calcul des positions pour centrer dans le carré
-            $xImage = 12 + ($maxWidth - $newWidth) ;
-            $yImage = 188 + ($maxHeight - $newHeight);
-
-            if ($isAndroid === "1") {
-                $newWidth /= 1.5;
-                $newHeight /= 1.5;
-
-                $yImage += 10;
-            }
-            else {
-                $newWidth /= 1.3;
-                $newHeight /= 1.3;
-            }
+            // Taille fixe de la signature (indépendante de PC/téléphone)
+            $signatureWidth = 50;  // Largeur fixe en mm
+            $signatureHeight = 15; // Hauteur fixe en mm
             
-            $pdf->Image($signaturePath, $xImage + 2, $yImage + 7, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
-
-                                  
+            // Position fixe de la signature
+            $xImage = 12;  // Position X
+            $yImage = 197; // Position Y
+            
+            $pdf->Image($signaturePath, $xImage, $yImage, $signatureWidth, $signatureHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
         }
 
         $pdf->SetFont('helvetica', 'i', 12);
-        $pdf->SetXY( 40, 210);
+        $pdf->SetXY( 40, 212);
         $pdf->Write(12, $this->formatDate($data['fait-le']) ?? date('d/m/Y'));
 
         $pdf->SetFont('helvetica', 'i', 14);
@@ -1140,100 +1120,107 @@ class PdfController extends Controller
         
         $pdf->SetFont('helvetica', '', 8);    
 
+        if (isset($data['hcfc'])) {
+            if ($data['hcfc'] == '2-30') {
+                $x = 107;   
+                $y = 109.5;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');      
+            }
+            elseif ($data['hcfc'] == '30-300') { 
+                $x = 138;  
+                $y = 109.5;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');     
+            }
+            elseif ($data['hcfc'] == '300') {
+                $x = 168.5;  
+                $y = 109.5;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');       
+            }    
+        }
+        if (isset($data['hfc_pfc'])) {
+            if ($data['hfc_pfc'] == '5-50') {
+                $x = 107;     
+                $y = 114;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');  
+            }
+            elseif ($data['hfc_pfc'] == '50-500') {
+                $x = 138;  
+                $y = 114;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');     
+            }
+            elseif ($data['hfc_pfc'] == '500') {
+                $x = 168.5;
+                $y = 114;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');  
+            }  
+        }
+        if (isset($data['hfo'])) {
+            if ($data['hfo'] == '1-10') {
+                $x = 107;     
+                $y = 119;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');  
+            }
+            elseif ($data['hfo'] == '10-100') {
+                $x = 138;  
+                $y = 119;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');     
+            }
+            elseif ($data['hfo'] == '100') {
+                $x = 168.5;
+                $y = 119;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');  
+            }  
+        }
+        if (isset($data['equipement_sans_detection']))
+        {
+            if ($data['equipement_sans_detection'] == 'sans12') {
+                $x = 107;   
+                $y = 123;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');   
+            }
+            elseif ($data['equipement_sans_detection'] == 'sans6') { 
+                $x = 138;  
+                $y = 123;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');   
+            }
+            elseif ($data['equipement_sans_detection'] == 'sans3') {
+                $x = 168.5;
+                $y = 123.2;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');   
+            } 
+        }
 
-        if ($data['hcfc'] == '2-30') {
-            $x = 107;   
-            $y = 109.5;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');      
-        }
-        elseif ($data['hcfc'] == '30-300') { 
-            $x = 138;  
-            $y = 109.5;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');     
-        }
-        elseif ($data['hcfc'] == '300') {
-            $x = 168.5;  
-            $y = 109.5;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');       
-        }    
-
-        if ($data['hfc_pfc'] == '5-50') {
-            $x = 107;     
-            $y = 114;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');  
-        }
-        elseif ($data['hfc_pfc'] == '50-500') {
-            $x = 138;  
-            $y = 114;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');     
-        }
-        elseif ($data['hfc_pfc'] == '500') {
-            $x = 168.5;
-            $y = 114;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');  
-        }  
-
-        if ($data['hfo'] == '1-10') {
-            $x = 107;     
-            $y = 119;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');  
-        }
-        elseif ($data['hfo'] == '10-100') {
-            $x = 138;  
-            $y = 119;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');     
-        }
-        elseif ($data['hfo'] == '100') {
-            $x = 168.5;
-            $y = 119;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');  
-        }  
-
-        if ($data['equipement_sans_detection'] == 'sans12') {
-            $x = 107;   
-            $y = 123;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');   
-        }
-        elseif ($data['equipement_sans_detection'] == 'sans6') { 
-            $x = 138;  
-            $y = 123;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');   
-        }
-        elseif ($data['equipement_sans_detection'] == 'sans3') {
-            $x = 168.5;
-            $y = 123.2;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');   
-        } 
-
-        if ($data['equipement_avec_detection'] == 'avec24') {
-            $x = 107;   
-            $y = 128;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');   
-        }
-        elseif ($data['equipement_avec_detection'] == 'avec12') { 
-            $x = 138;  
-            $y = 128;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');   
-        }
-        elseif ($data['equipement_avec_detection'] == 'avec6') {
-            $x = 168.5;
-            $y = 128;
-            $pdf->SetXY($x, $y);
-            $pdf->Write(10, 'X');   
+        if (isset($data['equipement_avec_detection'])) {
+            if ($data['equipement_avec_detection'] == 'avec24') {
+                $x = 107;   
+                $y = 128;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');   
+            }
+            elseif ($data['equipement_avec_detection'] == 'avec12') { 
+                $x = 138;  
+                $y = 128;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');   
+            }
+            elseif ($data['equipement_avec_detection'] == 'avec6') {
+                $x = 168.5;
+                $y = 128;
+                $pdf->SetXY($x, $y);
+                $pdf->Write(10, 'X');   
+            }
         }
         
         if ($data['constat_fuites'] == 'oui') {
@@ -1347,7 +1334,8 @@ class PdfController extends Controller
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
         $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_operateur.png');
         file_put_contents($signaturePath, $signatureData);
-        $pdf->Image($signaturePath, 75, 275, 28, 6);
+        // Taille fixe pour la signature opérateur
+        $pdf->Image($signaturePath, 67, 275, 35, 6.5);
         
         $pdf->SetXY(125, 258);
         $pdf->Write(10, ($data['nom_signataire_detenteur'] ?? ''));   
@@ -1360,7 +1348,8 @@ class PdfController extends Controller
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
         $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_detenteur.png');
         file_put_contents($signaturePath, $signatureData);
-        $pdf->Image($signaturePath, 155, 275, 28, 6);
+        // Taille fixe pour la signature détenteur
+        $pdf->Image($signaturePath, 147, 275, 35, 6.5);
 
         // Aplatir le PDF en l'empêchant d'être modifié
         $pdf->Output($outputPath,'F'); 

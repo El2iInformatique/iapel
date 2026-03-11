@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TokenController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -43,9 +44,6 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
 
     // Data d'un document
     Route::get('/open/{token}', [BiController::class, 'open'])->middleware('VerifTokenAndSecretToken');
-
-    // Suppression d'un document
-    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('VerifTokenAndSecretToken');
     
 });
 

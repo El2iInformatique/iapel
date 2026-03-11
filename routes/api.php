@@ -18,4 +18,9 @@ Route::prefix('api')->group(function () {
     Route::post('/create-json', [BiController::class, 'createJson'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('VerifSecretToken');
+
+    //Suppression d'un document
+    Route::delete('/delete/{token}', [BiController::class, 'delete'])
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('VerifTokenAndSecretToken');
 });
