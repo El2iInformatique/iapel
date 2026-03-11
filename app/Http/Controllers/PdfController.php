@@ -494,7 +494,7 @@ class PdfController extends Controller
     
     public function checkExistAndIsValidePdf($jsonPath, $client, $document, $uid): bool 
     {
-        //return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
+        return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
 
         $pdfFile = $jsonPath 
             ? str_replace('.json', '.pdf', $jsonPath) 
@@ -597,8 +597,8 @@ class PdfController extends Controller
         $pdf->useTemplate($tplIdx);
 
         
-        $pdf->SetFont('helvetica', 'b', 6);
-        $pdf->SetXY(19, 37);
+        $pdf->SetFont('helvetica', 'b', 8);
+        $pdf->SetXY(23, 37);
         $pdf->Write(10, ($this->reformaterTexte($data['dataToken']['uid']) ?? '000'));    
 
         $pdf->SetFont('helvetica', 'b', 8);
@@ -644,12 +644,12 @@ class PdfController extends Controller
         
 	    $pdf->SetFont('helvetica', '', 9); 
 
-        $pdf->SetXY(68, 45);
+        $pdf->SetXY(75, 45);
         $pdf->Write(10, ($data['adresse_intervention'] ?? '') . ' ' . ($data['cp_intervention'] ?? '') . ' ' . ($data['ville_intervention'] ?? '') . ' - ' . ($data['lieu_intervention'] ?? ''));  
 
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(68, 59.5);
+        $pdf->SetXY(75, 59.5);
         $pdf->Write(10, ($data['adresse_facturation'] ?? '') . ' ' . ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? ''));
 
 
@@ -670,28 +670,28 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', '', 11);
         if (isset($data['intervention_realisable']) && ($data['intervention_realisable'] == 'oui')) {            
-            $pdf->SetXY(14.6, 127.6);
+            $pdf->SetXY(15.15, 127.6);
             $pdf->Write(10, 'X');
         }        
         if (isset($data['terminee']) && ($data['terminee'] == 'oui')) {            
-            $pdf->SetXY(14.6, 132.5);
+            $pdf->SetXY(15.15, 143);
             $pdf->Write(10, 'X');
         }
         if (isset($data['intervention_suite']) && ($data['intervention_suite'] == 'oui')) {            
-            $pdf->SetXY(14.6, 137.3);
+            $pdf->SetXY(15.15, 149.7);
             $pdf->Write(10, 'X');
         }
         if (isset($data['facturable']) && ($data['facturable'] == 'oui')) {            
-            $pdf->SetXY(14.6, 142);
+            $pdf->SetXY(15.15, 164.5);
             $pdf->Write(10, 'X');
         }
         if (isset($data['devis_a_faire']) && ($data['devis_a_faire'] == 'oui')) {            
-            $pdf->SetXY(14.6, 146.8);
+            $pdf->SetXY(15.15, 157.3);
             $pdf->Write(10, 'X');
         }
 
         if (isset($data['absent']) && ($data['absent'] == 'oui')) {            
-            $pdf->SetXY(15.15, 160); 
+            $pdf->SetXY(15.15, 133.5); 
             $pdf->Write(10, 'X');
         }
 
