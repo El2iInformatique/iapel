@@ -494,7 +494,7 @@ class PdfController extends Controller
     
     public function checkExistAndIsValidePdf($jsonPath, $client, $document, $uid): bool 
     {
-        return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
+        //return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
 
         $pdfFile = $jsonPath 
             ? str_replace('.json', '.pdf', $jsonPath) 
