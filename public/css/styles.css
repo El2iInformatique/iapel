@@ -4,6 +4,11 @@ body {
     background-repeat: repeat;
 }
 
+.required-asterisk {
+    color: red;
+    margin-left: 0.25rem;
+}
+
 .card {
     background-color: #ffffff;
 }
@@ -102,6 +107,16 @@ body {
     padding: 0;
     font-weight: 400;
 }
+
+
+a:link {
+    color: var(--primary-purple);
+}
+
+a:visited {
+    color: var(--accent-orange-dark);
+}
+
 
 .main-wrapper {
     min-height: 100vh;

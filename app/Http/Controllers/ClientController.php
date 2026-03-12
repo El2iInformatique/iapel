@@ -20,11 +20,48 @@ class ClientController extends Controller
     }
 
     /**
+     * Crée le fichier Options_BI.json avec une structure par défaut s'il n'existe pas.
+     * * @param string $client Le nom du client (dossier)
+     * @return bool True si créé avec succès, False s'il existe déjà ou en cas d'erreur
+     */
+    public static function createBiOptionFile(string $client): bool 
+    {
+        $optionFile = "{$client}/Options_BI.json";
+
+        // Si le fichier existe déjà, on ne l'écrase pas et on s'arrête là
+        if (Storage::disk('public')->exists($optionFile)) {
+            return false; 
+        }
+
+        // On prépare la structure de base en PHP (tableaux)
+        $defaultData = [
+            "Constat"           => [""],
+            "Verification"      => [""],
+            "NotesParticuliere" => [""],
+            "PointVigilance"    => [""]
+        ];
+
+        try {
+            // On transforme le tableau PHP en JSON bien formaté et on sauvegarde
+            $stored = Storage::disk('public')->put(
+                $optionFile,
+                json_encode($defaultData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            return $stored; // Retourne true si l'écriture s'est bien passée
+
+        } catch (\Exception $e) {
+            \Log::error("[OPTIONS_BI] Erreur de création pour le client {$client}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public static function create($client, $document, $uid, $validated = null): bool
     {
-        if (empty($client) || empty($document) || empty($uid)) {
+        if (empty($client) || empty($document) || empty($uid) || !is_array($validated)) {
             return false;
         }
 
@@ -42,6 +79,7 @@ class ClientController extends Controller
 
 
         try {
+            
              // On fusionne les champs extra (ceux qui ne sont pas dans le bloc dataToken)
             $extraFields = array_diff_key($validated, array_flip(['uid', 'client', 'document']));
             $jsonData = array_merge($jsonData, $extraFields);
@@ -55,6 +93,26 @@ class ClientController extends Controller
             // On s'assure que le fichier a bien été écrit sur le disque
             if (!$stored) {
                 throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
+            }
+
+            if ($document === "rapport_intervention") {
+                $optionFile = "{$client}/Options_BI.json";
+
+                if (!Storage::disk('public')->exists($optionFile)) {
+                    if (!ClientController::createBiOptionFile($client)) {
+                        Log::warning("Erreur lors de la création du fichier de configuration du BI : " . $optionFile);
+                    }
+                }
+            }
+            // A utiliser plus tard -- Inutiliser actuellement
+            else if ($document === "cerfa_15497") {
+                $optionFile = "{$client}/Options_Cerfa.json";
+
+                if (!Storage::disk('public')->exists($optionFile)) {
+                    if (!ClientController::createBiOptionFile($client)) {
+                        Log::warning("Erreur lors de la création du fichier de configuration du BI : " . $optionFile);
+                    }
+                }
             }
 
         } catch (\Exception $e) {
@@ -119,6 +177,11 @@ class ClientController extends Controller
 
     /**
      * Traite et met à jour les données d'un document existant.
+     * 
+     * Cette méthode fusionne les données existantes avec les nouvelles entrées de la requête.
+     * Le traitement varie selon le type de document (rapport_intervention vs cerfa_15497)
+     * car ils ont des structures de données différentes.
+     * 
      * @param string $client Le nom du client
      * @param string $document Le type de document (rapport_intervention, cerfa...)
      * @param string $uid L'identifiant unique du document
@@ -131,6 +194,8 @@ class ClientController extends Controller
         try {
             $data = $existingData;
 
+            // === TRAITEMENT DIFFÉRENCIÉ PAR TYPE DE DOCUMENT ===
+            // Chaque type a sa propre logique de mise à jour (champs texte, images, signatures, etc.)
             if ($document == 'rapport_intervention') {
                 $biPath = $client . '/' . $document . '/' . $uid;
                 
@@ -144,7 +209,14 @@ class ClientController extends Controller
 
                 foreach ($textFields as $field) {
                     if ($request->has($field)) {
-                        $data[$field] = $request->input($field);
+                        // Si le champ est dans la requête, on force null en ""
+                        $val = $request->input($field);
+                        $data[$field] = $val === null ? "" : $val;
+                    } else {
+                        // Si le champ n'est pas dans la requête et n'existe pas (ou est null) dans les data existantes
+                        if (!isset($data[$field]) || $data[$field] === null) {
+                            $data[$field] = "";
+                        }
                     }
                 }
 
@@ -195,16 +267,23 @@ class ClientController extends Controller
 
                 foreach ($cerfaFields as $field) {
                     if ($request->has($field)) {
-                        $data[$field] = $request->input($field);
+                        // Si le champ est dans la requête, on force null en ""
+                        $val = $request->input($field);
+                        $data[$field] = $val === null ? "" : $val;
+                    } else {
+                        // Si le champ n'est pas dans la requête et n'existe pas (ou est null) dans les data existantes
+                        if (!isset($data[$field]) || $data[$field] === null) {
+                            $data[$field] = "";
+                        }
                     }
                 }
 
-                // Gestion des signatures et dates
+                // Gestion des signatures et dates (remplacement des null par "")
                 $data['date_signature_operateur'] = date('d/m/Y');
-                $data['signature-operateur'] = $request->input('signature-operateur') ?: null;
+                $data['signature-operateur'] = $request->input('signature-operateur') ?: "";
 
                 $data['date_signature_detenteur'] = date('d/m/Y');
-                $data['signature-detenteur'] = $request->input('signature-detenteur') ?: null;
+                $data['signature-detenteur'] = $request->input('signature-detenteur') ?: "";
             } 
 
             // Sauvegarde sécurisée via la façade Storage de Laravel
@@ -242,12 +321,17 @@ class ClientController extends Controller
     public static function getAllDocuments(string $entreprise): array
     {
         $basePath = "$entreprise";
+        // === RÉCUPÉRATION DE TOUS LES FICHIERS ===
+        // Charge la liste complète des fichiers du client depuis le storage
         $files = Storage::disk('public')->allFiles($basePath);
 
-        // Sépare proprement les fichiers "devis", "rapport_intervention", "cerfa_15497" et les autres
+        // === CLASSIFICATION DES FICHIERS PAR TYPE ===
+        // Sépare les fichiers en 4 catégories distinctes selon leur chemin
+        // Cette approche permet un traitement différencié pour chaque type de document
         $lesDevisFiles = array_filter($files, fn($f) => strpos($f, '/devis/') !== false);
         $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
         $lesCerfas15497 = array_filter($files, fn($f) => strpos($f, '/cerfa_15497/') !== false);
+        // Les fichiers qui ne correspondent à aucune catégorie (fichiers administratifs, formats, etc.)
         $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false && strpos($f, '/cerfa_15497/') === false);
 
         // Chargement des règles de format
@@ -258,14 +342,17 @@ class ClientController extends Controller
             $formatRules = json_decode($formatContent, true);
         }
 
-        $nTotal = 0;
-        $nDevis = 0;
-        $nBi = 0;
-        $nCerfa = 0;
+        // === COMPTEURS POUR LES STATISTIQUES ===
+        $nTotal = 0;   // Nombre total de documents
+        $nDevis = 0;   // Nombre de devis
+        $nBi = 0;      // Nombre de bulletins d'intervention
+        $nCerfa = 0;   // Nombre de formulaires CERFA
 
         // ==========================================
         // 1. TRAITEMENT DES DEVIS
         // ==========================================
+        // Groupe les devis par dossier (plusieurs fichiers peuvent être dans le même dossier:
+        // devis.pdf, devis_certifie.pdf, devis.json, etc.)
         $devisTraites = [];
         foreach ($lesDevisFiles as $file) {
             $parts = explode('/', $file);
@@ -405,9 +492,12 @@ class ClientController extends Controller
         // ==========================================
         // 4. CONSTRUCTION DU TABLEAU FINAL DE DOCUMENTS
         // ==========================================
+        // Fusionne les 3 types de documents dans un seul tableau avec structure unifiée
+        // Chaque document contient: path, status (draft/signed/etc.), date, et métadonnées
         $documents = [];
         
-        // Finalisation Devis
+        // === FINALISATION DEVIS ===
+        // Convertit les devis traités en structure standardisée pour le frontend
         foreach ($devisTraites as $folder => $d) {
             $status = $d['has_certifie'] ? 'certifie' : '';
             $traitTs = $d['normal_last'] ?? $d['certifie_last'];
@@ -597,7 +687,9 @@ class ClientController extends Controller
 
         // Ajouter nombre de documents total et chaque type dans une balise metadata.
 
-        // Filtrage final pour ne renvoyer que les dossiers valides
+        // === FILTRAGE FINAL ===
+        // Supprime les documents mal formés (sans chemin valide) et réindexe le tableau
+        // array_values() réinitialise les clés numériques pour éviter les trous d'indices
         return array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
     }
 
