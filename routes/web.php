@@ -25,7 +25,7 @@ require base_path('routes/api.php');
 
 
 RateLimiter::for('anti-bruteforce-rapport', function (Request $request) {
-    return Limit::perMinute(15)->by($request->ip()); // 15 requêtes par minute par IP
+    return Limit::perMinute(20)->by($request->ip()); // 20 requêtes par minute par IP
 });
 
 Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {

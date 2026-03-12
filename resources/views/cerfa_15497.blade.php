@@ -17,6 +17,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 
+    <style>
+        .required-asterisk {
+            color: red;
+            margin-left: 0.25rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -415,7 +421,7 @@
                                 </div>
 
                                 <!-- Signature -->
-                                <h5 class="mt-4">Signature</h5>
+                                <h5 class="mt-4">Signature <span class="required-asterisk">*</span></h5>
                                 <hr>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -431,7 +437,7 @@
                                             <input type="text" class="form-input" id="qualite_signataire_operateur" name="qualite_signataire_operateur" value="{{ old('qualite_signataire_operateur') }}" maxlength="27">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature :</label>
+                                            <label class="form-label">Signature <span class="required-asterisk">*</span></label>
                                             <canvas id="signature-pad-operateur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-operateur" id="signature-operateur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-operateur">Effacer</button>
@@ -450,7 +456,7 @@
                                             <input type="text" class="form-input" id="qualite_signataire_detenteur" name="qualite_signataire_detenteur" value="{{ old('qualite_signataire_detenteur') }}" maxlength="26">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature :</label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
+                                            <label class="form-label">Signature <span class="required-asterisk">*</span></label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-detenteur" id="signature-detenteur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-detenteur">Effacer</button>
                                         </div>
@@ -595,9 +601,102 @@
             signatureInputOperateur.value = "";
         });
 
-        // S'assurer que la signature est bien enregistrée avant soumission
+        // S'assurer que les deux signatures sont bien enregistrées avant soumission
         form.addEventListener("submit", function (event) {
-            saveSignature(); // Enregistre la signature avant l'envoi
+            saveSignature(); // Enregistre les signatures avant l'envoi
+
+            // Vérifier que les deux signatures ne sont pas vides
+            if (signatureInputOperateur.value === "" || signaturePadOperateur.isEmpty()) {
+                event.preventDefault(); // Empêcher la soumission
+                
+                // Créer et afficher un message d'erreur
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "alert alert-danger";
+                errorMsg.style.cssText = "animation: slideDown 0.3s ease-out; border-left: 5px solid #dc3545; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);";
+                errorMsg.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #dc3545;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="alert-heading mb-2" style="color: #dc3545;">
+                                <strong>Signature de l'Opérateur manquante</strong>
+                            </h5>
+                            <p class="mb-0">
+                                Vous devez signer dans la section <strong>Signature - Opérateur</strong> avant de pouvoir générer le PDF.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                errorMsg.id = "signature-operateur-error";
+                
+                // Supprimer l'ancien message s'il existe
+                const existingError = document.getElementById("signature-operateur-error");
+                if (existingError) existingError.remove();
+                
+                // Insérer le message au début du formulaire
+                form.insertBefore(errorMsg, form.firstChild);
+                
+                // Faire défiler jusqu'au message d'erreur
+                setTimeout(() => {
+                    errorMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 100);
+                
+                // Supprimer le message après 10 secondes
+                setTimeout(() => {
+                    if (errorMsg.parentNode) {
+                        errorMsg.remove();
+                    }
+                }, 10000);
+                
+                return; // Arrêter le traitement
+            }
+
+            if (signatureInputDetenteur.value === "" || signaturePadDetenteur.isEmpty()) {
+                event.preventDefault(); // Empêcher la soumission
+                
+                // Créer et afficher un message d'erreur
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "alert alert-danger";
+                errorMsg.style.cssText = "animation: slideDown 0.3s ease-out; border-left: 5px solid #dc3545; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);";
+                errorMsg.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #dc3545;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="alert-heading mb-2" style="color: #dc3545;">
+                                <strong>Signature du Détenteur manquante</strong>
+                            </h5>
+                            <p class="mb-0">
+                                Vous devez signer dans la section <strong>Signature - Détenteur</strong> avant de pouvoir générer le PDF.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                errorMsg.id = "signature-detenteur-error";
+                
+                // Supprimer l'ancien message s'il existe
+                const existingError = document.getElementById("signature-detenteur-error");
+                if (existingError) existingError.remove();
+                
+                // Insérer le message au début du formulaire
+                form.insertBefore(errorMsg, form.firstChild);
+                
+                // Faire défiler jusqu'au message d'erreur
+                setTimeout(() => {
+                    errorMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 100);
+                
+                // Supprimer le message après 10 secondes
+                setTimeout(() => {
+                    if (errorMsg.parentNode) {
+                        errorMsg.remove();
+                    }
+                }, 10000);
+                
+                return; // Arrêter le traitement
+            }
         });
     });
 </script>

@@ -25,6 +25,12 @@
     <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     
+    <style>
+        .required-asterisk {
+            color: red;
+            margin-left: 0.25rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -78,7 +84,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <strong>{{ $data['adresse_intervention'] }}</strong><br>
+                                                    {{ $data['adresse_intervention'] }}<br>
                                                     {{ $data['cp_intervention'] }} {{ $data['ville_intervention'] }} - {{ $data['lieu_intervention'] }}
                                                 </div>
                                                 <div class="mb-3">
@@ -120,7 +126,7 @@
                                                 <hr>
                                                 <div class="mb-3">
                                                     <span class="text-muted">Code client :</span> <strong>{{ $data['code_client'] }}</strong><br>
-                                                    <span class="text-muted">Email :</span> <strong>{{ $data['email_client'] }}</strong><br>
+                                                    <span class="text-muted">Email :</span> <strong> <a href="mailto:{{ $data['email_client'] }}">{{ $data['email_client'] }}</a></strong><br>
                                                     <span class="text-muted">Téléphone :</span> <strong>{{ $data['telephone_client'] }}</strong><br>
                                                     <span class="text-muted">Portable :</span> <strong>{{ $data['portable_client'] }}</strong>
                                                 </div>
@@ -151,7 +157,7 @@
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <div class="form-group">
-                                                    <label for="equipier" class="form-label">Equipier :</label>
+                                                    <label for="equipier" class="form-label">Equipier :<span class="required-asterisk">*</span></label>
                                                     <input type="text" class="form-input" id="equipier" name="equipier" value="{{ $data['equipier'] ?? '' }}" maxlength="30">
                                                 </div>
                                             </div>
@@ -327,7 +333,7 @@
 
                     <!-- Gestion de la signature -->
                     <div class="signature-section mt-4">     
-                        <h3 class="signature-title"><i class="bi bi-pencil-square"></i> Signature</h3>
+                        <h3 class="signature-title"><i class="bi bi-pencil-square"></i> Signature <span class="required-asterisk">*</span></h3>
                         <p class="text-muted small mb-3">Signature du client ou de son représentant :</p>
                         
                         <canvas id="signature-pad" class="signature-canvas w-100" style="height: 250px;"></canvas>
@@ -918,15 +924,97 @@
                 
                 saveSignature(); // Enregistre la signature avant l'envoi
 
+                // Récupérer l'équipier et les éléments de la section Réalisation
+                const equipierInput = document.getElementById("equipier");
+                const realisationSection = document.getElementById("accordion_collapse_realisation");
+                const realisationButton = document.querySelector('[data-bs-target="#accordion_collapse_realisation"]');
+
+                // Vérifier que l'équipier est rempli
+                if (!equipierInput.value || equipierInput.value.trim() === "") {
+                    event.preventDefault(); // Empêcher la soumission
+                    
+                    // Ouvrir la section Réalisation si elle est fermée
+                    if (realisationSection && !realisationSection.classList.contains("show")) {
+                        realisationButton.click();
+                        
+                        // Attendre que la section s'ouvre avant de faire le focus
+                        setTimeout(() => {
+                            equipierInput.focus();
+                        }, 400);
+                    } else {
+                        // Si la section est déjà ouverte, focus immédiat
+                        equipierInput.focus();
+                    }
+                    
+                    // Créer et afficher un message d'erreur
+                    const errorMsg = document.createElement("div");
+                    errorMsg.className = "alert alert-danger";
+                    errorMsg.style.cssText = "animation: slideDown 0.3s ease-out; border-left: 5px solid #dc3545; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);";
+                    errorMsg.innerHTML = `
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #dc3545;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="alert-heading mb-2" style="color: #dc3545;">
+                                    <strong>Champ obligatoire manquant</strong>
+                                </h5>
+                                <p class="mb-0">
+                                    Vous devez remplir le champ <strong>Equipier</strong> dans la section <strong>2 - Réalisation</strong> avant de pouvoir générer le PDF.
+                                </p>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle"></i> La section s'est ouverte automatiquement pour vous.
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                    errorMsg.id = "equipier-error";
+                    
+                    // Supprimer l'ancien message s'il existe
+                    const existingError = document.getElementById("equipier-error");
+                    if (existingError) existingError.remove();
+                    
+                    // Insérer le message au début du formulaire
+                    form.insertBefore(errorMsg, form.firstChild);
+                    
+                    // Faire défiler jusqu'au message d'erreur
+                    setTimeout(() => {
+                        errorMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 100);
+                    
+                    // Supprimer le message après 5 secondes
+                    setTimeout(() => {
+                        if (errorMsg.parentNode) {
+                            errorMsg.remove();
+                        }
+                    }, 10000);
+                    
+                    return; // Arrêter le traitement
+                }
+
                 // Vérifier que la signature n'est pas vide
                 if (!signatureInput.value || signaturePad.isEmpty()) {
                     event.preventDefault(); // Empêcher la soumission
                     
                     // Créer et afficher un message d'erreur en rouge
                     const errorMsg = document.createElement("div");
-                    errorMsg.className = "alert alert-danger d-flex align-items-center";
-                    errorMsg.style.cssText = "animation: slideDown 0.3s ease-out;";
-                    errorMsg.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i><strong>Une signature est requise</strong> &nbsp pour générer le PDF. Veuillez signer avant de continuer.';
+                    errorMsg.className = "alert alert-danger";
+                    errorMsg.style.cssText = "animation: slideDown 0.3s ease-out; border-left: 5px solid #dc3545; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);";
+                    errorMsg.innerHTML = `
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #dc3545;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="alert-heading mb-2" style="color: #dc3545;">
+                                    <strong>Signature manquante</strong>
+                                </h5>
+                                <p class="mb-0">
+                                    Une signature est requise pour générer le PDF. Veuillez signer dans la section Signature ci-dessous.
+                                </p>
+                            </div>
+                        </div>
+                    `;
                     errorMsg.id = "signature-error";
                     
                     // Supprimer l'ancien message s'il existe
