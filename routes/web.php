@@ -44,6 +44,14 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
 
     // Data d'un document
     Route::get('/open/{token}', [BiController::class, 'open'])->middleware('VerifTokenAndSecretToken');
+
+    //Suppression d'un document
+    Route::delete('/delete/{token}', [BiController::class, 'delete'])
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('VerifTokenAndSecretToken'); //Legacy
+
+    // Téléchargement du document d'intervention réalisé
+    Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken'); // Legacy
     
 });
 
@@ -63,8 +71,6 @@ Route::post('/revision/check', [RevisionController::class, 'check'])->name('revi
 // Listing des documents disponibles pour un client
 Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
 
-// Téléchargement du document d'intervention réalisé
-Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken');
 // Fonction de vérification de l'état du document d'intervention
 Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check'])->middleware('VerifSecretToken');
 // Listing de tous les documents enregistrés pour un client

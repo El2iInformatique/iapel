@@ -22,6 +22,13 @@
             color: red;
             margin-left: 0.25rem;
         }
+        input:disabled, input[disabled], textarea:disabled, textarea[disabled] {
+            background-color: #d3d3d3 !important;
+            color: #666666 !important;
+            cursor: not-allowed !important;
+            opacity: 1 !important;
+            border: 1px solid #999999 !important;
+        }
     </style>
 </head>
 <body>
@@ -51,7 +58,7 @@
                                 </div>
                                 <div class="mb-3">
                                 <label for="numero_attestation_capacite" class="form-label">Numéro d'attestation de capacité :</label>
-                                    <input type="text" class="form-input" id="numero_attestation_capacite" name="numero_attestation_capacite" value="{{ old('numero_attestation_capacite') }}" maxlength="14">
+                                    <input type="text" class="form-input" id="numero_attestation_capacite" name="numero_attestation_capacite" value="{{ old('numero_attestation_capacite') }}" maxlength="22">
                                 </div>
 
                                 <h5 class="mt-4">[2] Détenteur</h5>
@@ -79,11 +86,11 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="charge" class="form-label">Charge totale (en kg) :</label>
-                                        <input type="text" class="form-input" id="charge" name="charge" value="{{ old('charge') }}" maxlength="7">
+                                        <input type="number" class="form-input" id="charge" name="charge" value="{{ old('charge') }}" maxlength="7" min="0" step="0.01">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="tonnage" class="form-label">Tonnage équivalent CO² (t. éq CO2) :</label>
-                                        <input type="text" class="form-input" id="tonnage" name="tonnage" value="{{ old('tonnage') }}" maxlength="5">
+                                        <input type="number" class="form-input" id="tonnage" name="tonnage" value="{{ old('tonnage') }}" maxlength="5" min="0" step="0.01">
                                     </div>
                                 </div>
 
@@ -133,7 +140,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <input type="text" class="form-input" id="autre_valeur" name="autre_valeur" value="{{ old('autre_valeur') }}" maxlength="14">
+                                            <input type="text" class="form-input" id="autre_valeur" name="autre_valeur" value="{{ old('autre_valeur') }}" maxlength="14" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -331,11 +338,11 @@
                                     <div class="col-md-6">
                                          <div class="mb-3">
                                             <label for="quantite_chargee_totale" class="form-label" >Quantité chargée totale (A+B+C) (kg) :</label>
-                                            <input type="text" class="form-input" id="quantite_chargee_totale" name="quantite_chargee_totale" value="{{ old('quantite_chargee_totale') }}" maxlength="8">
+                                            <input type="number" class="form-input" id="quantite_chargee_totale" name="quantite_chargee_totale" value="{{ old('quantite_chargee_totale') }}" maxlength="8" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_chargee_A" class="form-label">A - Dont fluide vierge (kg) :</label>
-                                            <input type="text" class="form-input" id="quantite_chargee_A" name="quantite_chargee_A" value="{{ old('quantite_chargee_A') }}" maxlength="8">
+                                            <input type="number" class="form-input" id="quantite_chargee_A" name="quantite_chargee_A" value="{{ old('quantite_chargee_A') }}" maxlength="8" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="fluide_A" class="form-label">Dénomination du fluide chargé si changement :</label>
@@ -343,29 +350,29 @@
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_chargee_B" class="form-label">B - Dont fluide recyclé (fluide récupéré et réintrooduit) (kg) :</label>
-                                            <input type="text" class="form-input" id="quantite_chargee_B" name="quantite_chargee_B" value="{{ old('quantite_chargee_B') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_chargee_B" name="quantite_chargee_B" value="{{ old('quantite_chargee_B') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_chargee_C" class="form-label">C - Dont fluide régénéré (kg) :</label>
-                                            <input type="text" class="form-input" id="quantite_chargee_C" name="quantite_chargee_C" value="{{ old('quantite_chargee_C') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_chargee_C" name="quantite_chargee_C" value="{{ old('quantite_chargee_C') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                          <div class="mb-3">
                                             <label for="quantite_recuperee_totale" class="form-label">Quantité de fluide récupérée totale (D+E) (kg) :</label>
-                                            <input type="text" class="form-input" id="quantite_recuperee_totale" name="quantite_recuperee_totale" value="{{ old('quantite_recuperee_totale') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_recuperee_totale" name="quantite_recuperee_totale" value="{{ old('quantite_recuperee_totale') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_recuperee_D" class="form-label">D - Dont fluide destiné au traitement (kg) :</label>
-                                            <input type="text" class="form-input" id="quantite_recuperee_D" name="quantite_recuperee_D" value="{{ old('quantite_recuperee_D') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_recuperee_D" name="quantite_recuperee_D" value="{{ old('quantite_recuperee_D') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="BSFF" class="form-label">Si connu, numéro du BSFF (Trackdéchets) :</label>
-                                            <input type="text" class="form-input" id="BSFF" name="BSFF" value="{{ old('BSFF') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="BSFF" name="BSFF" value="{{ old('BSFF') }}" maxlength="7" min="0">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_recuperee_E" class="form-label">E - Dont fluide conservé pour réutilisation (réintroduction) (kg) :</label>
-                                            <input type="text" class="form-input" id="quantite_recuperee_E" name="quantite_recuperee_E" value="{{ old('quantite_recuperee_E') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_recuperee_E" name="quantite_recuperee_E" value="{{ old('quantite_recuperee_E') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="identification_E" class="form-label">Identification du ou des contenants :</label>
@@ -389,7 +396,7 @@
                                             <label class="form-check-label" for="autre_cas_non_inflammable">Autre cas de fluides frigorigènes non-inflammables :</label>
                                         </div>
                                         <div class="mb-3">
-                                            <input type="text" class="form-input" id="autre_fluide_non_inflammable" name="autre_fluide_non_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="15">
+                                            <input type="text" class="form-input" id="autre_fluide_non_inflammable" name="autre_fluide_non_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="15" disabled>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -399,11 +406,11 @@
                                             <label class="form-check-label" for="UN3161">UN 3161, Déchet Gaz liquéfié inflammable NSA, 2.1 (B/D)</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="fluide_inflammable" value="autre_cas_inflammable" id="autre_cas_non_inflammable">
+                                            <input class="form-check-input" type="radio" name="fluide_inflammable" value="autre_cas_inflammable" id="autre_cas_inflammable">
                                             <label class="form-check-label" for="autre_cas_inflammable">Autre cas de fluides frigorigènes inflammables :</label>
                                         </div>
                                         <div class="mb-3">
-                                            <input type="text" class="form-input" id="autre_fluide_inflammable" name="autre_fluide_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="18">
+                                            <input type="text" class="form-input" id="autre_fluide_inflammable" name="autre_fluide_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="18" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -421,7 +428,7 @@
                                 </div>
 
                                 <!-- Signature -->
-                                <h5 class="mt-4">Signature <span class="required-asterisk">*</span></h5>
+                                <h5 class="mt-4">Signature </span></h5>
                                 <hr>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -437,7 +444,7 @@
                                             <input type="text" class="form-input" id="qualite_signataire_operateur" name="qualite_signataire_operateur" value="{{ old('qualite_signataire_operateur') }}" maxlength="27">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature <span class="required-asterisk">*</span></label>
+                                            <label class="form-label">Signature </label>
                                             <canvas id="signature-pad-operateur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-operateur" id="signature-operateur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-operateur">Effacer</button>
@@ -456,7 +463,7 @@
                                             <input type="text" class="form-input" id="qualite_signataire_detenteur" name="qualite_signataire_detenteur" value="{{ old('qualite_signataire_detenteur') }}" maxlength="26">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature <span class="required-asterisk">*</span></label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
+                                            <label class="form-label">Signature </label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-detenteur" id="signature-detenteur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-detenteur">Effacer</button>
                                         </div>
@@ -531,6 +538,113 @@
         localisationFuitesRadioOui.addEventListener("change", toggleLocalisationFuitesField);
         localisationFuitesRadioNon.addEventListener("change", toggleLocalisationFuitesField);
 
+        // Écouter tous les radio buttons nature_intervention pour mettre à jour l'état du champ "Autre"
+        const natureRadios = document.querySelectorAll('input[name="nature_intervention"]');
+        natureRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAutreField);
+        });
+
+        // Gestion des champs "Autres cas de fluides"
+        let autreFluidNonInflammableRadio = document.getElementById("autre_cas_non_inflammable");
+        let autreFluidNonInflammableField = document.getElementById("autre_fluide_non_inflammable");
+        let autreFluidInflammableRadio = document.getElementById("autre_cas_inflammable");
+        let autreFluidInflammableField = document.getElementById("autre_fluide_inflammable");
+
+        // Fonction pour activer/désactiver le champ "Autre fluide non-inflammable"
+        function toggleAutreFluidNonInflammable() {
+            if (autreFluidNonInflammableRadio.checked) {
+                autreFluidNonInflammableField.disabled = false;
+            } else {
+                autreFluidNonInflammableField.disabled = true;
+                autreFluidNonInflammableField.value = "";
+            }
+        }
+
+        // Fonction pour activer/désactiver le champ "Autre fluide inflammable"
+        function toggleAutreFluidInflammable() {
+            if (autreFluidInflammableRadio.checked) {
+                autreFluidInflammableField.disabled = false;
+            } else {
+                autreFluidInflammableField.disabled = true;
+                autreFluidInflammableField.value = "";
+            }
+        }
+
+        // Vérifier l'état au chargement
+        toggleAutreFluidNonInflammable();
+        toggleAutreFluidInflammable();
+
+        // Écouter tous les radio buttons fluide_non_inflammable
+        const fluidNonInflammableRadios = document.querySelectorAll('input[name="fluide_non_inflammable"]');
+        fluidNonInflammableRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAutreFluidNonInflammable);
+        });
+
+        // Écouter tous les radio buttons fluide_inflammable
+        const fluidInflammableRadios = document.querySelectorAll('input[name="fluide_inflammable"]');
+        fluidInflammableRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAutreFluidInflammable);
+        });
+
+        // Forcer les champs numériques à accepter uniquement des nombres
+        const numericFields = [
+            'charge', 'tonnage', 'quantite_chargee_totale', 'quantite_chargee_A',
+            'quantite_chargee_B', 'quantite_chargee_C', 'quantite_recuperee_totale',
+            'quantite_recuperee_D', 'BSFF', 'quantite_recuperee_E', 'numero_attestation_capacite'
+        ];
+
+        numericFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                // Empêcher les caractères non-numériques avant qu'ils ne soient saisis
+                field.addEventListener('keypress', function(e) {
+                    const char = String.fromCharCode(e.which);
+                    // Accepter seulement les chiffres et le point (pour décimales)
+                    if (!/[0-9.]/.test(char)) {
+                        e.preventDefault();
+                    }
+                    // Vérifier la limite de caractères
+                    const maxLength = parseInt(field.getAttribute('maxlength')) || 10;
+                    if (field.value.length >= maxLength) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Nettoyer au paste
+                field.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    let pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    // Garder seulement les chiffres et les points
+                    pastedText = pastedText.replace(/[^0-9.]/g, '');
+                    // Empêcher plusieurs points
+                    if ((pastedText.match(/\./g) || []).length > 1) {
+                        pastedText = pastedText.replace(/\.(?=.*\.)/g, '');
+                    }
+                    // Respecter la limite de caractères
+                    const maxLength = parseInt(field.getAttribute('maxlength')) || 10;
+                    if (pastedText.length > maxLength) {
+                        pastedText = pastedText.substring(0, maxLength);
+                    }
+                    field.value = pastedText;
+                });
+
+                // Nettoyer l'input en temps réel (au cas où)
+                field.addEventListener('input', function(e) {
+                    let value = e.target.value;
+                    value = value.replace(/[^0-9.]/g, '');
+                    if ((value.match(/\./g) || []).length > 1) {
+                        value = value.replace(/\.(?=.*\.)/g, '');
+                    }
+                    // Respecter la limite de caractères
+                    const maxLength = parseInt(field.getAttribute('maxlength')) || 10;
+                    if (value.length > maxLength) {
+                        value = value.substring(0, maxLength);
+                    }
+                    e.target.value = value;
+                });
+            }
+        });
+
 
 
         // Créer la signature avec gestion souris + tactile
@@ -600,6 +714,9 @@
             signaturePadOperateur.clear();
             signatureInputOperateur.value = "";
         });
+
+
+        /*
 
         // S'assurer que les deux signatures sont bien enregistrées avant soumission
         form.addEventListener("submit", function (event) {
@@ -698,6 +815,9 @@
                 return; // Arrêter le traitement
             }
         });
+
+        */
+
     });
 </script>
 

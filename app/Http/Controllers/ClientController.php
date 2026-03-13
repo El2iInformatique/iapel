@@ -56,12 +56,53 @@ class ClientController extends Controller
         }
     }
 
+
+    public static function copyPdfFileToClientBI(string $client, string $document): bool 
+    {
+        // Vérification stricte des paramètres (évite les espaces vides)
+        if (empty(trim($client)) || empty(trim($document))) {
+            return false;
+        }
+
+        $sourcePath = "pdf/{$document}.pdf";
+        $destinationPath = "{$client}/{$document}/{$document}.pdf"; 
+
+        $localDisk = Storage::disk('local');
+        $publicDisk = Storage::disk('public');
+
+        // Vérifier si le fichier source existe
+        if (!$localDisk->exists($sourcePath)) {
+            return false;
+        }
+
+        try {
+            // Utilisation des Streams (Flux) pour la copie inter-disques
+            // C'est beaucoup plus performant pour les PDF car ça ne charge pas tout le fichier en RAM
+            $stream = $localDisk->readStream($sourcePath);
+            
+            // La méthode put() va créer automatiquement les dossiers de destination s'ils n'existent pas
+            $success = $publicDisk->put($destinationPath, $stream);
+            
+            // Fermer le flux pour libérer la mémoire
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+
+            return $success;
+
+        } catch (\Exception $e) {
+            // 5. Gérer les erreurs inattendues (ex: permissions de dossier)
+            Log::error("Erreur lors de la copie du PDF vers le client : " . $e->getMessage());
+            return false;
+        }
+    }
+
     /**
      * Show the form for creating a new resource.
      */
-    public static function create($client, $document, $uid, $validated = null): bool
+    public static function create($client, $document, $uid, array $validated = null): bool
     {
-        if (empty($client) || empty($document) || empty($uid) || !is_array($validated)) {
+        if (empty($client) || empty($document) || empty($uid) || !$validated) {
             return false;
         }
 
@@ -95,12 +136,20 @@ class ClientController extends Controller
                 throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
             }
 
+            $pdfFile = "{$client}/{$document}/{$document}.pdf";
+
             if ($document === "rapport_intervention") {
                 $optionFile = "{$client}/Options_BI.json";
 
                 if (!Storage::disk('public')->exists($optionFile)) {
                     if (!ClientController::createBiOptionFile($client)) {
                         Log::warning("Erreur lors de la création du fichier de configuration du BI : " . $optionFile);
+                    }
+                }
+
+                if (!Storage::disk('public')->exists($pdfFile)) {
+                    if (!ClientController::copyPdfFileToClientBI($client, $document)) {
+                        Log::warning("Erreur lors de la copie du fichier pdf : " . $document);
                     }
                 }
             }
@@ -111,6 +160,12 @@ class ClientController extends Controller
                 if (!Storage::disk('public')->exists($optionFile)) {
                     if (!ClientController::createBiOptionFile($client)) {
                         Log::warning("Erreur lors de la création du fichier de configuration du BI : " . $optionFile);
+                    }
+                }
+
+                if (!Storage::disk('public')->exists($pdfFile)) {
+                    if (!ClientController::copyPdfFileToClientBI($client, $document)) {
+                        Log::warning("Erreur lors de la copie du fichier pdf : " . $document);
                     }
                 }
             }
