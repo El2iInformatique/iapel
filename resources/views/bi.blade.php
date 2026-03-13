@@ -157,7 +157,7 @@
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <div class="form-group">
-                                                    <label for="equipier" class="form-label">Equipier :<span class="required-asterisk">*</span></label>
+                                                    <label for="equipier" class="form-label">Equipier : </label>
                                                     <input type="text" class="form-input" id="equipier" name="equipier" value="{{ $data['equipier'] ?? '' }}" maxlength="30">
                                                 </div>
                                             </div>
@@ -333,7 +333,7 @@
 
                     <!-- Gestion de la signature -->
                     <div class="signature-section mt-4">     
-                        <h3 class="signature-title"><i class="bi bi-pencil-square"></i> Signature <span class="required-asterisk">*</span></h3>
+                        <h3 class="signature-title"><i class="bi bi-pencil-square"></i> Signature </h3>
                         <p class="text-muted small mb-3">Signature du client ou de son représentant :</p>
                         
                         <canvas id="signature-pad" class="signature-canvas w-100" style="height: 250px;"></canvas>
@@ -920,6 +920,9 @@
             });
             
             // S'assurer que la signature est bien enregistrée avant soumission
+
+            /*
+            
             form.addEventListener("submit", function (event) {
                 
                 saveSignature(); // Enregistre la signature avant l'envoi
@@ -992,7 +995,13 @@
                     return; // Arrêter le traitement
                 }
 
+                */
+
+
                 // Vérifier que la signature n'est pas vide
+
+                /*
+
                 if (!signatureInput.value || signaturePad.isEmpty()) {
                     event.preventDefault(); // Empêcher la soumission
                     
@@ -1031,10 +1040,10 @@
                     setTimeout(() => {
                         errorMsg.remove();
                     }, 10000);
-                }
+                } 
             });
 
-            
+            */
 
         });
     </script>

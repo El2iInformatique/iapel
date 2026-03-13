@@ -428,7 +428,7 @@
                                 </div>
 
                                 <!-- Signature -->
-                                <h5 class="mt-4">Signature <span class="required-asterisk">*</span></h5>
+                                <h5 class="mt-4">Signature </span></h5>
                                 <hr>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -444,7 +444,7 @@
                                             <input type="text" class="form-input" id="qualite_signataire_operateur" name="qualite_signataire_operateur" value="{{ old('qualite_signataire_operateur') }}" maxlength="27">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature <span class="required-asterisk">*</span></label>
+                                            <label class="form-label">Signature </label>
                                             <canvas id="signature-pad-operateur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-operateur" id="signature-operateur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-operateur">Effacer</button>
@@ -463,7 +463,7 @@
                                             <input type="text" class="form-input" id="qualite_signataire_detenteur" name="qualite_signataire_detenteur" value="{{ old('qualite_signataire_detenteur') }}" maxlength="26">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature <span class="required-asterisk">*</span></label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
+                                            <label class="form-label">Signature </label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-detenteur" id="signature-detenteur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-detenteur">Effacer</button>
                                         </div>
@@ -715,6 +715,9 @@
             signatureInputOperateur.value = "";
         });
 
+
+        /*
+
         // S'assurer que les deux signatures sont bien enregistrées avant soumission
         form.addEventListener("submit", function (event) {
             saveSignature(); // Enregistre les signatures avant l'envoi
@@ -812,6 +815,9 @@
                 return; // Arrêter le traitement
             }
         });
+
+        */
+
     });
 </script>
 
