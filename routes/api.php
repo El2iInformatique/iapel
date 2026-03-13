@@ -23,4 +23,7 @@ Route::prefix('api')->group(function () {
     Route::delete('/delete/{token}', [BiController::class, 'delete'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('VerifTokenAndSecretToken');
+
+    // Téléchargement du document d'intervention réalisé
+    Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifTokenAndSecretToken');
 });
