@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Carbon;
 
 
 /**
@@ -33,17 +32,8 @@ use Illuminate\Support\Carbon;
 class PdfController extends Controller
 {
 
-    /**
-     * Formate et normalise le texte pour l'affichage dans les PDF
-     * - Supprime les retours à la ligne et espaces superflus
-     * - Capitalise la première lettre et après les points
-     * - Normalise la ponctuation
-     * 
-     * @param string $texte Le texte à reformater
-     * @return string Le texte normalisé
-     */
     public function reformaterTexte($texte) {
-           // Normalise les retours Windows (\r\n -> \n)
+           // Normalise les retours Windows
         $texte = str_replace("\r\n", "\n", $texte);
 
         // Supprime espaces en fin/début de ligne
@@ -52,10 +42,10 @@ class PdfController extends Controller
 
         
 
-        // Supprime les retours à la ligne
+        // Supprime les retours restants
         $texte = str_replace("\n", ' ', $texte);
 
-        // Supprime les espaces multiples (remplace par un seul)
+        // Supprime les espaces multiples
         $texte = preg_replace('/\s+/u', ' ', $texte);
 
         // Supprime espace avant ponctuation
@@ -73,38 +63,6 @@ class PdfController extends Controller
         return trim($texte);
     }
 
-
-    /**
-     * Convertit une date dans n'importe quel format en format français (d/m/Y)
-     * - Accepte les formats avec '/', '-', ou '.'
-     * - Gère les erreurs de parsing gracieusement
-     * 
-     * @param string $date La date à formater
-     * @return string|null La date au format d/m/Y ou null si invalide
-     */
-    public function formatDate($date): ?string 
-    {
-        // Si la date est vide ou invalide, retourner null
-        if (empty($date)) {
-            return null;
-        }
-
-        $date = trim($date, " ");
-
-        $date = trim($date);
-        // Normalise les séparateurs en "/"
-        $date = str_replace(['/', '-', '.'], '/', $date);
-
-        try {
-            // Parse la date et la formate en français
-            return Carbon::parse($date)->format('d/m/Y');
-        } catch (\Exception $e) {
-            // Log l'erreur et retourne null en cas d'échec
-            Log::error("Format de date invalide : " . $date);
-            return null;
-        }
-    }
-
     /**
      * @brief Affiche un document PDF à partir d'un token d'accès.
      *
@@ -118,8 +76,8 @@ class PdfController extends Controller
      *
      * @return mixed Vue d'affichage du PDF ou erreur 404.
      *
-     * @throws \Exception Si aucun token valide n'est trouvé dans la base.
-     * @throws \Exception Si le fichier JSON associé n'existe pas.
+     * @throws Exception Si aucun token valide n'est trouvé dans la base.
+     * @throws Exception Si le fichier JSON associé n'existe pas.
      *
      * @note Cette méthode est utilisée pour l'affichage dans le navigateur, pas pour le téléchargement direct.
      * @see TokenLinksRapport Pour la gestion des tokens et leurs liens.
@@ -128,13 +86,12 @@ class PdfController extends Controller
      */
     public function show($token)
     {
-        // Récupère les données du token depuis la base de données
+
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
-        // Construit le chemin complet du fichier JSON contenant les données
+        // Construire le chemin du fichier JSON
         $filePath = storage_path( $dataToken['paths']);
 
-        // Vérifie que le fichier existe, sinon log l'erreur
         if (!file_exists($filePath)) {
             \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
                 'token' => $token,
@@ -146,7 +103,7 @@ class PdfController extends Controller
             return abort(404, "Fichier introuvable");
         }
 
-        // Charge le contenu JSON et l'extrait les informations clés
+        // Lire le contenu existant
         $data = json_decode(file_get_contents($filePath), true);
         $document = $data['dataToken']['document'];
         $client = $data['dataToken']['client'];
@@ -175,8 +132,8 @@ class PdfController extends Controller
      *
      * @return mixed Téléchargement du PDF généré ou erreur JSON si le fichier source n'existe pas.
      *
-     * @throws \Exception Si une erreur survient lors de la création du fichier JSON.
-     * @throws \Exception Si le modèle PDF source est introuvable.
+     * @throws Exception Si une erreur survient lors de la création du fichier JSON.
+     * @throws Exception Si le modèle PDF source est introuvable.
      *
      * @note Le PDF généré est "aplati" pour empêcher les modifications ultérieures.
      * @warning Cette méthode nécessite que les modèles PDF soient présents dans storage/app/public/.
@@ -185,28 +142,24 @@ class PdfController extends Controller
      */
     public function generateDownloadPDF(Request $request)
     {
-        // Extrait les données JSON de la requête
         $data = json_decode($request->getContent(), true);
         $uid = $data['uid'];
         $document = $data['document'];
         
-        // === ÉTAPE 1 : CRÉATION DU DOSSIER DE STOCKAGE ===
+        // Création du JSON
         $folderPath = storage_path('app/public/' . $document . '/' . $uid);
 
-        // Crée le dossier s'il n'existe pas
+        // Vérifier si le dossier existe, sinon le créer
         if (!File::exists($folderPath)) {
             File::makeDirectory($folderPath, 0775, true, true);
         }
 
-        // === ÉTAPE 2 : SAUVEGARDE DES DONNÉES EN JSON ===
         $jsonPath = $folderPath . '/'. $uid .'.json';
         try {
-            // Supprime l'ancien JSON s'il existe
             if (file_exists($jsonPath)) {
                 unlink($jsonPath);
             }
             
-            // Structure les données selon le type de document
             if ($document == 'cerfa_15497-03') {
                 $jsonData = [
                     'operateur' => $data['Operateur'] ?? '',
@@ -223,10 +176,8 @@ class PdfController extends Controller
                 ];
             }     
 
-            // Écrit les données JSON dans le fichier
             file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT));
         } catch (\Exception $e) {
-            // Log l'erreur en cas d'échec
             \Log::error("[CONFIG CLIENT] CREATION DU FICHIER JSON", [
                 'path' => $jsonPath,
                 'fonction' => __FUNCTION__,
@@ -236,34 +187,30 @@ class PdfController extends Controller
             ]);
         }
 
-        // === ÉTAPE 3 : GÉNÉRATION DU PDF REMPLI ===
-        $pdfPath = storage_path('app/public/'.$document.'/'.$document.'.pdf'); // Modèle PDF de base
-        $outputPath = storage_path('app/public/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF en sortie
+        // Création du PDF
+        $pdfPath = storage_path('app/public/'.$document.'/'.$document.'.pdf'); // PDF d'origine
+        $outputPath = storage_path('app/public/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
 
-        // Vérifie que le JSON existe
+        // Lire le fichier JSON
         if (!file_exists($jsonPath)) {
             return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
         }
 
-        // Initialise FPDI (extension TCPDF pour manipuler les PDF existants)
+        // Initialiser FPDI
         $pdf = new Fpdi();
         $pdf->SetAutoPageBreak(false);
         $pdf->setSourceFile($pdfPath);
         $totalPages = $pdf->setSourceFile($pdfPath);
-        
-        // Boucle sur chaque page du modèle pour les dupliquer et les remplir
         for ($i = 1; $i <= $totalPages; $i++) {
             $pdf->AddPage();
-            // Import la page du modèle PDF
             $tplIdx = $pdf->importPage($i);
             $pdf->useTemplate($tplIdx, 0, 0);
 
-            // Remplissage des champs sur la première page uniquement
             if ($i == 1) {
-                // Définit la police et la taille du texte (Helvetica, 8pt)
+                // Modification de la page n°1
+                // Définir la police et la taille du texte
                 $pdf->SetFont('helvetica', '', 8);
 
-                // Remplissage des champs avec les coordonnées X,Y spécifiques au modèle
                 $pdf->SetXY(28, 47);
                 $pdf->Write(10, ($data['nom'] ?? ''));    
 
@@ -279,12 +226,13 @@ class PdfController extends Controller
                 $pdf->SetXY(168, 50.6);
                 $pdf->Write(10, ($data['code_postal'] ?? '')); 
             }
+
         }
 
-        // Génère et sauvegarde le PDF rempli (aplatissement impossible de le modifier après)
+        // Aplatir le PDF en l'empêchant d'être modifié
         $pdf->Output($outputPath,'F'); 
 
-        // Retourne le PDF en téléchargement
+        // Téléchargement du PDF
         return response()->download($outputPath, "{$uid}.pdf");
     }
 
@@ -316,53 +264,44 @@ class PdfController extends Controller
      */
     public function generateAttestationTVA(Request $request)
     {
-        // === ÉTAPE 1 : RÉCUPÉRATION DES PARAMÈTRES ===
-        // Accepte les requêtes JSON (POST) ou les paramètres URL (GET)
         if ($request->isJson()) {
-            // Requête POST avec JSON
+            // Request en JSON provenant du POST
             $data = json_decode($request->getContent(), true);
             $uid = $data['uid'];
             $document = $data['document'];
             $client = $data['client'];
         } else {
-            // Requête GET avec paramètres URL
+            // Request provenant du GET
             $uid = $request->query('uid');
             $document = $request->query('document');
             $client = $request->query('client');
         }
-        
-        // === ÉTAPE 2 : CHEMINS D'ACCÈS AUX FICHIERS ===
-        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // Modèle PDF
+        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
 
-        // === ÉTAPE 3 : CHARGEMENT DES DONNÉES ===
+        // Lire le fichier JSON
         $jsonPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.json');
         if (!file_exists($jsonPath)) {
             return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
         }
 
-        // Charge les données du fichier JSON
+         // Remplissage des champs avec des valeurs dynamiques
         $data = json_decode(file_get_contents($jsonPath), true);
 
-        // === ÉTAPE 4 : GÉNÉRATION ET REMPLISSAGE DU PDF ===
-        // Initialise FPDI pour manipuler le PDF
+        // Initialiser FPDI
         $pdf = new Fpdi();
         $pdf->SetAutoPageBreak(false);
         $pdf->setSourceFile($pdfPath);
         $totalPages = $pdf->setSourceFile($pdfPath);
-        
-        // Boucle sur toutes les pages du modèle
         for ($i = 1; $i <= $totalPages; $i++) {
             $pdf->AddPage();
             $tplIdx = $pdf->importPage($i);
             $pdf->useTemplate($tplIdx, 0, 0);
 
             if ($i == 1) {
-                // ===== REMPLISSAGE DE LA PAGE 1 =====
-                // Définit la police (Helvetica 8pt pour s'adapter à la présentation du formulaire)
+                // Modification de la page n°1
                 $pdf->SetFont('helvetica', '', 8);
 
-                // === SECTION 1 : DONNÉES PERSONNELLES ===
                 $pdf->SetXY(28, 47);
                 $pdf->Write(10, ($data['nom'] ?? ''));    
 
@@ -378,8 +317,6 @@ class PdfController extends Controller
                 $pdf->SetXY(168, 50.6);
                 $pdf->Write(10, ($data['code_postal'] ?? '')); 
                 
-                // === SECTION 2 : TYPE DE LOGEMENT (NATURE DES LOCAUX) ===
-                // Coche la case correspondante au type de logement
                 if ($data['nature_locaux_type'] == 'maison') {
                     $pdf->SetXY(19.5, 74.8);
                     $pdf->Write(10, 'X'); 
@@ -393,7 +330,6 @@ class PdfController extends Controller
                     $pdf->Write(10, 'X'); 
                 }
                 else if ($data['nature_locaux_type'] == 'autre') {
-                    // Si type "autre", coche la case ET remplit le champ de description
                     $pdf->SetXY(19.5, 80.6);
                     $pdf->Write(10, 'X'); 
 
@@ -401,8 +337,7 @@ class PdfController extends Controller
                     $pdf->Write(10, $data['nature_locaux_type_autre_valeur']); 
                 }
 
-                // === SECTION 3 : AFFECTATION DES LOCAUX ===
-                // Sélectionne le type d'affectation du logement (résidence principale, etc.)
+                
                 if ($data['nature_locaux_affectation'] == 'affectation_1') {
                     $pdf->SetXY(19.5, 92);
                     $pdf->Write(10, 'X'); 
@@ -430,59 +365,53 @@ class PdfController extends Controller
                 $pdf->SetXY(160, 117);
                 $pdf->Write(10, $data['code_postal_travaux']); 
 
-                // === SECTION 4 : STATUT DU PROPRIÉTAIRE ===
-                // Indique si le demandeur est propriétaire, locataire, ou autre
                 if ($data['nature_locaux_status'] == 'proprietaire') {
                     $pdf->SetXY(36.5, 123.5);
-                    $pdf->Write(10, 'X');  // Propriétaire
+                    $pdf->Write(10, 'X'); 
                 }
                 else if ($data['nature_locaux_status'] == 'locataire') {
                     $pdf->SetXY(59.5, 123.5);
-                    $pdf->Write(10, 'X');  // Locataire
+                    $pdf->Write(10, 'X'); 
                 }
                 else if ($data['nature_locaux_status'] == 'status_autre') {
                     $pdf->SetXY(84.5, 123.5);
-                    $pdf->Write(10, 'X');  // Autre statut
+                    $pdf->Write(10, 'X'); 
                     
                     $pdf->SetXY(130, 123);
                     $pdf->Write(10, $data['nature_locaux_status_autre_valeur']); 
                 }
                 
-                // === SECTION 5 : TYPES DE TRAVAUX EFFECTUÉS ===
-                // La section suivante liste les différentes catégories de travaux (isolation, chauffage, etc.)
                 if (isset($data['travaux']) && is_array($data['travaux'])) {
                     foreach ($data['travaux'] as $travaux) {
                         if ($travaux == "travaux_1") {
                             $pdf->SetXY(19.5, 145);
-                            $pdf->Write(10, 'X');  // Type de travaux #1
+                            $pdf->Write(10, 'X'); 
                         }
                         else if ($travaux == "travaux_2") {
                             $pdf->SetXY(19.5, 152.5);
-                            $pdf->Write(10, 'X');  // Type de travaux #2 (Isolation thermique)
+                            $pdf->Write(10, 'X'); 
                             
-                            // === SOUS-SECTION : DÉTAILS DE L'ISOLATION THERMIQUE ===
-                            // Spécifie quelle partie de bâtiment a été isolée (toiture, parois, etc.)
                             if (isset($data['travaux_2_details']) && is_array($data['travaux_2_details'])) {
                                 foreach ($data['travaux_2_details'] as $travaux_2_details) {
                                     if ($travaux_2_details == "travaux_2_details_1") {
                                         $pdf->SetXY(96, 156.2);
-                                        $pdf->Write(10, 'X');  // Détail isolation #1
+                                        $pdf->Write(10, 'X'); 
                                     }    
                                     else if ($travaux_2_details == "travaux_2_details_2") {
                                         $pdf->SetXY(33.2, 160);
-                                        $pdf->Write(10, 'X');  // Détail isolation #2
+                                        $pdf->Write(10, 'X'); 
                                     }    
                                     else if ($travaux_2_details == "travaux_2_details_3") {
                                         $pdf->SetXY(66.7, 160);
-                                        $pdf->Write(10, 'X');  // Détail isolation #3
+                                        $pdf->Write(10, 'X'); 
                                     }    
                                     else if ($travaux_2_details == "travaux_2_details_4") {
                                         $pdf->SetXY(97.3, 160);
-                                        $pdf->Write(10, 'X');  // Détail isolation #4
+                                        $pdf->Write(10, 'X'); 
                                     }
                                     else if ($travaux_2_details == "travaux_2_details_5") {
                                         $pdf->SetXY(154, 160);
-                                        $pdf->Write(10, 'X');  // Détail isolation #5
+                                        $pdf->Write(10, 'X'); 
                                     }    
                                     else if ($travaux_2_details == "travaux_2_details_6") {
                                         $pdf->SetXY(19.5, 163.5);
@@ -513,24 +442,19 @@ class PdfController extends Controller
                     }
                 }
 
-
-                // === SECTION FINALE : DATES, LIEUX ET SIGNATURE ===
-                // Remplir le lieu où les travaux ont été effectués
+                
                 $pdf->SetXY(93, 256);
                 $pdf->Write(10, $data['fait_a']); 
 
-                // Remplir la date de signature (au format français JJ/MM/YYYY)
                 $pdf->SetXY(130, 256);
-                $pdf->Write(10, ($this->formatDate($data['fait_le']) ?? date('d/m/Y'))); 
+                $fait_le = \DateTime::createFromFormat('Y-m-d', $data['fait_le']);
+                $fait_le = $fait_le ? $fait_le->format('d/m/Y') : '';
+                $pdf->Write(10, $fait_le); 
 
-                // === GESTION DE LA SIGNATURE NUMÉRIQUE ===
-                // Convertir la signature depuis le format base64 (stockée lors de la capture) vers PNG
                 $signatureBase64 = $data['signature'];
                 $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
                 $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
-                // Sauvegarde l'image PNG temporaire sur le serveur
                 file_put_contents($signaturePath, $signatureData);
-                // Insère l'image de signature au bon endroit du PDF (position 150, 260 avec dimensions 50x16 mm)
                 $pdf->Image($signaturePath, 150, 260, 50, 16);
 
 
@@ -551,28 +475,19 @@ class PdfController extends Controller
     {
         //return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
 
-        // === ÉTAPE 1 : DÉTERMINER LE CHEMIN DU FICHIER PDF ===
-        // Utilise le chemin JSON comme base si fourni, sinon construit le chemin complet
         $pdfFile = $jsonPath 
             ? str_replace('.json', '.pdf', $jsonPath) 
             : storage_path("app/public/{$client}/{$document}/{$uid}/{$uid}.pdf");
     
-        // === ÉTAPE 2 : VÉRIFIER L'EXISTENCE DU FICHIER ===
         if (!File::exists($pdfFile)) {
             return false;
         }
     
-        // === ÉTAPE 3 : VALIDATION DE LA STRUCTURE PDF ===
-        // Lit les 5 premiers octets pour vérifier la signature PDF (doit commencer par "%PDF-")
         $header = file_get_contents($pdfFile, false, null, 0, 5);
         
-        // Calcule la taille totale du fichier pour vérifier la fin
         $fileSize = File::size($pdfFile);
-        // Les 6 derniers octets doivent contenir "%%EOF" (marqueur de fin de fichier PDF)
         $footer = ($fileSize > 6) ? file_get_contents($pdfFile, false, null, $fileSize - 6) : '';
     
-        // === VALIDATION FINALE ===
-        // Un PDF valide commence par "%PDF-" et se termine par "%%EOF"
         $isValidPdf = str_starts_with($header, '%PDF-') && str_contains($footer, '%%EOF');
         
         return $isValidPdf;
@@ -645,12 +560,10 @@ class PdfController extends Controller
             ]);
         }
 
-         // === ÉTAPE 1 : CHARGEMENT ET RÉCUPÉRATION DES DONNÉES ===
-        // Charge les données du fichier JSON contenant tous les détails du bulletin d'intervention
+         // Remplissage des champs avec des valeurs dynamiques
         $data = json_decode(file_get_contents($jsonPath), true);
 
-        // === ÉTAPE 2 : INITIALISATION DE FPDI ===
-        // FPDI (Free PDF Import) permet de charger un modèle PDF et d'ajouter du contenu par-dessus
+        // Initialiser FPDI
         $pdf = new Fpdi();
 
         // Evite les lignes au dessous et au dessus du PDF et les marges automatiques
@@ -663,70 +576,65 @@ class PdfController extends Controller
         $tplIdx = $pdf->importPage(1);
         $pdf->useTemplate($tplIdx);
 
-        // === ÉTAPE 3 : REMPLISSAGE DES CHAMPS PRINCIPAUX ===
         
-        // Numéro de bulletin (identifiant unique)
-        $pdf->SetFont('helvetica', 'b', 8);
-        $pdf->SetXY(23, 37);
+        $pdf->SetFont('helvetica', 'b', 6);
+        $pdf->SetXY(19, 37);
         $pdf->Write(10, ($this->reformaterTexte($data['dataToken']['uid']) ?? '000'));    
 
-        // Date de l'intervention
         $pdf->SetFont('helvetica', 'b', 8);
+
         $pdf->SetXY(31, y: 44);
-        $pdf->Write(10, ( $this->formatDate($data['date_intervention']) ?? date('d/m/Y')));    
-        
-        // Nom de l'intervenant principal
+        $pdf->Write(10, ($data['date_intervention'] ?? date('d/m/Y')));    
         $pdf->SetXY(32, 54);
         $pdf->Write(10, ($data['intervenant'] ?? ''));    
         
-        // === SECTION SPÉCIALE : GESTION DU NOM DE L'ÉQUIPIER AVEC POLICE ADAPTATIVE ===
         $equipier = $data['equipier'] ?? '';
-        $maxWidth = 38; // On réserve 38mm pour le champ de l'équipier
-        $fontSize = 6.7; // Taille de police par défaut
+        $maxWidth = 38; // On prend 38mm pour garder une petite marge de sécurité
+        $fontSize = 6.7; // Taille de base
 
-        // BOUCLE MAGIQUE : Réduit la police progressivement si le texte est trop large
-        // Cela permet d'accueillir des noms longs sans débordement
+        $pdf->SetFont('helvetica', 'b', $fontSize);
+
+        // BOUCLE MAGIQUE : Tant que le texte est physiquement trop large, on baisse la police
         while ($pdf->GetStringWidth($equipier) > $maxWidth && $fontSize > 3) {
-            $fontSize -= 0.3; // Réduit par étapes de 0.3 points
+            $fontSize -= 0.3;
             $pdf->SetFont('helvetica', 'b', $fontSize);
         }
 
         $pdf->SetXY(28.2, 63);
-        $pdf->Cell($maxWidth, 4, $equipier, 0, 0, 'L', 0, '', 1);
-        
-        // === ÉTAPE 4 : REMPLISSAGE DES INFORMATIONS CLIENT ===
-        $pdf->SetFont('helvetica', '', 6.7);
 
-        // Code client unique
+        $pdf->Cell($maxWidth, 4, $equipier, 0, 0, 'L', 0, '', 1);
+        $pdf->SetFont('helvetica', '', 6.7);
+   
+
+        
         $pdf->SetXY(37.25, 66);
         $pdf->Write(10, ($data['code_client'] ?? ''));  
-        
-        // Email du client
         $pdf->SetXY(29, 71);
         $pdf->Write(10, ($data['email_client'] ?? ''));  
-        
-        // Téléphone du client
         $pdf->SetXY(142, 66.25);
         $pdf->Write(10, ($data['telephone_client'] ?? ''));  
         $pdf->SetXY(139, 71.5);
         $pdf->Write(10, ($data['portable_client'] ?? ''));  
         
-        $pdf->SetFont('helvetica', '', 6.7);
+        $pdf->SetFont('helvetica', 'b', 6.7);
 
-        $pdf->SetXY(14, 88);
+        $pdf->SetXY(14, 86);
         $pdf->MultiCell(180, 10, ($data['description']."\n" ?? ''));
-
-        
-	    $pdf->SetFont('helvetica', '', 9); 
-
-        $pdf->SetXY(75, 45);
-        $pdf->Write(10, ($data['adresse_intervention'] ?? '') . ' ' . ($data['cp_intervention'] ?? '') . ' ' . ($data['ville_intervention'] ?? '') . ' - ' . ($data['lieu_intervention'] ?? ''));  
 
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(75, 59.5);
-        $pdf->Write(10, ($data['adresse_facturation'] ?? '') . ' ' . ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? ''));
+        $pdf->SetXY(135, 45);
+        $pdf->Write(10, ($data['nom_client'] ?? ''));  
+	    $pdf->SetFont('helvetica', 'b', 9);  
+        $pdf->SetXY(68, 59.5);
+        $pdf->Write(10, ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? '') . ' ' . ($data['adresse_facturation'] ?? ''));
 
+        
+
+        $pdf->SetFont('helvetica', '', 9);
+
+        $pdf->SetXY(68, 45);
+        $pdf->Write(10, ($data['adresse_intervention'] ?? ''));  
 
         $pdf->SetFont('helvetica', '', 6.3);
 
@@ -735,86 +643,73 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', '', 6.7);
 
-        $pdf->SetXY(67, 194);
+        $pdf->SetXY(67, 193);
         $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['materiel']) ?? '')), 0, 'L');
 
         $pdf->SetFont('helvetica', '', 9);
 
-        $pdf->SetXY(67, 229);
+        $pdf->SetXY(67, 228);
         $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['prevoir']) ?? '')), 0, 'L');
 
         $pdf->SetFont('helvetica', '', 11);
         if (isset($data['intervention_realisable']) && ($data['intervention_realisable'] == 'oui')) {            
-            $pdf->SetXY(15.15, 127.6);
+            $pdf->SetXY(14.6, 127.6);
             $pdf->Write(10, 'X');
         }        
         if (isset($data['terminee']) && ($data['terminee'] == 'oui')) {            
-            $pdf->SetXY(15.15, 143);
+            $pdf->SetXY(14.6, 132.5);
             $pdf->Write(10, 'X');
         }
         if (isset($data['intervention_suite']) && ($data['intervention_suite'] == 'oui')) {            
-            $pdf->SetXY(15.15, 149.7);
+            $pdf->SetXY(14.6, 137.3);
             $pdf->Write(10, 'X');
         }
         if (isset($data['facturable']) && ($data['facturable'] == 'oui')) {            
-            $pdf->SetXY(15.15, 164.5);
+            $pdf->SetXY(14.6, 142);
             $pdf->Write(10, 'X');
         }
         if (isset($data['devis_a_faire']) && ($data['devis_a_faire'] == 'oui')) {            
-            $pdf->SetXY(15.15, 157.3);
+            $pdf->SetXY(14.6, 146.8);
             $pdf->Write(10, 'X');
         }
 
         if (isset($data['absent']) && ($data['absent'] == 'oui')) {            
-            $pdf->SetXY(15.15, 133.5); 
+            $pdf->SetXY(14.6, 160); 
             $pdf->Write(10, 'X');
         }
 
         $pdf->SetFont('helvetica', '', 9);
 
-        // === GESTION DES PHOTOS AVANT/APRÈS ===
-        // Les photos sont redimensionnées intelligemment en conservant leur ratio d'aspect
-        // et centrées dans des zones préallouées du formulaire
-        
         if (isset($data['photo_avant'])) {
             $imagePath = storage_path('app/public/'.$data['photo_avant']);
             if ($imagePath && file_exists($imagePath)) {
-                // Récupère les dimensions originales de l'image
-                list($width, $height) = getimagesize($imagePath);
-                
-                // Définit la taille maximale pour la photo avant
+                list($width, $height) = getimagesize($imagePath); // Récupère la taille originale
                 $maxWidth = 62;
                 $maxHeight = 50;
-                
-                // === ALGORITHM DE REDIMENSIONNEMENT INTELLIGENT ===
-                // Conserve le ratio d'aspect tout en s'adaptant à la zone disponible
+                // Calcul du redimensionnement en conservant le ratio
                 if ($width > $height) {
-                    // Image en paysage : limiter la largeur
                     $newWidth = $maxWidth;
                     $newHeight = ($height / $width) * $maxWidth;
                 } else {
-                    // Image en portrait : limiter la hauteur
                     $newHeight = $maxHeight;
                     $newWidth = ($width / $height) * $maxHeight;
                 }
-                
-                // === CENTRAGE DE L'IMAGE DANS SA ZONE ===
-                // Calcule les décalages X et Y pour centrer l'image redimensionnée
+                // Calcul des positions pour centrer dans le carré
                 $x = 68.5 + ($maxWidth - $newWidth) / 2;
                 $y = 134 + ($maxHeight - $newHeight) / 2;
 
-                // Insertion de l'image redimensionnée et centrée
+                // Affichage de l'image redimensionnée
                 $pdf->Image($imagePath, $x, $y, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+
             }
         }
 
-        // Photo après l'intervention (même logique que photo_avant)
         if (isset($data['photo_apres'])) {
             $imagePath = storage_path('app/public/'.$data['photo_apres']);
             if ($imagePath && file_exists($imagePath)) {
                 list($width, $height) = getimagesize($imagePath); // Récupère la taille originale
-                $maxWidth = 60;
-                $maxHeight = 48;
+                $maxWidth = 62;
+                $maxHeight = 50;
                 // Calcul du redimensionnement en conservant le ratio
                 if ($width > $height) {
                     $newWidth = $maxWidth;
@@ -834,51 +729,64 @@ class PdfController extends Controller
         }
 
 
-        // === GESTION DE LA SIGNATURE NUMÉRIQUE ===
-        // La signature est capturée en base64 et convertie en image PNG
         if (isset($data['signature'])) {
             $signatureBase64 = $data['signature'];
-            // Décode la signature depuis le format base64
             $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
             $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature.png');
-            // Sauvegarde l'image PNG temporaire
             file_put_contents($signaturePath, $signatureData);
             
-            // === DIMENSIONS ET POSITION FIXES ===
-            // Les signatures ont une taille fixe indépendamment du dispositif (PC/téléphone)
-            // Cette approche garantit une présentation cohérente dans tous les cas
-            $signatureWidth = 50;  // Largeur fixe : 50 mm
-            $signatureHeight = 15; // Hauteur fixe : 15 mm
+            list($width, $height) = getimagesize($signaturePath); // Récupère la taille 
+
+            $maxWidth = 60;
+            $maxHeight = 18;
+
+            // Calcul du redimensionnement en conservant le ratio
+            if ($width > $height) {
+                $newWidth = $maxWidth;
+                $newHeight = ($height / $width) * $maxWidth;
+            } else {
+                $newHeight = $maxHeight;
+                $newWidth = ($width / $height) * $maxHeight;
+            }
+            // Calcul des positions pour centrer dans le carré
+            $xImage = 12 + ($maxWidth - $newWidth) ;
+            $yImage = 188 + ($maxHeight - $newHeight);
+
+            if ($isAndroid === "1") {
+                $newWidth /= 1.5;
+                $newHeight /= 1.5;
+
+                $yImage += 10;
+            }
+            else {
+                $newWidth /= 1.3;
+                $newHeight /= 1.3;
+            }
             
-            // Position absolue dans le PDF
-            $xImage = 12;  // Position X : 12 mm du bord gauche
-            $yImage = 197; // Position Y : 197 mm du haut
-            
-            // Insère l'image de signature
-            $pdf->Image($signaturePath, $xImage, $yImage, $signatureWidth, $signatureHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
+            $pdf->Image($signaturePath, $xImage + 2, $yImage + 7, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);    
+
+                                  
         }
 
-        // Date de signature (lieu + date)
         $pdf->SetFont('helvetica', 'i', 12);
-        $pdf->SetXY( 40, 212);
-        $pdf->Write(12, $this->formatDate($data['fait-le']) ?? date('d/m/Y'));
+        $pdf->SetXY( 40, 210);
+        $pdf->Write(12, $data['fait-le'] ?? date('d/m/Y'));
 
-        // Nom de l'intervenant principal qui a signé
         $pdf->SetFont('helvetica', 'i', 14);
         $pdf->SetXY( 14, 226);
         $pdf->Write(12, $data['intervenant'] ?? 'Intervenant');
 
 
-        // === PAGE 2 : COMPLÉMENTS D'INFORMATION ===
-        // Charge la deuxième page du modèle PDF
         $tpl2Idx = $pdf->importPage(2);
         $pdf->addPage();
         $pdf->useTemplate($tpl2Idx);
 
         $pdf->Ln(8);
 
-        // === SECTION 1 : LE CONSTAT ===
+        // ====== CONTENU ======
         $pdf->SetFont('helvetica', 'b', 9.5);
+
+        // Le constat
         $pdf->SetXY( 15, 40);
         $pdf->Write(8, "Le constat :");
         $pdf->Ln(6);
@@ -887,7 +795,7 @@ class PdfController extends Controller
         $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['constat']) ?? '')), 0, 'L');
         $pdf->Ln(12);
 
-        // === SECTION 2 : LES VÉRIFICATIONS EFFECTUÉES ===
+        // Les vérifications
         $pdf->SetFont('helvetica', 'b', 9.5);
         $pdf->SetXY( 15, 85);
         $pdf->Write(8, "Les vérifications :");
@@ -897,7 +805,7 @@ class PdfController extends Controller
         $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['verification']) ?? '')), 0, 'L');
         $pdf->Ln(12);
 
-        // === SECTION 3 : LES NOTES PARTICULIÈRES ===
+        // Les notes particulières
         $pdf->SetFont('helvetica', 'b', 9.5);
         $pdf->SetXY( 15, 130);
         $pdf->Write(8, "Les notes particulières :");
@@ -907,7 +815,7 @@ class PdfController extends Controller
         $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['notes_particulieres']) ?? '')), 0, 'L');
         $pdf->Ln(12);
 
-        // === SECTION 4 : LES POINTS DE VIGILANCE ===
+        // Les points de vigilance
         $pdf->SetFont('helvetica', 'b', 9.5);
         $pdf->SetXY( 15, 175);
         $pdf->Write(8, "Les points de vigilances :");
@@ -917,14 +825,13 @@ class PdfController extends Controller
         $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['points_vigilances']) ?? '')), 0, 'L');
         $pdf->Ln(12);
 
-        // === SECTION 5 : LES PHOTOS ===
+        // Les photos
         $pdf->SetFont('helvetica', 'b', 9.5);
         $pdf->SetXY( 15, 220);
         $pdf->Write(8, "Les photos :");
         $pdf->Ln(6);
         $pdf->MultiCell(0, 8, ($data['photos'] ?? ''));
 
-        // === SECTION 6 : COMPLÉMENTS SUPPLÉMENTAIRES (SI EXISTANTS) ===
         // Ajoute les compléments sur une page supplémentaire si il y en a plus de 2
         if (isset($data['complements']) && count($data['complements']) > 0) {
             $pdf->addPage();
@@ -933,52 +840,50 @@ class PdfController extends Controller
             $pdf->Cell(0, 10, 'Compléments supplémentaires', 0, 1, 'L');
             $pdf->Ln(5);
         
-            // === CONFIGURATION DE LA GRILLE D'IMAGES ===
-            // Les photos sont affichées en grille 3 colonnes pour une meilleure présentation
-            $pageWidth = 190;            // Largeur utile de la page (A4 - marges: ~210mm - 20mm)
+            // --- Configuration de la Grille ---
+            $pageWidth = 190;            // Largeur utile de la page (A4 - marges)
             $numCols = 3;                // Nombre d'images par ligne
-            $margin = 5;                 // Espace horizontal entre les photos (en mm)
-            $cellWidth = ($pageWidth - ($margin * ($numCols - 1))) / $numCols; // Largeur de chaque cellule
-            $imgHeightMax = 45;          // Hauteur max d'une image (en mm)
-            $commentHeight = 15;         // Espace réservé au commentaire sous l'image
-            $rowHeight = $imgHeightMax + $commentHeight + 5; // Hauteur totale d'une ligne (image + texte + espace)
+            $margin = 5;                 // Espace entre les photos
+            $cellWidth = ($pageWidth - ($margin * ($numCols - 1))) / $numCols;
+            $imgHeightMax = 45;          // Hauteur max de l'image
+            $commentHeight = 15;         // Espace réservé au commentaire
+            $rowHeight = $imgHeightMax + $commentHeight + 5; // Hauteur totale d'une ligne
         
             $startX = 10;
             $currentX = $startX;
             $currentY = $pdf->GetY();
             
-            // On stocke les compléments à afficher
+            // On ignore les 2 premiers éléments comme dans ta logique originale
             $complementsAffiches = $data['complements'];
         
             foreach ($complementsAffiches as $index => $complement) {
-                // === GESTION DES SAUTS DE PAGE ===
-                // Vérifie si il y a assez de place pour la ligne suivante
+                // Vérification du saut de page
                 if ($currentY + $rowHeight > 275) {
                     $pdf->addPage();
                     $currentY = 20;
                 }
         
-                // === AFFICHAGE DE L'IMAGE ===
                 if (isset($complement['image'])) {
                     $imagePath = storage_path('app/public/' . $complement['image']);
                     
                     if (file_exists($imagePath)) {
-                        // Affiche l'image avec le paramètre 'T' (top alignment) et redimensionnement proportionnel
+                        // On dessine l'image
+                        // Le paramètre 'T' et 'true' avec le redimensionnement proportionnel automatique
                         $pdf->Image($imagePath, $currentX, $currentY, $cellWidth, $imgHeightMax, '', '', 'T', true, 300, '', false, false, 0, 'CM', false, false);
         
-                        // === AFFICHAGE DU COMMENTAIRE SOUS L'IMAGE ===
+                        // --- Ajout du commentaire sous l'image ---
                         if (!empty($complement['comment'])) {
                             $pdf->SetFont('helvetica', '', 8);
                             $pdf->SetXY($currentX, $currentY + $imgHeightMax + 1);
-                            // MultiCell gère les retours à la ligne si le texte est trop long
+                            // MultiCell permet de gérer les retours à la ligne si le texte est long
                             $pdf->MultiCell($cellWidth, 4, $complement['comment'], 0, 'C', false, 1);
                         }
                     }
                 }
         
-                // === CALCUL DE LA POSITION SUIVANTE ===
+                // Calcul de la position du prochain élément
                 if (($index + 1) % $numCols == 0) {
-                    // On a rempli 3 colonnes, on descend à la ligne suivante
+                    // On change de ligne
                     $currentX = $startX;
                     $currentY += $rowHeight;
                 } else {
@@ -989,62 +894,59 @@ class PdfController extends Controller
         }
 
 
-        // === SECTION 7 : COMPLÉMENTS CLIENTS (SI EXISTANTS) ===
-        // Affiche les données personnalisées fournies par le client (textes et images)
         if (!empty($data['complement_client'])) {
             $pdf->AddPage();
             
-            // === TITRE DE LA PAGE ===
+            // --- Titre de la section ---
             $pdf->SetFont('helvetica', 'B', 12);
             $pdf->SetTextColor(50, 50, 50);
             $pdf->Cell(0, 10, 'Informations complémentaires client', 0, 1, 'L');
             $pdf->Ln(2);
         
-            // === BOUCLE SUR LES ÉLÉMENTS PERSONNALISÉS ===
             foreach ($data['complement_client'] as $item) {
-                // === GESTION DES SAUTS DE PAGE ===
-                // Si moins de 40mm restent, on change de page
+                // --- Vérification de l'espace restant ---
+                // Si moins de 40mm restent, on change de page pour éviter de couper un bloc
                 if ($pdf->GetY() > 250) {
                     $pdf->AddPage();
                 }
         
-                // === AFFICHAGE DE LA QUESTION (EN MAJUSCULES ET EN GRAS) ===
+                // --- Question (en gras) ---
                 $pdf->SetFont('helvetica', 'B', 9);
                 $pdf->SetTextColor(100, 100, 100);
                 $pdf->MultiCell(0, 6, mb_strtoupper($item['question']), 0, 'L');
                 
-                // === AFFICHAGE DE LA RÉPONSE (VALEUR) ===
+                // --- Réponse (Valeur) ---
                 $pdf->SetTextColor(0, 0, 0);
                 $pdf->SetFont('helvetica', '', 10);
         
                 if ($item['type'] === 'text') {
-                    // Affichage du texte simple avec indentation
+                    // Affichage du texte avec une petite indentation
                     $pdf->SetX(15); 
                     $pdf->MultiCell(0, 6, $item['value'], 0, 'L');
                     $pdf->Ln(2);
                 } else {
-                    // Affichage d'une image
+                    // Cas d'une image
                     $imagePath = storage_path('app/public/' . $item['value']);
                     if (file_exists($imagePath)) {
                         $pdf->Ln(1);
                         $currentY = $pdf->GetY();
                         
-                        // Affiche l'image (max 60mm large, 40mm haut)
+                        // On affiche l'image (max 60mm de large, 40mm de haut)
+                        // Le 'M' aligne l'image proprement
                         $pdf->Image($imagePath, 15, $currentY, 0, 40, '', '', 'T', true, 300, '', false, false, 0, 'L', false, false);
                         
-                        // Décale le curseur Y après l'image (images = ~42mm)
+                        // On décale le curseur Y après l'image pour la suite
                         $pdf->SetY($currentY + 42); 
                     }
                 }
         
-                // === LIGNE DE SÉPARATION SUBTILE ===
+                // Petite ligne de séparation subtile
                 $pdf->SetDrawColor(230, 230, 230);
                 $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
                 $pdf->Ln(4);
             }
         }
 
-        // === FINALISATION ===
         // Aplatir le PDF en l'empêchant d'être modifié
         $pdf->Output($outputPath,'F'); 
 
@@ -1086,22 +988,20 @@ class PdfController extends Controller
      */
     public function generateCerfa(Request $request)
     {
-        // === ÉTAPE 1 : RÉCUPÉRATION DES PARAMÈTRES ===
         $uid = $request->query('uid');
         $document = $request->query('document');
         $client = $request->query('client');
-        
-        // === ÉTAPE 2 : CHEMINS DES FICHIERS ===
-        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF modèle
+        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
-        $jsonPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.json'); // Données JSON
 
-        // === ÉTAPE 3 : VALIDATION - FICHIER JSON EXISTE-T-IL ? ===
+        // Lire le fichier JSON
+        $jsonPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.json');
         if (!file_exists($jsonPath)) {
             return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
         }
 
-        // === ÉTAPE 4 : VÉRIFIER SI LE PDF EST DÉJÀ GÉNÉRÉ ===
+        $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
+
         if ($this->checkExistAndIsValidePdf($jsonPath, $client, $document, $uid)) {
             \Log::info("[DOCUMENT] FICHIER PDF DEJA EXISTANT", [
                 'client' => $client,
@@ -1114,42 +1014,38 @@ class PdfController extends Controller
             ]);
         }
 
-        // === ÉTAPE 5 : CHARGEMENT DES DONNÉES ===
-        // Récupère tous les données du formulaire depuis le fichier JSON
+         // Remplissage des champs avec des valeurs dynamiques
         $data = json_decode(file_get_contents($jsonPath), true);
 
-        // === ÉTAPE 6 : INITIALISATION DE FPDI ===
-        // Charge le modèle PDF CERFA 15497-03
+        // Initialiser FPDI
         $pdf = new Fpdi();
+
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
+
         $pdf->SetAutoPageBreak(false);
         $pdf->AddPage();
         $pdf->setSourceFile($pdfPath);
         $tplIdx = $pdf->importPage(1);
         $pdf->useTemplate($tplIdx);
 
-        // === ÉTAPE 7 : CONFIGURATION GÉNÉRALE DU TEXTE ===
+        
+        // Définir la police et la taille du texte
         $pdf->SetFont('helvetica', '', 8);
 
-        // === REMPLISSAGE DES CHAMPS PRINCIPAUX ===
-        // Numéro de formulaire unique
         $pdf->SetXY(13, 32);
-        $pdf->MultiCell(30, 0, ($uid ?? ''));
+        $pdf->MultiCell(30,0, ($uid ?? ''));
 
-        // Police et couleur standard pour les informations principales
+        // Définir la police et la taille du texte
         $pdf->SetFont('helvetica', '', 9);
-        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetTextColor(0, 0, 0); // Texte noir
 
-        // === SECTION 1 : IDENTIFICATION OPÉRATEUR ET DÉTENTEUR ===
+        // Écrire les données dans le PDF (adapter les positions X et Y)
         $largeur = 60;
-        
-        // Opérateur (entreprise effectuant l'intervention)
         $pdf->SetXY(44, 32.5);
         $operateur = ($data['operateur'] ?? "") . "\n";
         $pdf->MultiCell($largeur, 10, $operateur);
 
-        // Détenteur (propriétaire/gestionnaire de l'équipement)
         $pdf->SetXY(121, 33);
         $detenteur = ($data['detenteur'] ?? "") . "\n";
         $pdf->MultiCell($largeur, 10, $detenteur);
@@ -1229,107 +1125,100 @@ class PdfController extends Controller
         
         $pdf->SetFont('helvetica', '', 8);    
 
-        if (isset($data['hcfc'])) {
-            if ($data['hcfc'] == '2-30') {
-                $x = 107;   
-                $y = 109.5;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');      
-            }
-            elseif ($data['hcfc'] == '30-300') { 
-                $x = 138;  
-                $y = 109.5;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');     
-            }
-            elseif ($data['hcfc'] == '300') {
-                $x = 168.5;  
-                $y = 109.5;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');       
-            }    
-        }
-        if (isset($data['hfc_pfc'])) {
-            if ($data['hfc_pfc'] == '5-50') {
-                $x = 107;     
-                $y = 114;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');  
-            }
-            elseif ($data['hfc_pfc'] == '50-500') {
-                $x = 138;  
-                $y = 114;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');     
-            }
-            elseif ($data['hfc_pfc'] == '500') {
-                $x = 168.5;
-                $y = 114;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');  
-            }  
-        }
-        if (isset($data['hfo'])) {
-            if ($data['hfo'] == '1-10') {
-                $x = 107;     
-                $y = 119;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');  
-            }
-            elseif ($data['hfo'] == '10-100') {
-                $x = 138;  
-                $y = 119;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');     
-            }
-            elseif ($data['hfo'] == '100') {
-                $x = 168.5;
-                $y = 119;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');  
-            }  
-        }
-        if (isset($data['equipement_sans_detection']))
-        {
-            if ($data['equipement_sans_detection'] == 'sans12') {
-                $x = 107;   
-                $y = 123;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');   
-            }
-            elseif ($data['equipement_sans_detection'] == 'sans6') { 
-                $x = 138;  
-                $y = 123;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');   
-            }
-            elseif ($data['equipement_sans_detection'] == 'sans3') {
-                $x = 168.5;
-                $y = 123.2;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');   
-            } 
-        }
 
-        if (isset($data['equipement_avec_detection'])) {
-            if ($data['equipement_avec_detection'] == 'avec24') {
-                $x = 107;   
-                $y = 128;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');   
-            }
-            elseif ($data['equipement_avec_detection'] == 'avec12') { 
-                $x = 138;  
-                $y = 128;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');   
-            }
-            elseif ($data['equipement_avec_detection'] == 'avec6') {
-                $x = 168.5;
-                $y = 128;
-                $pdf->SetXY($x, $y);
-                $pdf->Write(10, 'X');   
-            }
+        if ($data['hcfc'] == '2-30') {
+            $x = 107;   
+            $y = 109.5;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');      
+        }
+        elseif ($data['hcfc'] == '30-300') { 
+            $x = 138;  
+            $y = 109.5;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');     
+        }
+        elseif ($data['hcfc'] == '300') {
+            $x = 168.5;  
+            $y = 109.5;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');       
+        }    
+
+        if ($data['hfc_pfc'] == '5-50') {
+            $x = 107;     
+            $y = 114;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');  
+        }
+        elseif ($data['hfc_pfc'] == '50-500') {
+            $x = 138;  
+            $y = 114;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');     
+        }
+        elseif ($data['hfc_pfc'] == '500') {
+            $x = 168.5;
+            $y = 114;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');  
+        }  
+
+        if ($data['hfo'] == '1-10') {
+            $x = 107;     
+            $y = 119;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');  
+        }
+        elseif ($data['hfo'] == '10-100') {
+            $x = 138;  
+            $y = 119;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');     
+        }
+        elseif ($data['hfo'] == '100') {
+            $x = 168.5;
+            $y = 119;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');  
+        }  
+
+        if ($data['equipement_sans_detection'] == 'sans12') {
+            $x = 107;   
+            $y = 123;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');   
+        }
+        elseif ($data['equipement_sans_detection'] == 'sans6') { 
+            $x = 138;  
+            $y = 123;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');   
+        }
+        elseif ($data['equipement_sans_detection'] == 'sans3') {
+            $x = 168.5;
+            $y = 123.2;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');   
+        } 
+
+        if ($data['equipement_avec_detection'] == 'avec24') {
+            $x = 107;   
+            $y = 128;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');   
+        }
+        elseif ($data['equipement_avec_detection'] == 'avec12') { 
+            $x = 138;  
+            $y = 128;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');   
+        }
+        elseif ($data['equipement_avec_detection'] == 'avec6') {
+            $x = 168.5;
+            $y = 128;
+            $pdf->SetXY($x, $y);
+            $pdf->Write(10, 'X');   
         }
         
         if ($data['constat_fuites'] == 'oui') {
@@ -1437,28 +1326,26 @@ class PdfController extends Controller
         $pdf->SetXY(45, 264.5);
         $pdf->Write(10, ($data['qualite_signataire_operateur'] ?? ''));  
         $pdf->SetXY(45, 274);
-        $pdf->Write(10, ($data['date_signature_operateur'] ?? '')); // Possiblement a refaire pour formater la date dans le format français
+        $pdf->Write(10, ($data['date_signature_operateur'] ?? ''));   
 
         $signatureBase64 = $data['signature-operateur'];
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
         $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_operateur.png');
         file_put_contents($signaturePath, $signatureData);
-        // Taille fixe pour la signature opérateur
-        $pdf->Image($signaturePath, 67, 275, 35, 6.5);
+        $pdf->Image($signaturePath, 75, 275, 28, 6);
         
         $pdf->SetXY(125, 258);
         $pdf->Write(10, ($data['nom_signataire_detenteur'] ?? ''));   
         $pdf->SetXY(125, 264.5);
         $pdf->Write(10, ($data['qualite_signataire_detenteur'] ?? ''));  
         $pdf->SetXY(125, 274);
-        $pdf->Write(10, ($data['date_signature_detenteur'] ?? ''));  // Possiblement a refaire pour formater la date dans le format français
+        $pdf->Write(10, ($data['date_signature_detenteur'] ?? ''));  
 
         $signatureBase64 = $data['signature-detenteur'];
         $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
         $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_detenteur.png');
         file_put_contents($signaturePath, $signatureData);
-        // Taille fixe pour la signature détenteur
-        $pdf->Image($signaturePath, 147, 275, 35, 6.5);
+        $pdf->Image($signaturePath, 155, 275, 28, 6);
 
         // Aplatir le PDF en l'empêchant d'être modifié
         $pdf->Output($outputPath,'F'); 
@@ -1488,9 +1375,9 @@ class PdfController extends Controller
      *              - Succès : message, path, original_filename
      *              - Erreur : message d'erreur et code HTTP approprié
      *
-     * @throws \Exception Si le fichier n'est pas un PDF valide.
-     * @throws \Exception Si le token n'existe pas en base.
-     * @throws \Exception Si la création du répertoire ou le déplacement du fichier échoue.
+     * @throws Exception Si le fichier n'est pas un PDF valide.
+     * @throws Exception Si le token n'existe pas en base.
+     * @throws Exception Si la création du répertoire ou le déplacement du fichier échoue.
      *
      * @note L'arborescence créée suit le pattern : {organisation_id}/devis/{devis_id}_{token}/
      * @note Tous les uploads sont tracés dans les logs pour audit et sécurité.
@@ -1561,7 +1448,7 @@ class PdfController extends Controller
      *
      * @return mixed Vue 'devis_pdf' avec les données du devis ou erreur 404.
      *
-     * @throws \Exception Si le token n'existe pas en base.
+     * @throws Exception Si le token n'existe pas en base.
      *
      * @note La vue reçoit : client, token, nomDevis, isCertified pour l'affichage conditionnel.
      * @note La vérification de certification recherche un fichier avec suffixe '_certifie.pdf'.
