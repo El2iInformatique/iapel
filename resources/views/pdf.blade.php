@@ -59,7 +59,7 @@
             <script>
                 // Lancer la génération du PDF via une requête AJAX
                 
-                fetch("/{{ $route }}?client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}&isAndroid={{ urlencode($isAndroid) }}")
+                fetch("/{{ $route }}?token={{ urlencode($token ?? '') }}&client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}&isAndroid={{ urlencode($isAndroid) }}")
                     .then(response => {
                         if (response.ok) {
                             
@@ -78,7 +78,7 @@
             </script>
         @else    
             <div class="pdf-container">
-                <iframe src="/<?php echo $route; ?>?client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}" style="width:100%; height:100%;"></iframe>
+                <iframe src="/<?php echo $route; ?>?token={{ urlencode($token ?? '') }}&client={{ urlencode($client) }}&document={{ urlencode($document) }}&uid={{ urlencode($uid) }}" style="width:100%; height:100%;"></iframe>
             </div>
         @endif
     </body>
