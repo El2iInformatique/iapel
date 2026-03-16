@@ -574,10 +574,12 @@ class ClientController extends Controller
             $documents['devis/' . $folder] = [
                 'path' => 'devis/' . $folder,
                 'status' => $status,
+                'token' => $d['token'],
+                'type_document' => 'devis',
                 'data' => [
                     "nom" => $d['nom'],
                     "tiers" => $d['tiers'],
-                    'token' => $d['token'],
+                    'token' => $d['token'], // A supprimer
                     "date_traitement" => $dateTrait,
                     "temps_restants" => $tempsRestants,
                     "signable" => $signable,
@@ -612,7 +614,9 @@ class ClientController extends Controller
             $documents['rapport_intervention/' . $folder] = [
                 'path' => 'rapport_intervention/' . $folder,
                 'status' => $status,
-                'token_rapport' => null, 
+                'token_rapport' => null, // A supprimer
+                'token' => null, 
+                'type_document' => "rapport_intervention",
                 'data' => [
                     "nom" => $r['uid'],
                     "tiers" => $jsonData['nom_client'] ?? null,
@@ -628,7 +632,8 @@ class ClientController extends Controller
                 $pathToken = "app/public/" . $r['json_file'];
                 $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
                 if ($tokenRapport) {
-                    $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token;
+                    $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token; // A supprimer
+                    $documents['rapport_intervention/' . $folder]["token"] = $tokenRapport->token;
                 }
             }
 
@@ -656,7 +661,9 @@ class ClientController extends Controller
             $documents['cerfa_15497/' . $folder] = [
                 'path' => 'cerfa_15497/' . $folder,
                 'status' => $status,
-                'token_rapport' => null,
+                'token_rapport' => null, // A supprimer
+                'token' => null,
+                'type_document' => "cerfa_15497",
                 'data' => [
                     "nom" => $r['uid'],
                     "tiers" => $jsonData['nom_client'] ?? null,
@@ -673,7 +680,8 @@ class ClientController extends Controller
                 $pathToken = "app/public/" . $r['json_file'];
                 $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
                 if ($tokenRapport) {
-                    $documents['cerfa_15497/' . $folder]["token_rapport"] = $tokenRapport->token;
+                    $documents['cerfa_15497/' . $folder]["token_rapport"] = $tokenRapport->token; // A supprimer
+                    $documents['cerfa_15497/' . $folder]["token"] = $tokenRapport->token;
                 }
             }
 
@@ -685,7 +693,7 @@ class ClientController extends Controller
         // 5. TRAITEMENT DES AUTRES DOCUMENTS
         // ==========================================
 
-        Log::info("Documetns : ", ['documents' => $documents]);
+        Log::info("Documents : ", ['documents' => $documents]);
 
         foreach ($lesDocuments as $file) {
             $relativePath = preg_replace('#^' . preg_quote($basePath, '#') . '/?#', '', $file);
