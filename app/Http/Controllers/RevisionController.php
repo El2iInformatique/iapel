@@ -240,22 +240,26 @@ class RevisionController extends Controller
         // l'"énoncé" affiché à l'écran
         $question = $request->input('question');
 
-        // Normalisation (case, accents, espaces)
+        // === NORMALISATION DES RÉPONSES ===
+        // Fonction pour comparer les réponses de façon tolérante aux fautes de frappe
+        // Supprime accents, case, et espaces pour comparaison flexible
         $normalize = function ($str) {
             $str = trim((string)$str);
             $str = mb_strtolower($str, 'UTF-8');
-            $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
-            return preg_replace('/\s+/', '', $str);
+            $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str); // iconv enlève les accents
+            return preg_replace('/\s+/', '', $str); // supprime espaces
         };
 
-        // Compare et retourne "ok" | "presque" | "faux"
+        // === COMPARAISON AVEC DISTANCE DE LEVENSHTEIN ===
+        // Retourne 'ok' (exact), 'presque' (<=4 caractères différents), ou 'faux'
+        // Algorithm de Levenshtein = distance d'édition (combien de caractères à changer)
         $compareTolerance = function ($a, $b) use ($normalize) {
             if ($a === null || $b === null) return null; // non applicable
             $a = $normalize($a);
             $b = $normalize($b);
             if ($a === $b) return 'ok';
             $distance = levenshtein($a, $b);
-            return ($distance <= 4) ? 'presque' : 'faux';
+            return ($distance <= 4) ? 'presque' : 'faux'; // Tolérance: 4 caractères max
         };
 
         // Statuts par partie (selon la direction)
