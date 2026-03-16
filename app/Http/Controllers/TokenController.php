@@ -16,18 +16,11 @@ use Illuminate\Support\Facades\Log;
 class TokenController extends Controller
 {
 
-    /**
-     * @brief Génère un token de signature sécurisé pour un devis.
-     * 
-     * Le token est une clé unique et temporaire permettant au client de signer le devis
-     * sans être authentifié. Il expire après 30 jours.
-     */
     public function generate(Request $request)
     {
-        // === VALIDATION DES DONNÉES REQUISES ===
         $request->validate([
-            'organisation_id' => 'required|string',  // Identifiant du prestataire
-            'devis_id' => 'required|string',         // Numéro unique du devis
+            'organisation_id' => 'required|string',
+            'devis_id' => 'required|string',
             'tiers' => 'required|string',
             'client_email' => 'required|string',
             'titre' => 'required|string',
@@ -83,16 +76,8 @@ class TokenController extends Controller
     }
 
 
-    /**
-     * @brief Génère un token pour accéder à un rapport d'intervention ou document PDF.
-     * 
-     * Contrairement aux tokens de signature (devis), ceux-ci permettent simplement
-     * l'accès en lecture sécurisée à un document déjà généré.
-     */
     public static function generateTokenRapport(Request $request, $path){
-        // === AUTHENTIFICATION (actuellement commentée) ===
-        // Code d'authentification désactivé - à réactiver si besoin de vérifier
-        // que le demandeur est autorisé à générer des tokens
+
         /*
             if (!$request->hasHeader('secret-token')) {
                 return response()->json(['error' => 'No secret token provided.'], 403);
@@ -106,40 +91,31 @@ class TokenController extends Controller
             if (!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)) {
                 return response()->json(['error' => 'Not authorized.'], 403);
             }
+    
+            Log::info('Début de la génération du token', ['request_data' => $request->all()]);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json(['error' => 'Invalid JSON'], 400);
+            }
         */
 
-        // === GÉNÉRATION D'UN TOKEN SÉCURISÉ ===
-        // Crée une chaîne aléatoire de 60 caractères (cryptographiquement sûre)
-        // Cette clé sera stockée en base avec l'expiration et le chemin du document
+
         $token = Str::random(60);
 
-        // Enregistre le token en base de données avec chemin et date d'expiration
         TokenLinksRapport::generateTokenRapport($token, $path);
 
         return $token;
     }
 
-    /**
-     * @brief Valide qu'un token d'accès au rapport existe et n'a pas expiré.
-     * 
-     * Vérifie :
-     * 1. Que le token existe en base de données
-     * 2. Que la date d'expiration n'est pas dépassée
-     * Supprime automatiquement les tokens expirés.
-     */
     public static function isValideTokenRapport($token)
     {
-        // === RECHERCHE DU TOKEN ===
         $tokenRecord = TokenLinksRapport::where('token', $token)->first();
 
-        // Token inexistant → accès refusé
         if (!$tokenRecord)
             return false;
 
-        // === VÉRIFICATION DE L'EXPIRATION ===
         $expiresAt = Carbon::parse($tokenRecord->expires_at);
 
-        // Si le token a expiré, on le supprime de la base (nettoyage)
         if ($expiresAt->lessThan(now())) {
             \Log::info("[TOKEN] DATE DEPASSER", [
                 'token' => $tokenRecord->token,

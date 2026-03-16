@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\TokenController;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -25,7 +24,7 @@ require base_path('routes/api.php');
 
 
 RateLimiter::for('anti-bruteforce-rapport', function (Request $request) {
-    return Limit::perMinute(20)->by($request->ip()); // 20 requêtes par minute par IP
+    return Limit::perMinute(15)->by($request->ip()); // 15 requêtes par minute par IP
 });
 
 Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
@@ -45,13 +44,8 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     // Data d'un document
     Route::get('/open/{token}', [BiController::class, 'open'])->middleware('VerifTokenAndSecretToken');
 
-    //Suppression d'un document
-    Route::delete('/delete/{token}', [BiController::class, 'delete'])
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
-        ->middleware('VerifTokenAndSecretToken'); //Legacy
-
-    // Téléchargement du document d'intervention réalisé
-    Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken'); // Legacy
+    // Suppression d'un document
+    Route::get('/delete/{token}', [BiController::class, 'delete'])->middleware('VerifTokenAndSecretToken');
     
 });
 
@@ -71,6 +65,8 @@ Route::post('/revision/check', [RevisionController::class, 'check'])->name('revi
 // Listing des documents disponibles pour un client
 Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
 
+// Téléchargement du document d'intervention réalisé
+Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken');
 // Fonction de vérification de l'état du document d'intervention
 Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check'])->middleware('VerifSecretToken');
 // Listing de tous les documents enregistrés pour un client
