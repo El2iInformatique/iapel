@@ -73,20 +73,11 @@ class SignatureController extends Controller
         }
     }
 
-    /**
-     * @brief Signe un devis avec la signature manuscrite du client.
-     * 
-     * Processus en 3 étapes :
-     * 1. Intègre la signature base64 du client dans le PDF
-     * 2. Génère un fichier intermédiaire signé (non certifié)
-     * 3. Fait signer électroniquement le PDF par un script Python (certificat)
-     */
+    // Gérer la signature
     public function sign(Request $request, $token)
     {
         \Log::info("DEBUG: Début du processus de signature pour le token : " . $token);
         
-        // === VALIDATION ===
-        // La signature arrive en base64 depuis l'appli frontend (SignaturePad.js)
         $request->validate([
             'signature' => 'required|string' // Signature encodée en base64
         ]);
@@ -129,13 +120,12 @@ class SignatureController extends Controller
             'pdf_exists' => file_exists($pdfPath)
         ]);
 
-        // === ÉTAPE 1 : INTÉGRATION DE LA SIGNATURE DANS LE PDF ===
-        // Charge le PDF du devis et ajoute l'image de signature du client
+        // Charger le PDF source
         $pdf = new Fpdi();
         $pdf->SetAutoPageBreak(false);
         \Log::info("DEBUG: Instance FPDI créée");
 
-        // Récupère le nombre total de pages pour traiter chacune
+        // ombre total de pages dans le PDF source
         $pageCount = $pdf->setSourceFile($pdfPath);
         \Log::info("DEBUG: PDF source chargé", ['pageCount' => $pageCount]);
 
@@ -151,13 +141,9 @@ class SignatureController extends Controller
             if ($i == $pageCount - $tokenEntry->nb_pages) {
                 \Log::info("DEBUG: Application de la signature sur la page", ['page' => $i]);
                 
-                // === COORDONNÉES DE PLACEMENT ===
-                // Les coordonnées en base de données sont en pixels (du frontend)
-                // ratioConversion = conversion pixels → millimètres pour FPDI
                 $hauteurSignature = $tokenEntry->position_signature;
-                $ratioConversion = 6.98; // ratio calibré : 1 pixel = 6.98 autres unités
-                
-                // Récupère les coordonnées X,Y stockées pour date et signature
+                $ratioConversion = 6.98; // ce 6.98 a l'air de sortir du chapeau mais je jure que c'est un ratio correct que j'ai calculé a la main
+
                 $xDate = $tokenEntry->x_date;
                 $yDate = $tokenEntry->y_date;
                 $xSignature = $tokenEntry->x_signature;
@@ -241,12 +227,10 @@ class SignatureController extends Controller
         $pdf->Output($outputPath, 'F');
         \Log::info("DEBUG: PDF signé généré", ['outputPath' => $outputPath, 'file_exists' => file_exists($outputPath)]);
 
-        // === ÉTAPE 2 : SIGNATURE ÉLECTRONIQUE (CERTIFICAT) ===
-        // Lance un script Python qui applique une signature électronique certificative
-        // Cela ajoute une preuve légale que le PDF n'a pas été modifié après signature
-        $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf'); // PDF intermédiaire avec signature manuscrite
-        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_certifie.pdf'); // PDF final certifié
-        $scriptPath = storage_path('app/signature/sign.py'); // Script Python pour signature électronique
+        // On va signer électroniquement le devis
+        $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf'); // PDF du devis avec signature client
+        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_certifie.pdf'); // PDF du devis avec signature client
+        $scriptPath = storage_path('app/signature/sign.py');
         
         \Log::info("DEBUG: Préparation de la signature électronique", [
             'pdfSignePath' => $pdfSignePath,
@@ -267,8 +251,7 @@ class SignatureController extends Controller
             'error_output' => $process->getErrorOutput()
         ]);
 
-        // === VÉRIFICATION DE LA SIGNATURE ÉLECTRONIQUE ===
-        // Si le script Python échoue, on log l'erreur et on rejette la signature
+        // 📌 Vérifier si le script a échoué
         if (!$process->isSuccessful()) {
             \Log::error("DEBUG: Échec du processus Python", [
                 'exit_code' => $process->getExitCode(),
@@ -285,19 +268,11 @@ class SignatureController extends Controller
         \Log::info("DEBUG: Fichiers temporaires supprimés - Processus de signature terminé avec succès");
     }
 
-    /**
-     * @brief Signe un devis avec le nom et prénom du client (signature typographique).
-     * 
-     * Alternative à la signature manuscrite :
-     * - Génère une image de signature élégante avec le nom complet du client
-     * - Puis suit le même processus que sign() : intégration + certification électronique
-     */
+    // Gérer la signature par nom et prénom complets
     public function signWithFullName(Request $request, $token)
     {
         \Log::info("DEBUG: Début du processus de signature par nom et prénom pour le token : " . $token);
         
-        // === VALIDATION DES ENTRÉES ===
-        // Valide que les champs nom et prénom ne sont pas vides
         $request->validate([
             'firstname' => 'required|string|max:50',
             'lastname' => 'required|string|max:50'
