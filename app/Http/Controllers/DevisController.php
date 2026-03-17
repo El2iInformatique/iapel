@@ -53,15 +53,20 @@ class DevisController extends Controller
             return response()->json(['error'=>'No secret token provided.'], 403);  
         }
         
+        // === AUTHENTIFICATION PAR SECRET TOKEN ===
+        // Vérifie que le demandeur a le bon secret-token 
+        // (soit celui de l'organisation, soit le token admin global)
         $secretToken = config("secrets.$token->organisation_id"); 
         $adminToken = config('secrets.admin'); 
 
         $providedToken = $request->header('secret-token');
 
+        // hash_equals() = comparaison résistante aux attaques par timing (timing attacks)
         if(!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)){
             return response()->json(['error'=>'Not authorized.'], 403);
         }
 
+        // === CONSTRUCTION DES CHEMINS DE FICHIERS ===
         $devisDir = $token->devis_id . '_' . $noToken;
 
 	    $devisPath = $token->organisation_id . '/devis/' . $devisDir . '/';
@@ -121,11 +126,13 @@ class DevisController extends Controller
             return response()->json(['error'=>'No secret token provided.'], 403);  
         }
         
+        // === AUTHENTIFICATION PAR SECRET TOKEN DE L'ORGANISATION ===
         $secretToken = config("secrets.$token->organisation_id"); 
         $adminToken = config('secrets.admin'); 
 
         $providedToken = $request->header('secret-token');
 
+        // hash_equals() compare de manière sécurisée (résiste aux timing attacks)
         if(!hash_equals($providedToken, $secretToken) && !hash_equals($providedToken, $adminToken)){
             return response()->json(['error'=>'Not authorized.'], 403);
         }

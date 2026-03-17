@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\layou_client;
-use App\Http\Controllers\TokenController;
-use App\Models\Token;
-use App\Models\TokenLinksRapport;
+use App\Http\Controllers\TokenController; // Contrôleur pour gérer les tokens de rapport
+use App\Http\Controllers\ClientController; // Contrôleur pour gérer les documents clients
+use App\Models\TokenLinksRapport; // Modèle de liaison entre token et rapport
 
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Carbon;
 
 /**
  * @class BiController
@@ -37,9 +37,42 @@ class BiController extends Controller
      * @param string $client Nom du client.
      * @return JsonResponse Liste des documents ou message d’erreur.
      */
+
+     public function formatDate($date): ?string 
+    {
+        // Si la date est vide, nulle ou n'est pas une chaîne exploitable
+        if (empty($date)) {
+            return null;
+        }
+
+        // Nettoyage des espaces en début/fin
+        $date = trim($date);
+
+        // Uniformisation des séparateurs de date en "/" pour Carbon
+        $date = str_replace(['/', '-', '.'], '/', $date);
+
+        try {
+            // Tenter de parser et formater avec Carbon
+            return Carbon::parse($date)->format('d/m/Y');
+        } catch (\Exception $e) {
+            // En cas d'erreur de parsing, logguer et renvoyer null
+            Log::error("Format de date invalide : " . $date);
+            return null;
+        }
+    }
+    
+    /**
+     * Récupère la liste des documents disponibles pour un client donné.
+     *
+     * Le fichier 'documents.json' est stocké par client dans le stockage public.
+     * Si le fichier n'existe pas, une erreur 404 est renvoyée.
+     *
+     * @param string $client Nom du client.
+     * @return JsonResponse Liste des documents ou message d'erreur.
+     */
     public function getDocuments($client)
     {
-        // Récupération du fichier JSON
+        // Construction du chemin vers le fichier JSON du client
         $filePath = storage_path('app/public/' . $client . '/documents.json');
 
         // Vérifier si le fichier existe
@@ -54,18 +87,34 @@ class BiController extends Controller
             return response()->json(['error' => 'Fichier introuvable'], 404);
         }
 
-        // Lire et décoder le JSON
+        // Lire le contenu du fichier JSON
         $json = file_get_contents($filePath);
+
+        // Décoder le JSON en tableau associatif
         $data = json_decode($json, true); // true => convertir en tableau associatif
 
+        // Retourner les données au format JSON
         return response()->json($data);
     }
 
 
+    /**
+     * Indique si un PDF a déjà été généré pour un rapport donné.
+     *
+     * Cette vérification utilise deux sources :
+     * - le champ 'pdf_exists' présent dans les métadonnées de token,
+     * - la présence physique du fichier PDF dans le stockage.
+     *
+     * @param string $jsonPath Chemin absolu vers le fichier JSON existant.
+     * @param array $dataToken Données issues de la table TokenLinksRapport.
+     * @return bool true si le PDF existe déjà, false sinon.
+     */
     public function checkExistPdf($jsonPath, $dataToken): bool {
+        // Détermine le chemin du fichier PDF à partir du chemin JSON (ou fallback)
         $pdfFile = str_replace('.json', '.pdf', $jsonPath) 
         ?? storage_path("app/public/{$dataToken['client']}/{$dataToken['document']}/{$dataToken['uid']}/{$dataToken['uid']}.pdf");
 
+        // Vérifier si le PDF existe déjà (dans la DB ou sur le disque)
         $alreadyExists = !empty($dataToken['pdf_exists']) || file_exists($pdfFile);
 
         return $alreadyExists;
@@ -80,89 +129,162 @@ class BiController extends Controller
      * @param Request $request Requête HTTP contenant les données du document.
      * @return JsonResponse Contient le token et l’URL d’accès BI.
      */
-    // fonction de création du JSON et du TOKEN d'identification du fichier
     public function createJson(Request $request)
     {
-        // Le secret token est deja verifier dans le middleware VerifSecretToken, pas besoin de le verifier à nouveau
-        $data = $request->input();
-
-        $uid = $data['uid'];
-        $document = $data['document'];
-        $client = $data['client'];
-        $folderPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid);
-
-        // Vérifier si le dossier existe, sinon le créer
-        if (!File::exists($folderPath)) {
-            File::makeDirectory($folderPath, 0775, true, true);
-        }
-
-        $jsonPath = $folderPath . '/' . $uid . '.json';
-        $dataToken = [
-            'client' => $client,
-            'document' => $document,
-            'uid' => $uid
+        // Définition des règles de validation minimales
+        $baseRules = [
+            'document' => 'required|string|in:cerfa_15497,rapport_intervention',
+            'client'   => 'required|string',
+            'uid'      => 'required|string|max:50',
         ];
 
+        // Prépare les règles spécifiques selon le type de document
+        $specificRules = [];
+        $documentType = $request->input('document');
+
+        if ($documentType === 'cerfa_15497') {
+            $specificRules = [
+                'operateur' => 'nullable|string',
+                'detenteur' => 'nullable|string',
+                'numero_attestation_capacite' => 'nullable|string',
+                'identification' => 'nullable|string',
+                'denomination' => 'nullable|string',
+                'charge' => 'nullable|string',
+                'tonnage' => 'nullable|string',
+                'identification_controle' => 'nullable|string',
+                'date_controle' => 'nullable|date',
+                'detection_fuites' => 'nullable|string',
+                'constat_fuites' => 'nullable|string',
+                'localisation_fuite_1' => 'nullable|string',
+                'localisation_fuite_2' => 'nullable|string',
+                'localisation_fuite_3' => 'nullable|string',
+                'quantite_chargee_totale' => 'nullable|string',
+                'quantite_chargee_A' => 'nullable|string',
+                'fluide_A' => 'nullable|string',
+                'quantite_chargee_B' => 'nullable|string',
+                'quantite_chargee_C' => 'nullable|string',
+                'quantite_recuperee_totale' => 'nullable|string',
+                'quantite_recuperee_D' => 'nullable|string',
+                'BSFF' => 'nullable|string',
+                'quantite_recuperee_E' => 'nullable|string',
+                'identification_E' => 'nullable|string',
+                'autre_fluide_non_inflammable' => 'nullable|string',
+                'autre_fluide_inflammable' => 'nullable|string',
+                'installation_destination_fluide' => 'nullable|string',
+                'observations' => 'nullable|string',
+                'nom_signataire_operateur' => 'nullable|string',
+                'qualite_signataire_operateur' => 'nullable|string',
+                'nom_signataire_detenteur' => 'nullable|string',
+                'qualite_signataire_detenteur' => 'nullable|string',
+                'date_signature_operateur' => 'nullable|string',
+                'signature-operateur' => 'nullable|string',
+                'date_signature_detenteur' => 'nullable|string',
+                'signature-detenteur' => 'nullable|string',
+            ];
+        } elseif ($documentType === 'rapport_intervention') {
+            $specificRules = [
+                'code_client'          => 'nullable|string',
+                'equipier'             => 'nullable|string',
+                'nom_client'           => 'nullable|string',
+                'email_client'         => 'nullable|email',
+                'telephone_client'     => 'nullable|string',
+                'portable_client'      => 'nullable|string',
+                'adresse_facturation'  => 'nullable|string',
+                'cp_facturation'       => 'nullable|string',
+                'ville_facturation'    => 'nullable|string',
+                'date_intervention'    => 'nullable|date',
+                'adresse_intervention' => 'nullable|string',
+                'lieu_intervention'    => 'nullable|string',
+                'cp_intervention'      => 'nullable|string',
+                'ville_intervention'   => 'nullable|string',
+                'intervenant'          => 'nullable|string',
+                'description'          => 'nullable|string',
+            ];
+        }
+
+        // Fusion de toutes les règles de validation
+        $allRules = array_merge($baseRules, $specificRules);
+
+        // Initialisation avec des valeurs par défaut pour sécuriser les logs du bloc catch
+        $client = $request->input('client', 'inconnu');
+        $uid    = $request->input('uid', 'inconnu');
+
         try {
-            if (file_exists($jsonPath)) {
-                unlink($jsonPath);
-            }
+            // Création du validateur Laravel
+            $validator = Validator::make($request->all(), $allRules);
 
-            if (str_starts_with($document, 'cerfa_15497')) {
-
-              $jsonData = [
-                  'dataToken' => $dataToken,
-                    'operateur' => $data['operateur'] ?? '',
-                    'detenteur' => $data['detenteur'] ?? ''
-                ];
-
-            } 
-            else if ($document == 'rapport_intervention') {
-
-                $jsonData = [
-                    'dataToken' => $dataToken,
-                    'code_client' => $data['code_client'] ?? '',
-                    'nom_client' => $data['nom_client'] ?? '',
-                    'email_client' => $data['email_client'] ?? '',
-                    'telephone_client' => $data['telephone_client'] ?? '',
-                    'portable_client' => $data['portable_client'] ?? '',
-                    'adresse_facturation' => $data['adresse_facturation'] ?? '',
-                    'cp_facturation' => $data['cp_facturation'] ?? '',
-                    'ville_facturation' => $data['ville_facturation'] ?? '',
-					'date_intervention' => $data['date_intervention'] ?? '',
-                    'adresse_intervention' => $data['adresse_intervention'] ?? '',
-                    'intervenant' => $data['intervenant'] ?? '',
-                    'description' => $data['description'] ?? ''
-                ];
-            }
-
-            $token = TokenController::generateTokenRapport( $request, 'app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json' );
-
-            if (!$token) {
+            // Si la validation échoue, on log et on retourne les erreurs
+            if ($validator->fails()) {
+                Log::warning("[VALIDATION] Echec de validation des données d'entrée", [
+                    'client'   => $client,
+                    'uid'      => $uid,
+                    'errors'   => $validator->errors()->toArray(),
+                    'fonction' => __FUNCTION__,
+                    'fichier'  => basename(__FILE__),
+                    'ligne'    => __LINE__
+                ]);
                 return response()->json([
-                    'error' => 'Token non généré',
-                ], 500);
+                    'error'   => 'Validation échouée',
+                    'details' => $validator->errors()
+                ], 422); 
             }
-            file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT));
+
+            // Récupère les données validées
+            $validated = $validator->validated();
+            
+            // On récupère toutes les clés attendues par le validateur
+            $expectedKeys = array_keys($allRules);
+            
+            // On crée un tableau avec toutes ces clés initialisées à ""
+            $fullData = array_fill_keys($expectedKeys, "");
+            
+            // On écrase les valeurs par défaut avec les données reçues
+            $finalData = array_merge($fullData, $validated);
+
+            // Si une valeur est explicitement nulle, on la remplace par une chaîne vide
+            $finalData = array_map(function($value) {
+                return $value === null ? "" : $value;
+            }, $finalData);
+            // ----------------------------------------------------
+
+            // Mise à jour des variables critiques avec les données validées/enrichies
+            $uid      = $finalData['uid'];
+            $document = $finalData['document'];
+            $client   = $finalData['client'];
+
+            // On appelle le contrôleur client pour créer le document côté stockage
+            $succes = ClientController::create($client, $document, $uid, $finalData);
+
+            if (!$succes) {
+                throw new Exception("Erreur lors de la création du nouveau document");
+            }
+
+            // Préparation du chemin relatif vers le fichier JSON
+            $relativeFolder = "{$client}/{$document}/{$uid}";
+            $relativeFilePath = "{$relativeFolder}/{$uid}.json";
+
+            // Génération du Token
+            $fullPathForToken = "app/public/{$relativeFilePath}";
+            $token = TokenController::generateTokenRapport($request, $fullPathForToken);
 
             return response()->json([
-                'message' => 'Token généré avec succès',
-                'token' => $token,
-                'bi_url' => url('/bi/' . $token),
-            ], 200);
+                'message' => 'Document créé avec succès',
+                'token'   => $token,
+                'bi_url'  => url("/bi/{$token}"),
+            ], 201);
 
-        } catch (\Exception $e) {
-            \Log::error("[CONFIG CLIENT] CREATION DU FICHIER JSON", [
-                'client' => $client,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'message' => $e->getMessage()
+        } catch (Exception $e) {
+            Log::error("[JSON_CREATION_FAILED] Client: {$client}, UID: {$uid}", [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString()
             ]);
-            abort(500, 'Erreur lors de la création du fichier JSON');
+
+            return response()->json([
+                'error' => 'Une erreur technique est survenue lors de la génération du document.'
+            ], 500);
         }
     }
-
+    
     /**
      * @brief Télécharge le fichier PDF correspondant à un token donné.
      *
@@ -174,12 +296,13 @@ class BiController extends Controller
      */
     public function download($token)
     {
+        // Recherche du token en base pour retrouver le chemin du JSON associé
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
+        // Construire le chemin du fichier JSON stocké
+        $filePath = storage_path($dataToken['paths']);
 
-        // Vérifier si le fichier existe
+        // Vérifier si le fichier JSON existe avant de le lire
         if (!file_exists($filePath)) {
             \Log::error("[TELECHARGEMENT] FICHIER JSON INTROUVABLE", [
                 'token' => $token,
@@ -191,16 +314,19 @@ class BiController extends Controller
             abort(404, 'Fichier introuvable');
         }
 
-        // Lire et décoder le fichier JSON
+        // Lire et décoder le fichier JSON pour récupérer les métadonnées
         $data = json_decode(file_get_contents($filePath), true);
 
+        // Extraire les éléments nécessaires depuis le JSON
         $client = $data["dataToken"]["client"];
         $document = $data["dataToken"]["document"];
         $uid = $data["dataToken"]["uid"];
         $token = $dataToken->token;
 
+        // Chemin du PDF correspondant
         $filePath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
+        // Vérifier l'existence du PDF
         if (!file_exists($filePath)) {
             \Log::error("[TELECHARGEMENT] FICHIER PDF INTROUVABLE", [
                 'client' => $client,
@@ -212,6 +338,7 @@ class BiController extends Controller
             return response()->json(['error' => 'Fichier introuvable'], 404);
         }
 
+        // Retourner le PDF en téléchargement
         return response()->download($filePath, "{$uid}.pdf");
     }
 
@@ -229,9 +356,11 @@ class BiController extends Controller
      */
     public function check($client, $document, $uid, Request $request)
     {
+        // Construction des chemins attendus pour JSON et PDF
         $jsonPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.json');
         $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $uid . '/' . $uid . '.pdf');
 
+        // Retourner le résultat des vérifications d'existence
         return response()->json([
             'json_exists' => file_exists($jsonPath),
             'pdf_exists' => file_exists($pdfPath)
@@ -249,9 +378,10 @@ class BiController extends Controller
      */
     public function show($token)
     {
+        // Récupération des infos liées au token
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
-        // Vérifier si le token existe - si le token n'existe pas, on affiche une page d'erreur 404
+        // Si le token n'existe pas, on bloque l'accès
         if (!$dataToken) {
             \Log::error("[DATA_TOKEN] TOKEN INTROUVABLE", [
                 'token' => $token,
@@ -262,10 +392,10 @@ class BiController extends Controller
             abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
         }
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
+        // Construire le chemin du fichier JSON à partir du token
+        $filePath = storage_path($dataToken['paths']);
 
-        // Vérifier si le fichier existe
+        // Vérifier que le JSON existe
         if (!file_exists($filePath)) {
             \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
                 'token' => $token,
@@ -277,6 +407,7 @@ class BiController extends Controller
             abort(404, 'Fichier introuvable');
         }
 
+        // Si un PDF existe déjà, on refuse l'accès pour éviter les doublons
         if ($this->checkExistPdf($filePath, $dataToken)) {
             $client = $dataToken['client'] ?? 'unknown_client';
             \Log::warning("[JSON] ACCES REFUSER", [
@@ -290,7 +421,7 @@ class BiController extends Controller
             abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
         }
 
-        // Lire et décoder le fichier JSON
+        // lire et décoder le JSON pour construire la vue
         $data = json_decode(file_get_contents($filePath), true);
 
         $client = $data["dataToken"]["client"];
@@ -298,15 +429,49 @@ class BiController extends Controller
         $uid = $data["dataToken"]["uid"];
         $token = $dataToken->token;
 
+        // Si on a un cerfa spécifique, on utilise sa vue dédiée
         if (str_starts_with($document, 'cerfa_15497_')) {
             return view('cerfa_15497', compact('data', 'token', 'uid', 'client', 'document'));
         }
+        // Si le document commence par cerfa, on affiche la vue correspondante
         else if (str_starts_with($document, 'cerfa')) {
             return view($document, compact('data', 'token', 'uid', 'client', 'document'));
         } else {
 
-        return view('bi', compact('data', 'token', 'uid', 'client', 'document'));
+            // Si la date d'intervention est présente, on la formate
+            if (isset($data["date_intervention"])) {
+                $data["date_intervention"] = $this->formatDate($data["date_intervention"]) ?? null;
+            }
 
+            // Récupération des options BI pour le client
+            $allOption = ClientController::getOptionsBI($client);
+            
+            // Initialisation des tableaux d'options
+            $optionsConstat = [];
+            $optionsVerification = [];
+            $optionsNotesParticuliere = [];
+            $optionsPointVigilance = [];
+
+            // On vérifie qu'on a bien reçu les 4 tableaux attendus
+            if (is_array($allOption) && count($allOption) >= 4) {
+                $optionsConstat           = $allOption[0];
+                $optionsVerification      = $allOption[1];
+                $optionsNotesParticuliere = $allOption[2];
+                $optionsPointVigilance    = $allOption[3];
+            }
+
+            // IMPORTANT : Ajoute toutes les options dans le compact pour les utiliser en front
+            return view('bi', compact(
+                'data', 
+                'token', 
+                'uid', 
+                'client', 
+                'document', 
+                'optionsConstat',
+                'optionsVerification', 
+                'optionsNotesParticuliere', 
+                'optionsPointVigilance'
+            ));
         }
     }
 
@@ -317,20 +482,22 @@ class BiController extends Controller
      * au token correspondant et met à jour le statut du document.
      *
      * @param Request $request Contient les fichiers et les métadonnées du rapport.
-     * @return JsonResponse Résultat de la soumission.
+     * @return \Illuminate\Http\RedirectResponse Résultat de la soumission.
      */
     public function submit(Request $request, $token)
     {
+        // Récupération du token en DB
         $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
+        // Si token introuvable, bloquer
         if (!$dataToken) {
             abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
         }
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
+        // Construire le chemin du JSON associé
+        $filePath = storage_path($dataToken['paths']);
 
-        // Vérifier si le fichier JSON existe
+        // Vérifier que le fichier JSON existe
         if (!file_exists($filePath)) {
             \Log::error("[JSON] TOKEN INTROUVABLE", [
                 'token' => $token,
@@ -342,6 +509,7 @@ class BiController extends Controller
             abort(404, "Fichier introuvable");
         }
 
+        // Vérifier si un PDF existe déjà pour éviter les doublons
         if ($this->checkExistPdf($filePath, $dataToken)) {
             $client = $dataToken['client'] ?? 'unknown_client';
             \Log::error("[REFUSE] SOUMISSION REFUSER", [
@@ -355,155 +523,21 @@ class BiController extends Controller
             abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
         }
 
-        // Lire le contenu existant
+        // Lecture du JSON existant pour récupérer les métadonnées
         $data = json_decode(file_get_contents($filePath), true);
         $document = $data['dataToken']['document'];
         $client = $data['dataToken']['client'];
         $uid = $data['dataToken']['uid'];
 
-        if ($document == 'rapport_intervention') {
-            $biPath = $client . '/' . $document . '/' . $uid;
-            $data['intervention_realisable'] = $request->input('intervention_realisable');
-            $data['equipier'] = $request->input('equipier');
-            $data['compte_rendu'] = $request->input('compte_rendu');
-            $data['materiel'] = $request->input('materiel');
-            $data['intervention_suite'] = $request->input('intervention_suite');
-            $data['materiel'] = $request->input('materiel');
-            $data['prevoir'] = $request->input('prevoir');
-            $data['facturable'] = $request->input('facturable');
-            $data['terminee'] = $request->input('terminee');
-            $data['absent'] = $request->input('absent');
-            $data['fait-le'] = $request->input('fait-le');
-            $data['devis_a_faire'] = $request->input('devis_a_faire');
+        // Délégation au ClientController pour stocker le fichier PDF et mettre à jour les données
+        $succes = ClientController::store($client, $document, $uid, $request, $data);
 
-            // Traitement Photo Avant
-            if ($request->hasFile('photo_avant') && $request->file('photo_avant')->isValid()) {
-                $file = $request->file('photo_avant');
-                
-                // On stocke le fichier et on récupère sont chemin
-                $data['photo_avant'] = $file->store($biPath, 'public');
-            }
+        // En cas d'échec, on remonte une erreur
+        if (!$succes) {
+            abort(500, "Une erreur est survenue lors de l'enregistrement des données.");
+        }
 
-            // Traitement Photo Après
-            if ($request->hasFile('photo_apres') && $request->file('photo_apres')->isValid()) {
-                $file = $request->file('photo_apres');
-                $data['photo_apres'] = $file->store($biPath, 'public');
-            }
-
-            $data['complements'] = [];
-            $comments = $request->input('comments');
-            $images = $request->input('images');
-            if (isset($images)) {
-                foreach ($images as $index => $image) {
-                    // Stocker chaque image et son commentaire dans un tableau
-                    $data['complements'][] = [
-                        'image' => $biPath . '/' . $image,
-                        'comment' => $comments[$index] ?? '', // Associer le bon commentaire
-                    ];
-                }
-            }
-
-            $data["constat"] = $request->input('constat');
-            $data["verification"] = $request->input('verification');
-            $data["notes_particulieres"] = $request->input('notes_particulieres');
-            $data["points_vigilances"] = $request->input('points_vigilances');
-
-            if ($request->input('signature')) {
-                $data['signature'] = $request->input('signature');
-            }
-
-            $data['pdf_exists'] = true; // Marquer que le PDF a été généré
-
-        } else if (str_starts_with($document, 'cerfa_15497')) {
-            // Mettre à jour les données avec les nouvelles valeurs du formulaire
-            $data['operateur'] = $request->input('operateur');
-            $data['detenteur'] = $request->input('detenteur');
-
-            $data['numero_attestation_capacite'] = $request->input('numero_attestation_capacite');
-
-            $data['identification'] = $request->input('identification');
-            $data['denomination'] = $request->input('denomination');
-            $data['charge'] = $request->input('charge');
-            $data['tonnage'] = $request->input('tonnage');
-
-            $data['nature_intervention'] = $request->input('nature_intervention');
-            $data['autre_valeur'] = $request->input('autre_valeur');
-
-            $data['identification_controle'] = $request->input('identification_controle');
-            $data['date_controle'] = $request->input('date_controle');
-
-            $data['detection_fuites'] = $request->input('detection_fuites');
-
-            $data['hcfc'] = $request->input('hcfc');
-            $data['hfc_pfc'] = $request->input('hfc_pfc');
-            $data['hfo'] = $request->input('hfo');
-
-            $data['equipement_sans_detection'] = $request->input('equipement_sans_detection');
-            $data['equipement_avec_detection'] = $request->input('equipement_avec_detection');
-
-            $data['constat_fuites'] = $request->input('constat_fuites');
-
-            $data['localisation_fuite_1'] = $request->input('localisation_fuite_1');
-            $data['reparation_fuite_1'] = $request->input('reparation_fuite_1');
-            $data['localisation_fuite_2'] = $request->input('localisation_fuite_2');
-            $data['reparation_fuite_2'] = $request->input('reparation_fuite_2');
-            $data['localisation_fuite_3'] = $request->input('localisation_fuite_3');
-            $data['reparation_fuite_3'] = $request->input('reparation_fuite_3');
-
-            $data['quantite_chargee_totale'] = $request->input('quantite_chargee_totale');
-            $data['quantite_chargee_A'] = $request->input('quantite_chargee_A');
-            $data['fluide_A'] = $request->input('fluide_A');
-            $data['quantite_chargee_B'] = $request->input('quantite_chargee_B');
-            $data['quantite_chargee_C'] = $request->input('quantite_chargee_C');
-
-            $data['quantite_recuperee_totale'] = $request->input('quantite_recuperee_totale');
-            $data['quantite_recuperee_D'] = $request->input('quantite_recuperee_D');
-            $data['BSFF'] = $request->input('BSFF');
-            $data['quantite_recuperee_E'] = $request->input('quantite_recuperee_E');
-            $data['identification_E'] = $request->input('identification_E');
-
-            $data['fluide_non_inflammable'] = $request->input('fluide_non_inflammable');
-            $data['autre_fluide_non_inflammable'] = $request->input('autre_fluide_non_inflammable');
-            $data['fluide_inflammable'] = $request->input('fluide_inflammable');
-            $data['autre_fluide_inflammable'] = $request->input('autre_fluide_inflammable');
-
-            $data['installation_destination_fluide'] = $request->input('installation_destination_fluide');
-
-            $data['observations'] = $request->input('observations');
-
-            // Gestion de la photo
-            /*
-            if ($request->hasFile('photo')) {
-                $imagePath = $request->file('photo')->store('images', 'public');
-                $data['photo'] = $imagePath;
-            }
-            // Sauvegarde du commentaire
-            $data['commentaire'] = $request->input('commentaire');
-            */
-
-            $data['nom_signataire_operateur'] = $request->input('nom_signataire_operateur');
-            $data['qualite_signataire_operateur'] = $request->input('qualite_signataire_operateur');
-            $data['date_signature_operateur'] = date('d/m/Y');
-            if ($request->input('signature-operateur')) {
-                $data['signature-operateur'] = $request->input('signature-operateur');
-            } else {
-                $data['signature-operateur'] = null;
-            }
-
-            $data['nom_signataire_detenteur'] = $request->input('nom_signataire_detenteur');
-            $data['qualite_signataire_detenteur'] = $request->input('qualite_signataire_detenteur');
-            $data['date_signature_detenteur'] = date('d/m/Y');
-            if ($request->input('signature-detenteur')) {
-                $data['signature-detenteur'] = $request->input('signature-detenteur');
-            } else {
-                $data['signature-detenteur'] = null;
-            }
-        } 
-
-        // Sauvegarder les nouvelles données dans le fichier JSON
-        file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-        // Rediriger avec un message de succès
+        // Rediriger vers la vue PDF finale
         return redirect()->route('pdf.view', ['token' => $token]);
     }
 
@@ -514,13 +548,14 @@ class BiController extends Controller
      * Retourne la liste des rapports et documents disponibles
      * dans le répertoire du client spécifié.
      *
-     * @param string $client Nom du client.
+     * @param string $entreprise Nom du client.
+     * @param Request $request
      * @return JsonResponse Liste des fichiers enregistrés.
      */
     public function listSavedDocs($entreprise, Request $request): JsonResponse
     {
         try {
-             // Le secret token est deja verifier dans le middleware VerifSecretToken, pas besoin de le verifier à nouveau
+            // Le secret token est déjà vérifié dans le middleware VerifSecretToken
 
             \Log::info("[ACCES] ACCES AUTORISER - listSavedDocs", [
                 'client' => $entreprise,
@@ -528,370 +563,14 @@ class BiController extends Controller
                 'fichier' => basename(__FILE__),
             ]);
 
-            $basePath = "$entreprise";
+            // Appel de la logique métier déléguée au ClientController
+            $documents = ClientController::getAllDocuments($entreprise);
 
-            $files = Storage::disk('public')->allFiles($basePath);
+            // Retourner la liste des documents
+            return response()->json($documents);
 
-            // Sépare proprement les fichiers "devis", "rapport_intervention" et les autres
-            $lesDevisFiles = array_filter($files, fn($f) => strpos($f, '/devis/') !== false);
-            $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
-            $lesCerfas15497 = array_filter($files, fn($f) => strpos($f, '/cerfa_15497/') !== false);
-            $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false && strpos($f, '/cerfa_15497/') === false);
-
-            // Chargement des règles de format (comme dans ta version)
-            $formatPath = 'format.json';
-            $formatRules = [];
-            if (Storage::disk('public')->exists($formatPath)) {
-                $formatContent = Storage::disk('public')->get($formatPath);
-                $formatRules = json_decode($formatContent, true);
-            }
-
-            // Construction d'une map des devis par dossier (ex: testn17_PC67...)
-            $devisTraites = [];
-            foreach ($lesDevisFiles as $file) {
-                $parts = explode('/', $file);
-                $devisIndex = array_search('devis', $parts);
-                if ($devisIndex === false || !isset($parts[$devisIndex + 1]))
-                    continue;
-
-                $folder = $parts[$devisIndex + 1]; // ex: testn17_PC67...
-                $fileName = end($parts); // ex: testn17_PC67....pdf ou testn17_PC67..._certifie.pdf
-
-                // extraction nom / token depuis le nom du dossier
-                $folderParts = explode('_', $folder);
-                $nom = $folderParts[0] ?? $folder;
-                $tokenStr = $folderParts[1] ?? null;
-                $tokenModel = $tokenStr ? Token::where('token', $tokenStr)->first() : null;
-
-                if (!isset($devisTraites[$folder])) {
-                    $devisTraites[$folder] = [
-                        'nom' => $nom,
-                        'token' => $tokenModel->token ?? $tokenStr,
-                        'tiers' => $tokenModel->tiers ?? null,
-                        'has_normal' => false,
-                        'has_certifie' => false,
-                        'normal_file' => null,
-                        'certifie_file' => null,
-                        'normal_last' => null,
-                        'certifie_last' => null,
-                    ];
-                }
-
-                if (str_ends_with($fileName, '_certifie.pdf')) {
-                    $devisTraites[$folder]['has_certifie'] = true;
-                    $devisTraites[$folder]['certifie_file'] = $file;
-                    if (Storage::disk('public')->exists($file)) {
-                        $devisTraites[$folder]['certifie_last'] = Storage::disk('public')->lastModified($file);
-                    }
-                } elseif (str_ends_with($fileName, '.pdf')) {
-                    $devisTraites[$folder]['has_normal'] = true;
-                    $devisTraites[$folder]['normal_file'] = $file;
-                    if (Storage::disk('public')->exists($file)) {
-                        $devisTraites[$folder]['normal_last'] = Storage::disk('public')->lastModified($file);
-                    }
-                }
-            }
-
-            // Construction d'une map des rapports d'intervention par dossier
-            $rapportInterventionTraites = [];
-            foreach ($lesRapportInterventionFiles as $file) {
-                // Ignorer le fichier rapport_intervention/rapport_intervention.pdf
-                if (str_ends_with($file, 'rapport_intervention/rapport_intervention.pdf')) 
-                    continue;
-                
-                $parts = explode('/', $file);
-                $rapportIndex = array_search('rapport_intervention', $parts);
-                if ($rapportIndex === false || !isset($parts[$rapportIndex + 1]))
-                    continue;
-
-                $folder = $parts[$rapportIndex + 1]; // ex: uid_folder
-                $fileName = end($parts); // ex: uid.pdf ou uid.json
-
-                if (!isset($rapportInterventionTraites[$folder])) {
-                    $rapportInterventionTraites[$folder] = [
-                        'uid' => $folder,
-                        'has_json' => false,
-                        'has_pdf' => false,
-                        'json_file' => null,
-                        'pdf_file' => null,
-                        'json_last' => null,
-                        'pdf_last' => null,
-                    ];
-                }
-
-                if (str_ends_with($fileName, '.json')) {
-                    $rapportInterventionTraites[$folder]['has_json'] = true;
-                    $rapportInterventionTraites[$folder]['json_file'] = $file;
-                    if (Storage::disk('public')->exists($file)) {
-                        $rapportInterventionTraites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
-                    }
-                } elseif (str_ends_with($fileName, '.pdf')) {
-                    $rapportInterventionTraites[$folder]['has_pdf'] = true;
-                    $rapportInterventionTraites[$folder]['pdf_file'] = $file;
-                    if (Storage::disk('public')->exists($file)) {
-                        $rapportInterventionTraites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
-                    }
-                }
-            }
-
-            $cerfas15497Traites = [];
-            foreach ($lesCerfas15497 as $file) {
-                // Ignorer le fichier rapport_intervention/rapport_intervention.pdf
-                if (str_ends_with($file, 'cerfa_15497/cerfa_15497.pdf'))
-                    continue;
-                
-                $parts = explode('/', $file);
-                $rapportIndex = array_search('cerfa_15497', $parts);
-                if ($rapportIndex === false || !isset($parts[$rapportIndex + 1]))
-                    continue;
-
-                $folder = $parts[$rapportIndex + 1]; // ex: uid_folder
-                $fileName = end($parts); // ex: uid.pdf ou uid.json
-
-                if (!isset($cerfas15497Traites[$folder])) {
-                    $cerfas15497Traites[$folder] = [
-                        'uid' => $folder,
-                        'has_json' => false,
-                        'has_pdf' => false,
-                        'json_file' => null,
-                        'pdf_file' => null,
-                        'json_last' => null,
-                        'pdf_last' => null,
-                    ];
-                }
-
-                if (str_ends_with($fileName, '.json')) {
-                    $cerfas15497Traites[$folder]['has_json'] = true;
-                    $cerfas15497Traites[$folder]['json_file'] = $file;
-                    if (Storage::disk('public')->exists($file)) {
-                        $cerfas15497Traites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
-                    }
-                } elseif (str_ends_with($fileName, '.pdf')) {
-                    $cerfas15497Traites[$folder]['has_pdf'] = true;
-                    $cerfas15497Traites[$folder]['pdf_file'] = $file;
-                    if (Storage::disk('public')->exists($file)) {
-                        $cerfas15497Traites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
-                    }
-                }
-            }
-
-            \Log::info("[DEVIS] DEVIS RECUEILLIS", [
-                'client' => $entreprise,
-                'devis' => json_encode($devisTraites),
-            ]);
-            \Log::info("[BI] RAPPORTS INTERVENTIONS RECUEILLIS", [
-                'client' => $entreprise,
-                'bi' => json_encode($rapportInterventionTraites)
-            ]);
-            \Log::info("[CERFA] CERFAS RECUEILLIS", [
-                'client' => $entreprise,
-                'cerfas' => json_encode($cerfas15497Traites)
-            ]);
-
-            // Création de l'index documents pour retour
-            $documents = [];
-            
-            // Traitement des devis
-            foreach ($devisTraites as $folder => $d) {
-                $status = $d['has_certifie'] ? 'certifie' : '';
-                // Preferer la date du PDF normal comme date de traitement
-                $traitTs = $d['normal_last'] ?? $d['certifie_last'];
-                $confTs = $d['certifie_last'] ?? null;
-
-                $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-                $dateConf = $confTs ? \Carbon\Carbon::createFromTimestamp($confTs)->toDateTimeString() : null;
-
-                // Calcul du temps restant (devis valide 30 jours)
-                $tempsRestants = 0;
-                $signable = false;
-                
-                if ($traitTs) {
-                    $dateCreation = \Carbon\Carbon::createFromTimestamp($traitTs);
-                    $joursEcoules = $dateCreation->diffInDays(\Carbon\Carbon::now());
-                    $tempsRestants = max(0, 30 - $joursEcoules);
-                    $signable = $tempsRestants > 0;
-                }
-
-                $documents['devis/' . $folder] = [
-                    'path' => 'devis/' . $folder,
-                    'status' => $status,
-                    'data' => [
-                        "nom" => $d['nom'],
-                        "tiers" => $d['tiers'],
-                        'token' => $d['token'],
-                        "date_traitement" => $dateTrait,
-                        "temps_restants" => $tempsRestants,
-                        "signable" => $signable,
-                        "date_confirmation" => $dateConf,
-                        "par" => null
-                    ]
-                ];
-            }
-
-            // Traitement des rapports d'intervention
-            foreach ($rapportInterventionTraites as $folder => $r) {
-                $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
-                
-                $traitTs = $r['json_last'];
-                $pdfTs = $r['pdf_last'];
-
-                $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-                $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
-
-                // Récupérer les données du JSON si disponible
-                $jsonData = null;
-                if ($r['has_json'] && $r['json_file']) {
-                    try {
-                        $jsonContent = Storage::disk('public')->get($r['json_file']);
-                        $jsonData = json_decode($jsonContent, true);
-                    } catch (\Exception $e) {
-                        \Log::error("[BI] LECTURE JSON", [
-                            'client' => $entreprise,
-                            'fonction' => __FUNCTION__,
-                            'fichier' => basename(__FILE__),
-                            'ligne' => __LINE__,
-                            'json_file' => $r['json_file'],
-                            'message' => $e->getMessage()
-                        ]);
-                    }
-                }
-
-                $documents['rapport_intervention/' . $folder] = [
-                    'path' => 'rapport_intervention/' . $folder,
-                    'status' => $status,
-                    'token_rapport' => null, // sera rempli plus bas si on trouve le token
-                    'data' => [
-                        "nom" => $r['uid'],
-                        "tiers" => $jsonData['nom_client'] ?? null,
-                        "intervenant" => $jsonData['intervenant'] ?? null,
-                        "description" => $jsonData['description'] ?? null,
-                        "date_traitement" => $dateTrait,
-                        "date_pdf" => $datePdf,
-                        "par" => null
-                    ]
-                ];
-
-                // Chercher le token associé
-                if ($r['json_file']) {
-                    $pathToken = "app/public/" . $r['json_file'];
-                    $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
-                    if ($tokenRapport) {
-                        $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token;
-                    }
-                }
-            }
-
-            foreach ($cerfas15497Traites as $folder => $r) {
-                $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
-                
-                $traitTs = $r['json_last'];
-                $pdfTs = $r['pdf_last'];
-
-                $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-                $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
-
-                // Récupérer les données du JSON si disponible
-                $jsonData = null;
-                if ($r['has_json'] && $r['json_file']) {
-                    try {
-                        $jsonContent = Storage::disk('public')->get($r['json_file']);
-                        $jsonData = json_decode($jsonContent, true);
-                    } catch (\Exception $e) {
-                        \Log::error("[CERFA] LECTURE JSON", [
-                            'client' => $entreprise,
-                            'fonction' => __FUNCTION__,
-                            'fichier' => basename(__FILE__),
-                            'ligne' => __LINE__,
-                            'json_file' => $r['json_file'],
-                            'message' => $e->getMessage()
-                        ]);
-                    }
-                }
-
-                $documents['cerfa_15497/' . $folder] = [
-                    'path' => 'cerfa_15497/' . $folder,
-                    'status' => $status,
-                    'token_rapport' => null, // sera rempli plus bas si on trouve le token
-                    'data' => [
-                        "nom" => $r['uid'],
-                        "tiers" => $jsonData['nom_client'] ?? null,
-                        "operateur" => $jsonData['operateur'] ?? null,
-                        "detenteur" => $jsonData['detenteur'] ?? null,
-                        "nature_intervention" => $jsonData['nature_intervention'] ?? null,
-                        "date_traitement" => $dateTrait,
-                        "date_pdf" => $datePdf,
-                        "par" => null
-                    ]
-                ];
-
-                // Chercher le token associé
-                if ($r['json_file']) {
-                    $pathToken = "app/public/" . $r['json_file'];
-                    $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
-                    if ($tokenRapport) {
-                        $documents['cerfa_15497/' . $folder]["token_rapport"] = $tokenRapport->token;
-                    }
-                }
-            }
-
-            // Traitement des autres documents (reste très proche de ta version)
-            foreach ($lesDocuments as $file) {
-                $relativePath = preg_replace('#^' . preg_quote($basePath, '#') . '/?#', '', $file);
-                $dirPath = dirname($relativePath);
-                $docType = explode('/', $relativePath)[0];
-
-                if ($dirPath === '.' || $dirPath === $basePath) {
-                    continue;
-                }
-
-                if (!isset($documents[$dirPath])) {
-                    $documents[$dirPath] = [
-                        'path' => $dirPath,
-                        'token_rapport' => null,
-                        'status' => 'À traiter',
-                        'data' => null
-                    ];
-                }
-
-                if (str_ends_with($file, '.pdf')) {
-                    $documents[$dirPath]['status'] = 'Validé';
-                }
-
-                if (str_ends_with($file, '.json')) {
-                    try {
-                        $jsonContent = Storage::disk('public')->get($file);
-                        $jsonData = json_decode($jsonContent, true);
-
-                        $pathToken = "app/public/" . $file;
-                        $dataToken = TokenLinksRapport::where('paths', $pathToken)->first();
-                        $token = $dataToken["token"] ?? null;
-                        $documents[$dirPath]["token_rapport"] = $token;
-
-                        if (isset($formatRules[$docType])) {
-                            $rules = $formatRules[$docType];
-                            $formattedData = [];
-
-                            foreach ($rules as $key => $rule) {
-                                if (is_array($rule)) {
-                                    $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
-                                } elseif (is_string($rule)) {
-                                    $formattedData[$key] = $jsonData[$rule] ?? null;
-                                } else {
-                                    $formattedData[$key] = null;
-                                }
-                            }
-
-                            $documents[$dirPath]['data'] = $formattedData;
-                        }
-                    } catch (\Exception $e) {
-                        $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
-                    }
-                }
-            }
-
-            $filteredDocs = array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
-            return response()->json($filteredDocs);
         } catch (\Exception $e) {
+            // En cas d'erreur, on log et on retourne un message générique
             \Log::error("[CATCH] ERREUR INCONNUE", [
                 'client' => $entreprise,
                 'fonction' => __FUNCTION__,
@@ -906,58 +585,56 @@ class BiController extends Controller
     /**
      * @brief Supprime un document spécifique.
      *
-     * Supprime les fichiers JSON et PDF correspondant à un document donné
-     * et nettoie les métadonnées associées.
-     *
-     * @param Request $request Contient les informations du document à supprimer.
-     * @return JsonResponse Confirmation de la suppression.
+     * @param Request $request
+     * @param string $token Le token identifiant le document.
+     * @return JsonResponse
      */
     public function delete(Request $request, $token): JsonResponse
     {
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        // 1. Récupération du lien via le token
+        $dataToken = TokenLinksRapport::where('token', $token)->first();
 
+        // Si le token n'existe pas, on renvoie 404
         if (!$dataToken) {
-            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+            return response()->json(['error' => 'Lien vers le rapport introuvable.'], 404);
         }
 
-        // Construire le chemin du fichier JSON
-        $filePath = storage_path( $dataToken['paths']);
+        // Récupération du chemin du fichier JSON pour extraire les infos de client/document/uid
+        // Note : On utilise storage_path car 'paths' en base contient souvent 'app/public/...'
+        $filePath = storage_path($dataToken->paths);
 
-        // Vérifier si le fichier JSON existe
+        // Si le fichier JSON n'existe plus, on nettoie la DB et renvoie un message d'erreur
         if (!file_exists($filePath)) {
-            \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
-                'token' => $token,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'chemin' => $filePath
-            ]);
-            abort(404, "Fichier introuvable");
+            $dataToken->delete();
+            return response()->json(['error' => 'Fichier JSON déjà absent du serveur. Nettoyage DB effectué.'], 404);
         }
 
         try {
-            // Lire le contenu existant
-            $data = json_decode(file_get_contents($filePath), true);
-            $document = $data['dataToken']['document'];
-            $client = $data['dataToken']['client'];
-            $uid = $data['dataToken']['uid'];
+            // Lire le JSON pour récupérer le contenu
+            $content = file_get_contents($filePath);
+            $jsonData = json_decode($content, true);
+            
+            $client   = $jsonData['dataToken']['client'] ?? null;
+            $document = $jsonData['dataToken']['document'] ?? null;
+            $uid      = $jsonData['dataToken']['uid'] ?? null;
+
+            if (!$client || !$document || !$uid) {
+                throw new \Exception("Structure JSON invalide pour la suppression.");
+            }
+
+            // Appel au ClientController pour la suppression physique et en base
+            $isDeleted = ClientController::delete($client, $document, $uid, $dataToken);
+
+            if ($isDeleted) {
+                return response()->json(['status' => 'Success.'], 200);
+            } else {
+                return response()->json(['error' => 'Erreur lors de la suppression des fichiers.'], 500);
+            }
+
         } catch (\Throwable $th) {
-            abort('500', "erreur interne");
+            // Log en cas d'erreur inattendue
+            \Log::error("[BI_CONTROLLER] Erreur delete", ['msg' => $th->getMessage()]);
+            return response()->json(['error' => 'Erreur interne lors de la suppression.'], 500);
         }
-
-
-        $path = "$client/$document/$uid";
-
-        if (!Storage::disk('public')->exists($path)) {
-            return response()->json(['error' => 'Folder not found.'], 404);
-        }
-
-        if (!Storage::disk('public')->deleteDirectory($path)) {
-            return response()->json(['error' => 'Failed to delete folder.'], 500);
-        }
-
-        $dataToken->delete();
-
-        return response()->json(['status' => 'Success.'], 200);
     }
 }
