@@ -21,6 +21,7 @@ Route::prefix('api')->group(function () {
 
     //Suppression d'un document
     Route::get('/delete/{token}', [BiController::class, 'delete'])
+
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('VerifTokenAndSecretToken');
 

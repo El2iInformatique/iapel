@@ -14,17 +14,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>Formulaire CERFA 15497-04</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 
+    <style>
+        .required-asterisk {
+            color: red;
+            margin-left: 0.25rem;
+        }
+        input:disabled, input[disabled], textarea:disabled, textarea[disabled] {
+            background-color: #d3d3d3 !important;
+            color: #666666 !important;
+            cursor: not-allowed !important;
+            opacity: 1 !important;
+            border: 1px solid #999999 !important;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">Fiche d'intervention cerfa_15497 n°{{ $uid }}</div>
-                    <div class="card-body">
+    <div class="main-wrapper">
+        <div class="signature-container">
+            <div class="header-section">
+                <div class="header-content">
+                    <div class="status-badge">
+                        <i class="bi bi-file-earmark-text"></i> Formulaire CERFA
+                    </div>
+                    <h1 class="header-title">Formulaire CERFA 15497-04</h1>
+                    <p class="header-subtitle">n°{{ $uid }}</p>
+                </div>
+            </div>
+
+            <div class="content-section">
 
                         <!-- Formulaire -->
                         <form action="{{ route('bi.submit', ['token' => $token]) }}" method="POST" enctype="multipart/form-data">
@@ -33,18 +54,18 @@
                                 <hr>
                                 <!-- Opérateur  -->
                                 <div class="mb-3">
-                                    <textarea class="form-control" id="operateur" name="operateur" rows="5" maxlength="57" required>{{ $data['operateur'] ?? '' }}</textarea>
+                                    <textarea class="form-input" id="operateur" name="operateur" rows="4" maxlength="57" required>{{ $data['operateur'] ?? '' }}</textarea>
                                 </div>
                                 <div class="mb-3">
                                 <label for="numero_attestation_capacite" class="form-label">Numéro d'attestation de capacité :</label>
-                                    <input type="text" class="form-control" id="numero_attestation_capacite" name="numero_attestation_capacite" value="{{ old('numero_anumero_attestation_capacitettestation') }}" maxlength="14">
+                                    <input type="text" class="form-input" id="numero_attestation_capacite" name="numero_attestation_capacite" value="{{ old('numero_attestation_capacite') }}" maxlength="22">
                                 </div>
 
                                 <h5 class="mt-4">[2] Détenteur</h5>
                                 <hr>
                                 <!-- Détenteur  -->
                                 <div class="mb-3">
-                                    <textarea class="form-control" id="detenteur" name="detenteur" rows="5" maxlength="95" required>{{ $data['detenteur'] ?? '' }}</textarea>
+                                    <textarea class="form-input" id="detenteur" name="detenteur" rows="4" maxlength="95" required>{{ $data['detenteur'] ?? '' }}</textarea>
                                 </div>
 
                                 <h5 class="mt-4">[3] Equipement concerné</h5>
@@ -53,11 +74,11 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="identification" class="form-label">Identification :</label>
-                                        <input type="text" class="form-control" id="identification" name="identification" value="{{ old('identification') }}"maxlength="48">
+                                        <input type="text" class="form-input" id="identification" name="identification" value="{{ old('identification') }}" maxlength="48">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="denomination" class="form-label">Dénomination du fluide :</label>
-                                        <input type="text" class="form-control" id="denomination" name="denomination" value="{{ old('denomination') }}"maxlength="7">
+                                        <input type="text" class="form-input" id="denomination" name="denomination" value="{{ old('denomination') }}" maxlength="7">
                                     </div>
                                 </div>
 
@@ -65,11 +86,11 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="charge" class="form-label">Charge totale (en kg) :</label>
-                                        <input type="text" class="form-control" id="charge" name="charge" value="{{ old('charge') }}"maxlength="7">
+                                        <input type="number" class="form-input" id="charge" name="charge" value="{{ old('charge') }}" maxlength="7" min="0" step="0.01">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="tonnage" class="form-label">Tonnage équivalent CO² (t. éq CO2) :</label>
-                                        <input type="text" class="form-control" id="tonnage" name="tonnage" value="{{ old('tonnage') }}"maxlength="5">
+                                        <input type="number" class="form-input" id="tonnage" name="tonnage" value="{{ old('tonnage') }}" maxlength="5" min="0" step="0.01">
                                     </div>
                                 </div>
 
@@ -119,7 +140,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <input type="text" class="form-control" id="autre_valeur" name="autre_valeur" value="{{ old('autre_valeur') }}" maxlength="14">
+                                            <input type="text" class="form-input" id="autre_valeur" name="autre_valeur" value="{{ old('autre_valeur') }}" maxlength="14" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -130,11 +151,11 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="identification_controle" class="form-label">Identification :</label>
-                                        <input type="text" class="form-control" id="identification_controle" name="identification_controle" value="{{ old('identification_controle') }}" maxlength="20">
+                                        <input type="text" class="form-input" id="identification_controle" name="identification_controle" value="{{ old('identification_controle') }}" maxlength="20">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="date_controle" class="form-label">Contrôlé le :</label>
-                                        <input type="date" class="form-control" id="date_controle" name="date_controle" value="{{ old('date_controle', date('Y-m-d')) }}">
+                                        <input type="date" class="form-input" id="date_controle" name="date_controle" value="{{ old('date_controle', date('Y-m-d')) }}">
                                     </div>
                                 </div>
 
@@ -260,7 +281,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label" for="localisation_fuite_1">Localisation fuite n°1 :</label>
-                                        <textarea class="form-control" id="localisation_fuite_1" name="localisation_fuite_1" rows="2" maxlength="72"></textarea>
+                                        <textarea class="form-input" id="localisation_fuite_1" name="localisation_fuite_1" rows="2" maxlength="72"></textarea>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Réparation de la fuite n°1 :</label>
@@ -277,7 +298,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label" for="localisation_fuite_2">Localisation fuite n°2 :</label>
-                                        <textarea class="form-control" id="localisation_fuite_2" name="localisation_fuite_2" rows="2" maxlength="72"></textarea>
+                                        <textarea class="form-input" id="localisation_fuite_2" name="localisation_fuite_2" rows="2" maxlength="72"></textarea>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Réparation de la fuite n°2 :</label>
@@ -294,7 +315,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label" for="localisation_fuite_3">Localisation fuite n°3 :</label>
-                                        <textarea class="form-control" id="localisation_fuite_3" name="localisation_fuite_3" rows="2" maxlength="72"></textarea>
+                                        <textarea class="form-input" id="localisation_fuite_3" name="localisation_fuite_3" rows="2" maxlength="72"></textarea>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Réparation de la fuite n°2 :</label>
@@ -317,45 +338,45 @@
                                     <div class="col-md-6">
                                          <div class="mb-3">
                                             <label for="quantite_chargee_totale" class="form-label" >Quantité chargée totale (A+B+C) (kg) :</label>
-                                            <input type="text" class="form-control" id="quantite_chargee_totale" name="quantite_chargee_totale" value="{{ old('quantite_chargee_totale') }}" maxlength="8">
+                                            <input type="number" class="form-input" id="quantite_chargee_totale" name="quantite_chargee_totale" value="{{ old('quantite_chargee_totale') }}" maxlength="8" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_chargee_A" class="form-label">A - Dont fluide vierge (kg) :</label>
-                                            <input type="text" class="form-control" id="quantite_chargee_A" name="quantite_chargee_A" value="{{ old('quantite_chargee_A') }}" maxlength="8">
+                                            <input type="number" class="form-input" id="quantite_chargee_A" name="quantite_chargee_A" value="{{ old('quantite_chargee_A') }}" maxlength="8" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="fluide_A" class="form-label">Dénomination du fluide chargé si changement :</label>
-                                            <input type="text" class="form-control" id="fluide_A" name="fluide_A" value="{{ old('fluide_A') }}" maxlength="8">
+                                            <input type="text" class="form-input" id="fluide_A" name="fluide_A" value="{{ old('fluide_A') }}" maxlength="8">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_chargee_B" class="form-label">B - Dont fluide recyclé (fluide récupéré et réintrooduit) (kg) :</label>
-                                            <input type="text" class="form-control" id="quantite_chargee_B" name="quantite_chargee_B" value="{{ old('quantite_chargee_B') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_chargee_B" name="quantite_chargee_B" value="{{ old('quantite_chargee_B') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_chargee_C" class="form-label">C - Dont fluide régénéré (kg) :</label>
-                                            <input type="text" class="form-control" id="quantite_chargee_C" name="quantite_chargee_C" value="{{ old('quantite_chargee_C') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_chargee_C" name="quantite_chargee_C" value="{{ old('quantite_chargee_C') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                          <div class="mb-3">
                                             <label for="quantite_recuperee_totale" class="form-label">Quantité de fluide récupérée totale (D+E) (kg) :</label>
-                                            <input type="text" class="form-control" id="quantite_recuperee_totale" name="quantite_recuperee_totale" value="{{ old('quantite_recuperee_totale') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_recuperee_totale" name="quantite_recuperee_totale" value="{{ old('quantite_recuperee_totale') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_recuperee_D" class="form-label">D - Dont fluide destiné au traitement (kg) :</label>
-                                            <input type="text" class="form-control" id="quantite_recuperee_D" name="quantite_recuperee_D" value="{{ old('quantite_recuperee_D') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_recuperee_D" name="quantite_recuperee_D" value="{{ old('quantite_recuperee_D') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="BSFF" class="form-label">Si connu, numéro du BSFF (Trackdéchets) :</label>
-                                            <input type="text" class="form-control" id="BSFF" name="BSFF" value="{{ old('BSFF') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="BSFF" name="BSFF" value="{{ old('BSFF') }}" maxlength="7" min="0">
                                         </div>
                                          <div class="mb-3">
                                             <label for="quantite_recuperee_E" class="form-label">E - Dont fluide conservé pour réutilisation (réintroduction) (kg) :</label>
-                                            <input type="text" class="form-control" id="quantite_recuperee_E" name="quantite_recuperee_E" value="{{ old('quantite_recuperee_E') }}" maxlength="7">
+                                            <input type="number" class="form-input" id="quantite_recuperee_E" name="quantite_recuperee_E" value="{{ old('quantite_recuperee_E') }}" maxlength="7" min="0" step="0.01">
                                         </div>
                                          <div class="mb-3">
                                             <label for="identification_E" class="form-label">Identification du ou des contenants :</label>
-                                            <input type="text" class="form-control" id="identification_E" name="identification_E" value="{{ old('identification_E') }}" maxlength="7">
+                                            <input type="text" class="form-input" id="identification_E" name="identification_E" value="{{ old('identification_E') }}" maxlength="7">
                                         </div>
                                     </div>
                                 </div>
@@ -375,7 +396,7 @@
                                             <label class="form-check-label" for="autre_cas_non_inflammable">Autre cas de fluides frigorigènes non-inflammables :</label>
                                         </div>
                                         <div class="mb-3">
-                                            <input type="text" class="form-control" id="autre_fluide_non_inflammable" name="autre_fluide_non_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="15">
+                                            <input type="text" class="form-input" id="autre_fluide_non_inflammable" name="autre_fluide_non_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="15" disabled>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -385,11 +406,11 @@
                                             <label class="form-check-label" for="UN3161">UN 3161, Déchet Gaz liquéfié inflammable NSA, 2.1 (B/D)</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="fluide_inflammable" value="autre_cas_inflammable" id="autre_cas_non_inflammable">
+                                            <input class="form-check-input" type="radio" name="fluide_inflammable" value="autre_cas_inflammable" id="autre_cas_inflammable">
                                             <label class="form-check-label" for="autre_cas_inflammable">Autre cas de fluides frigorigènes inflammables :</label>
                                         </div>
                                         <div class="mb-3">
-                                            <input type="text" class="form-control" id="autre_fluide_inflammable" name="autre_fluide_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="18">
+                                            <input type="text" class="form-input" id="autre_fluide_inflammable" name="autre_fluide_inflammable" value="{{ old('autre_fluide_non_inflammable') }}" maxlength="18" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -397,17 +418,17 @@
                                 <h5 class="mt-4">[13] Installation prévue de destination </h5>
                                 <hr>
                                 <div class="mb-3">
-                                    <textarea class="form-control" id="installation_destination_fluide" name="installation_destination_fluide" rows="2" maxlength="132"></textarea>
+                                    <textarea class="form-input" id="installation_destination_fluide" name="installation_destination_fluide" rows="2" maxlength="132"></textarea>
                                 </div>
 
                                 <h5 class="mt-4">[14] Observations : </h5>
                                 <hr>
                                 <div class="mb-3">
-                                    <textarea class="form-control" id="observations" name="observations" rows="5" maxlength="330"></textarea>
+                                    <textarea class="form-input" id="observations" name="observations" rows="5" maxlength="330"></textarea>
                                 </div>
 
                                 <!-- Signature -->
-                                <h5 class="mt-4">Signature</h5>
+                                <h5 class="mt-4">Signature </span></h5>
                                 <hr>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -416,14 +437,14 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="nom_signataire_operateur" class="form-label">Nom du signataire :</label>
-                                            <input type="text" class="form-control" id="nom_signataire_operateur" name="nom_signataire_operateur" value="{{ old('nom_signataire_operateur') }}" maxlength="27">
+                                            <input type="text" class="form-input" id="nom_signataire_operateur" name="nom_signataire_operateur" value="{{ old('nom_signataire_operateur') }}" maxlength="27">
                                         </div>
                                         <div class="mb-3">
                                             <label for="qualite_signataire_operateur" class="form-label">Qualité du signataire :</label>
-                                            <input type="text" class="form-control" id="qualite_signataire_operateur" name="qualite_signataire_operateur" value="{{ old('qualite_signataire_operateur') }}" maxlength="27">
+                                            <input type="text" class="form-input" id="qualite_signataire_operateur" name="qualite_signataire_operateur" value="{{ old('qualite_signataire_operateur') }}" maxlength="27">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature :</label>
+                                            <label class="form-label">Signature </label>
                                             <canvas id="signature-pad-operateur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-operateur" id="signature-operateur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-operateur">Effacer</button>
@@ -435,14 +456,14 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="nom_signataire_detenteur" class="form-label">Nom du signataire :</label>
-                                            <input type="text" class="form-control" id="nom_signataire_detenteur" name="nom_signataire_detenteur" value="{{ old('nom_signataire_detenteur') }}" maxlength="26">
+                                            <input type="text" class="form-input" id="nom_signataire_detenteur" name="nom_signataire_detenteur" value="{{ old('nom_signataire_detenteur') }}" maxlength="26">
                                         </div>
                                         <div class="mb-3">
                                             <label for="qualite_signataire_detenteur" class="form-label">Qualité du signataire :</label>
-                                            <input type="text" class="form-control" id="qualite_signataire_detenteur" name="qualite_signataire_detenteur" value="{{ old('qualite_signataire_detenteur') }}"maxlength="26">
+                                            <input type="text" class="form-input" id="qualite_signataire_detenteur" name="qualite_signataire_detenteur" value="{{ old('qualite_signataire_detenteur') }}" maxlength="26">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Signature :</label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
+                                            <label class="form-label">Signature </label><canvas id="signature-pad-detenteur" class="border" style="width: 100%; height: 200px;"></canvas>
                                             <input type="hidden" name="signature-detenteur" id="signature-detenteur">
                                             <button type="button" class="btn btn-secondary mt-2" id="clear-signature-detenteur">Effacer</button>
                                         </div>
@@ -517,6 +538,113 @@
         localisationFuitesRadioOui.addEventListener("change", toggleLocalisationFuitesField);
         localisationFuitesRadioNon.addEventListener("change", toggleLocalisationFuitesField);
 
+        // Écouter tous les radio buttons nature_intervention pour mettre à jour l'état du champ "Autre"
+        const natureRadios = document.querySelectorAll('input[name="nature_intervention"]');
+        natureRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAutreField);
+        });
+
+        // Gestion des champs "Autres cas de fluides"
+        let autreFluidNonInflammableRadio = document.getElementById("autre_cas_non_inflammable");
+        let autreFluidNonInflammableField = document.getElementById("autre_fluide_non_inflammable");
+        let autreFluidInflammableRadio = document.getElementById("autre_cas_inflammable");
+        let autreFluidInflammableField = document.getElementById("autre_fluide_inflammable");
+
+        // Fonction pour activer/désactiver le champ "Autre fluide non-inflammable"
+        function toggleAutreFluidNonInflammable() {
+            if (autreFluidNonInflammableRadio.checked) {
+                autreFluidNonInflammableField.disabled = false;
+            } else {
+                autreFluidNonInflammableField.disabled = true;
+                autreFluidNonInflammableField.value = "";
+            }
+        }
+
+        // Fonction pour activer/désactiver le champ "Autre fluide inflammable"
+        function toggleAutreFluidInflammable() {
+            if (autreFluidInflammableRadio.checked) {
+                autreFluidInflammableField.disabled = false;
+            } else {
+                autreFluidInflammableField.disabled = true;
+                autreFluidInflammableField.value = "";
+            }
+        }
+
+        // Vérifier l'état au chargement
+        toggleAutreFluidNonInflammable();
+        toggleAutreFluidInflammable();
+
+        // Écouter tous les radio buttons fluide_non_inflammable
+        const fluidNonInflammableRadios = document.querySelectorAll('input[name="fluide_non_inflammable"]');
+        fluidNonInflammableRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAutreFluidNonInflammable);
+        });
+
+        // Écouter tous les radio buttons fluide_inflammable
+        const fluidInflammableRadios = document.querySelectorAll('input[name="fluide_inflammable"]');
+        fluidInflammableRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAutreFluidInflammable);
+        });
+
+        // Forcer les champs numériques à accepter uniquement des nombres
+        const numericFields = [
+            'charge', 'tonnage', 'quantite_chargee_totale', 'quantite_chargee_A',
+            'quantite_chargee_B', 'quantite_chargee_C', 'quantite_recuperee_totale',
+            'quantite_recuperee_D', 'BSFF', 'quantite_recuperee_E', 'numero_attestation_capacite'
+        ];
+
+        numericFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                // Empêcher les caractères non-numériques avant qu'ils ne soient saisis
+                field.addEventListener('keypress', function(e) {
+                    const char = String.fromCharCode(e.which);
+                    // Accepter seulement les chiffres et le point (pour décimales)
+                    if (!/[0-9.]/.test(char)) {
+                        e.preventDefault();
+                    }
+                    // Vérifier la limite de caractères
+                    const maxLength = parseInt(field.getAttribute('maxlength')) || 10;
+                    if (field.value.length >= maxLength) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Nettoyer au paste
+                field.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    let pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    // Garder seulement les chiffres et les points
+                    pastedText = pastedText.replace(/[^0-9.]/g, '');
+                    // Empêcher plusieurs points
+                    if ((pastedText.match(/\./g) || []).length > 1) {
+                        pastedText = pastedText.replace(/\.(?=.*\.)/g, '');
+                    }
+                    // Respecter la limite de caractères
+                    const maxLength = parseInt(field.getAttribute('maxlength')) || 10;
+                    if (pastedText.length > maxLength) {
+                        pastedText = pastedText.substring(0, maxLength);
+                    }
+                    field.value = pastedText;
+                });
+
+                // Nettoyer l'input en temps réel (au cas où)
+                field.addEventListener('input', function(e) {
+                    let value = e.target.value;
+                    value = value.replace(/[^0-9.]/g, '');
+                    if ((value.match(/\./g) || []).length > 1) {
+                        value = value.replace(/\.(?=.*\.)/g, '');
+                    }
+                    // Respecter la limite de caractères
+                    const maxLength = parseInt(field.getAttribute('maxlength')) || 10;
+                    if (value.length > maxLength) {
+                        value = value.substring(0, maxLength);
+                    }
+                    e.target.value = value;
+                });
+            }
+        });
+
 
 
         // Créer la signature avec gestion souris + tactile
@@ -587,10 +715,109 @@
             signatureInputOperateur.value = "";
         });
 
-        // S'assurer que la signature est bien enregistrée avant soumission
+
+        /*
+
+        // S'assurer que les deux signatures sont bien enregistrées avant soumission
         form.addEventListener("submit", function (event) {
-            saveSignature(); // Enregistre la signature avant l'envoi
+            saveSignature(); // Enregistre les signatures avant l'envoi
+
+            // Vérifier que les deux signatures ne sont pas vides
+            if (signatureInputOperateur.value === "" || signaturePadOperateur.isEmpty()) {
+                event.preventDefault(); // Empêcher la soumission
+                
+                // Créer et afficher un message d'erreur
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "alert alert-danger";
+                errorMsg.style.cssText = "animation: slideDown 0.3s ease-out; border-left: 5px solid #dc3545; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);";
+                errorMsg.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #dc3545;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="alert-heading mb-2" style="color: #dc3545;">
+                                <strong>Signature de l'Opérateur manquante</strong>
+                            </h5>
+                            <p class="mb-0">
+                                Vous devez signer dans la section <strong>Signature - Opérateur</strong> avant de pouvoir générer le PDF.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                errorMsg.id = "signature-operateur-error";
+                
+                // Supprimer l'ancien message s'il existe
+                const existingError = document.getElementById("signature-operateur-error");
+                if (existingError) existingError.remove();
+                
+                // Insérer le message au début du formulaire
+                form.insertBefore(errorMsg, form.firstChild);
+                
+                // Faire défiler jusqu'au message d'erreur
+                setTimeout(() => {
+                    errorMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 100);
+                
+                // Supprimer le message après 10 secondes
+                setTimeout(() => {
+                    if (errorMsg.parentNode) {
+                        errorMsg.remove();
+                    }
+                }, 10000);
+                
+                return; // Arrêter le traitement
+            }
+
+            if (signatureInputDetenteur.value === "" || signaturePadDetenteur.isEmpty()) {
+                event.preventDefault(); // Empêcher la soumission
+                
+                // Créer et afficher un message d'erreur
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "alert alert-danger";
+                errorMsg.style.cssText = "animation: slideDown 0.3s ease-out; border-left: 5px solid #dc3545; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);";
+                errorMsg.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #dc3545;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="alert-heading mb-2" style="color: #dc3545;">
+                                <strong>Signature du Détenteur manquante</strong>
+                            </h5>
+                            <p class="mb-0">
+                                Vous devez signer dans la section <strong>Signature - Détenteur</strong> avant de pouvoir générer le PDF.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                errorMsg.id = "signature-detenteur-error";
+                
+                // Supprimer l'ancien message s'il existe
+                const existingError = document.getElementById("signature-detenteur-error");
+                if (existingError) existingError.remove();
+                
+                // Insérer le message au début du formulaire
+                form.insertBefore(errorMsg, form.firstChild);
+                
+                // Faire défiler jusqu'au message d'erreur
+                setTimeout(() => {
+                    errorMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 100);
+                
+                // Supprimer le message après 10 secondes
+                setTimeout(() => {
+                    if (errorMsg.parentNode) {
+                        errorMsg.remove();
+                    }
+                }, 10000);
+                
+                return; // Arrêter le traitement
+            }
         });
+
+        */
+
     });
 </script>
 
