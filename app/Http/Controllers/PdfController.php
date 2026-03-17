@@ -105,6 +105,7 @@ class PdfController extends Controller
         }
     }
 
+
     /**
      * @brief Affiche un document PDF à partir d'un token d'accès.
      *
@@ -549,7 +550,7 @@ class PdfController extends Controller
     
     public function checkExistAndIsValidePdf($jsonPath, $client, $document, $uid): bool 
     {
-        //return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
+        // return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
 
         // === ÉTAPE 1 : DÉTERMINER LE CHEMIN DU FICHIER PDF ===
         // Utilise le chemin JSON comme base si fourni, sinon construit le chemin complet
@@ -717,12 +718,12 @@ class PdfController extends Controller
         $pdf->MultiCell(180, 10, ($data['description']."\n" ?? ''));
 
         
-	    $pdf->SetFont('helvetica', '', 9); 
+	    $pdf->SetFont('helvetica', '', 8); 
 
         $pdf->SetXY(75, 45);
         $pdf->Write(10, ($data['adresse_intervention'] ?? '') . ' ' . ($data['cp_intervention'] ?? '') . ' ' . ($data['ville_intervention'] ?? '') . ' - ' . ($data['lieu_intervention'] ?? ''));  
 
-        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetFont('helvetica', '', 8);
 
         $pdf->SetXY(75, 59.5);
         $pdf->Write(10, ($data['adresse_facturation'] ?? '') . ' ' . ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? ''));
@@ -871,68 +872,119 @@ class PdfController extends Controller
 
         // === PAGE 2 : COMPLÉMENTS D'INFORMATION ===
         // Charge la deuxième page du modèle PDF
-        $tpl2Idx = $pdf->importPage(2);
-        $pdf->addPage();
-        $pdf->useTemplate($tpl2Idx);
+        if (!empty($data['constat']) || !empty($data['verification']) || !empty($data['notes_particulieres']) || !empty($data['points_vigilances']))
+        {
+            $tpl2Idx = $pdf->importPage(2);
+            $pdf->addPage();
+            $pdf->useTemplate($tpl2Idx);
 
-        $pdf->Ln(8);
+            $pdf->Ln(8);
 
-        // === SECTION 1 : LE CONSTAT ===
-        $pdf->SetFont('helvetica', 'b', 9.5);
-        $pdf->SetXY( 15, 40);
-        $pdf->Write(8, "Le constat :");
-        $pdf->Ln(6);
-        $pdf->SetFont('helvetica', 9);
-        $pdf->SetXY(18, 48);
-        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['constat']) ?? '')), 0, 'L');
-        $pdf->Ln(12);
+            // === SECTION 1 : LE CONSTAT ===
+            $pdf->SetFont('helvetica', 'b', 9.5);
+            $pdf->SetXY( 15, 40);
+            $pdf->Write(8, "Le constat :");
+            $pdf->Ln(6);
+            $pdf->SetFont('helvetica', 9);
+            $pdf->SetXY(18, 48);
+            $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['constat']) ?? '')), 0, 'L');
+            $pdf->Ln(12);
 
-        // === SECTION 2 : LES VÉRIFICATIONS EFFECTUÉES ===
-        $pdf->SetFont('helvetica', 'b', 9.5);
-        $pdf->SetXY( 15, 85);
-        $pdf->Write(8, "Les vérifications :");
-        $pdf->Ln(6);
-        $pdf->SetFont('helvetica', 9);
-        $pdf->SetXY( 18, 93);
-        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['verification']) ?? '')), 0, 'L');
-        $pdf->Ln(12);
+            // === SECTION 2 : LES VÉRIFICATIONS EFFECTUÉES ===
+            $pdf->SetFont('helvetica', 'b', 9.5);
+            $pdf->SetXY( 15, 85);
+            $pdf->Write(8, "Les vérifications :");
+            $pdf->Ln(6);
+            $pdf->SetFont('helvetica', 9);
+            $pdf->SetXY( 18, 93);
+            $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['verification']) ?? '')), 0, 'L');
+            $pdf->Ln(12);
 
-        // === SECTION 3 : LES NOTES PARTICULIÈRES ===
-        $pdf->SetFont('helvetica', 'b', 9.5);
-        $pdf->SetXY( 15, 130);
-        $pdf->Write(8, "Les notes particulières :");
-        $pdf->Ln(6);
-        $pdf->SetFont('helvetica', 9);
-        $pdf->SetXY( 18, 138);
-        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['notes_particulieres']) ?? '')), 0, 'L');
-        $pdf->Ln(12);
+            // === SECTION 3 : LES NOTES PARTICULIÈRES ===
+            $pdf->SetFont('helvetica', 'b', 9.5);
+            $pdf->SetXY( 15, 130);
+            $pdf->Write(8, "Les notes particulières :");
+            $pdf->Ln(6);
+            $pdf->SetFont('helvetica', 9);
+            $pdf->SetXY( 18, 138);
+            $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['notes_particulieres']) ?? '')), 0, 'L');
+            $pdf->Ln(12);
 
-        // === SECTION 4 : LES POINTS DE VIGILANCE ===
-        $pdf->SetFont('helvetica', 'b', 9.5);
-        $pdf->SetXY( 15, 175);
-        $pdf->Write(8, "Les points de vigilances :");
-        $pdf->Ln(6);
-        $pdf->SetFont('helvetica', 9);
-        $pdf->SetXY( 18, 183);
-        $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['points_vigilances']) ?? '')), 0, 'L');
-        $pdf->Ln(12);
+            // === SECTION 4 : LES POINTS DE VIGILANCE ===
+            $pdf->SetFont('helvetica', 'b', 9.5);
+            $pdf->SetXY( 15, 175);
+            $pdf->Write(8, "Les points de vigilances :");
+            $pdf->Ln(6);
+            $pdf->SetFont('helvetica', 9);
+            $pdf->SetXY( 18, 183);
+            $pdf->MultiCell(0, 8, (($this->reformaterTexte($data['points_vigilances']) ?? '')), 0, 'L');
 
-        // === SECTION 5 : LES PHOTOS ===
-        $pdf->SetFont('helvetica', 'b', 9.5);
-        $pdf->SetXY( 15, 220);
-        $pdf->Write(8, "Les photos :");
-        $pdf->Ln(6);
-        $pdf->MultiCell(0, 8, ($data['photos'] ?? ''));
+            // === SECTION 7 : COMPLÉMENTS CLIENTS (SI EXISTANTS) ===
+            // Affiche les données personnalisées fournies par le client (textes et images)
+            if (!empty($data['complement_client'])) {
+                $pdf->AddPage();
+                
+                // === TITRE DE LA PAGE ===
+                $pdf->SetFont('helvetica', 'B', 12);
+                $pdf->SetTextColor(50, 50, 50);
+                $pdf->Cell(0, 10, 'Informations complémentaires client', 0, 1, 'L');
+                $pdf->Ln(2);
+            
+                // === BOUCLE SUR LES ÉLÉMENTS PERSONNALISÉS ===
+                foreach ($data['complement_client'] as $item) {
+                    // === GESTION DES SAUTS DE PAGE ===
+                    // Si moins de 40mm restent, on change de page
+                    if ($pdf->GetY() > 250) {
+                        $pdf->AddPage();
+                    }
+            
+                    // === AFFICHAGE DE LA QUESTION (EN MAJUSCULES ET EN GRAS) ===
+                    $pdf->SetFont('helvetica', 'B', 9);
+                    $pdf->SetTextColor(100, 100, 100);
+                    $pdf->MultiCell(0, 6, mb_strtoupper($item['question']), 0, 'L');
+                    
+                    // === AFFICHAGE DE LA RÉPONSE (VALEUR) ===
+                    $pdf->SetTextColor(0, 0, 0);
+                    $pdf->SetFont('helvetica', '', 10);
+            
+                    if ($item['type'] === 'text') {
+                        // Affichage du texte simple avec indentation
+                        $pdf->SetX(15); 
+                        $pdf->MultiCell(0, 6, $item['value'], 0, 'L');
+                        $pdf->Ln(2);
+                    } else {
+                        // Affichage d'une image
+                        $imagePath = storage_path('app/public/' . $item['value']);
+                        if (file_exists($imagePath)) {
+                            $pdf->Ln(1);
+                            $currentY = $pdf->GetY();
+                            
+                            // Affiche l'image (max 60mm large, 40mm haut)
+                            $pdf->Image($imagePath, 15, $currentY, 0, 40, '', '', 'T', true, 300, '', false, false, 0, 'L', false, false);
+                            
+                            // Décale le curseur Y après l'image (images = ~42mm)
+                            $pdf->SetY($currentY + 42); 
+                        }
+                    }
+            
+                    // === LIGNE DE SÉPARATION SUBTILE ===
+                    $pdf->SetDrawColor(230, 230, 230);
+                    $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
+                    $pdf->Ln(4);
+                }
+            }
+        }
 
         // === SECTION 6 : COMPLÉMENTS SUPPLÉMENTAIRES (SI EXISTANTS) ===
-        // Ajoute les compléments sur une page supplémentaire si il y en a plus de 2
-        if (isset($data['complements']) && count($data['complements']) > 0) {
+        // Ajoute les compléments sur une page supplémentaire si il y en a plus de 0
+        if (!empty($data['complements']) && count($data['complements']) > 0) {
             $pdf->addPage();
-            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetFont('helvetica', 'B', 12);
             $pdf->SetTextColor(50, 50, 50);
-            $pdf->Cell(0, 10, 'Compléments supplémentaires', 0, 1, 'L');
+            $pdf->Cell(0, 10, 'Les photos : ', 0, 1, 'L');
             $pdf->Ln(5);
-        
+
+            $pdf->SetFont('helvetica', 'B', 11);
             // === CONFIGURATION DE LA GRILLE D'IMAGES ===
             // Les photos sont affichées en grille 3 colonnes pour une meilleure présentation
             $pageWidth = 190;            // Largeur utile de la page (A4 - marges: ~210mm - 20mm)
@@ -942,14 +994,14 @@ class PdfController extends Controller
             $imgHeightMax = 45;          // Hauteur max d'une image (en mm)
             $commentHeight = 15;         // Espace réservé au commentaire sous l'image
             $rowHeight = $imgHeightMax + $commentHeight + 5; // Hauteur totale d'une ligne (image + texte + espace)
-        
+    
             $startX = 10;
             $currentX = $startX;
             $currentY = $pdf->GetY();
-            
+                
             // On stocke les compléments à afficher
             $complementsAffiches = $data['complements'];
-        
+            
             foreach ($complementsAffiches as $index => $complement) {
                 // === GESTION DES SAUTS DE PAGE ===
                 // Vérifie si il y a assez de place pour la ligne suivante
@@ -957,15 +1009,15 @@ class PdfController extends Controller
                     $pdf->addPage();
                     $currentY = 20;
                 }
-        
+            
                 // === AFFICHAGE DE L'IMAGE ===
                 if (isset($complement['image'])) {
                     $imagePath = storage_path('app/public/' . $complement['image']);
-                    
+                        
                     if (file_exists($imagePath)) {
                         // Affiche l'image avec le paramètre 'T' (top alignment) et redimensionnement proportionnel
                         $pdf->Image($imagePath, $currentX, $currentY, $cellWidth, $imgHeightMax, '', '', 'T', true, 300, '', false, false, 0, 'CM', false, false);
-        
+            
                         // === AFFICHAGE DU COMMENTAIRE SOUS L'IMAGE ===
                         if (!empty($complement['comment'])) {
                             $pdf->SetFont('helvetica', '', 8);
@@ -975,7 +1027,7 @@ class PdfController extends Controller
                         }
                     }
                 }
-        
+            
                 // === CALCUL DE LA POSITION SUIVANTE ===
                 if (($index + 1) % $numCols == 0) {
                     // On a rempli 3 colonnes, on descend à la ligne suivante
@@ -988,70 +1040,14 @@ class PdfController extends Controller
             }
         }
 
+    // === FINALISATION ===
+    // Aplatir le PDF en l'empêchant d'être modifié
+    $pdf->Output($outputPath,'F'); 
 
-        // === SECTION 7 : COMPLÉMENTS CLIENTS (SI EXISTANTS) ===
-        // Affiche les données personnalisées fournies par le client (textes et images)
-        if (!empty($data['complement_client'])) {
-            $pdf->AddPage();
-            
-            // === TITRE DE LA PAGE ===
-            $pdf->SetFont('helvetica', 'B', 12);
-            $pdf->SetTextColor(50, 50, 50);
-            $pdf->Cell(0, 10, 'Informations complémentaires client', 0, 1, 'L');
-            $pdf->Ln(2);
-        
-            // === BOUCLE SUR LES ÉLÉMENTS PERSONNALISÉS ===
-            foreach ($data['complement_client'] as $item) {
-                // === GESTION DES SAUTS DE PAGE ===
-                // Si moins de 40mm restent, on change de page
-                if ($pdf->GetY() > 250) {
-                    $pdf->AddPage();
-                }
-        
-                // === AFFICHAGE DE LA QUESTION (EN MAJUSCULES ET EN GRAS) ===
-                $pdf->SetFont('helvetica', 'B', 9);
-                $pdf->SetTextColor(100, 100, 100);
-                $pdf->MultiCell(0, 6, mb_strtoupper($item['question']), 0, 'L');
-                
-                // === AFFICHAGE DE LA RÉPONSE (VALEUR) ===
-                $pdf->SetTextColor(0, 0, 0);
-                $pdf->SetFont('helvetica', '', 10);
-        
-                if ($item['type'] === 'text') {
-                    // Affichage du texte simple avec indentation
-                    $pdf->SetX(15); 
-                    $pdf->MultiCell(0, 6, $item['value'], 0, 'L');
-                    $pdf->Ln(2);
-                } else {
-                    // Affichage d'une image
-                    $imagePath = storage_path('app/public/' . $item['value']);
-                    if (file_exists($imagePath)) {
-                        $pdf->Ln(1);
-                        $currentY = $pdf->GetY();
-                        
-                        // Affiche l'image (max 60mm large, 40mm haut)
-                        $pdf->Image($imagePath, 15, $currentY, 0, 40, '', '', 'T', true, 300, '', false, false, 0, 'L', false, false);
-                        
-                        // Décale le curseur Y après l'image (images = ~42mm)
-                        $pdf->SetY($currentY + 42); 
-                    }
-                }
-        
-                // === LIGNE DE SÉPARATION SUBTILE ===
-                $pdf->SetDrawColor(230, 230, 230);
-                $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
-                $pdf->Ln(4);
-            }
-        }
-
-        // === FINALISATION ===
-        // Aplatir le PDF en l'empêchant d'être modifié
-        $pdf->Output($outputPath,'F'); 
-
-        return response()->file($outputPath, [
-            'Content-Disposition' => 'inline; filename="' . $uid . '"'
-        ]);
-    }
+    return response()->file($outputPath, [
+        'Content-Disposition' => 'inline; filename="' . $uid . '"'
+    ]);
+}
     
 
     /**
