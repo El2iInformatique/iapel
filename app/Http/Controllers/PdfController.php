@@ -154,7 +154,7 @@ class PdfController extends Controller
         
 
         // Retourne la vue PDF avec les données pour affichage
-        return view('pdf', compact('client','document', 'uid'));        
+        return view('pdf', compact('client', 'document', 'uid', 'token'));
     }
 
     /**
@@ -610,6 +610,7 @@ class PdfController extends Controller
      */
     public function generateBi(Request $request)
     {
+        $token = $request->query('token');
         $uid = $request->query('uid');
         $document = $request->query('document');
         $client = $request->query('client');

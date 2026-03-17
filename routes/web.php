@@ -46,7 +46,7 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     Route::get('/open/{token}', [BiController::class, 'open'])->middleware('VerifTokenAndSecretToken');
 
     //Suppression d'un document
-    Route::delete('/delete/{token}', [BiController::class, 'delete'])
+    Route::get('/delete/{token}', [BiController::class, 'delete'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('VerifTokenAndSecretToken'); //Legacy
 
