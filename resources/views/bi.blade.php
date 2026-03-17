@@ -84,8 +84,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="mb-3">
-                                                    {{ $data['adresse_intervention'] }}<br>
-                                                    {{ $data['cp_intervention'] }} {{ $data['ville_intervention'] }} - {{ $data['lieu_intervention'] }}
+                                                    {{ $data['adresse_intervention'] ?? '' }}<br>
+                                                    {{ $data['cp_intervention'] ?? '' }} {{ $data['ville_intervention'] ?? '' }} - {{ $data['lieu_intervention'] ?? '' }}
                                                 </div>
                                                 <div class="mb-3">
                                                     <button type="button" class="generate-btn" onclick="ouvrirNavigation()">
@@ -180,7 +180,7 @@
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Photo après l'intervention :</label>
                                                 <div class="mb-3">
-                                                    <input type="file" id="photo_apres" name="photo_apres" accept="image/*" capture="environment" class="d-none">
+                                                    <input type="file" id="photo_apres" name="photo_apres" accept="image/*" class="d-none">
                                                     <button type="button" id="btn_photo_apres" class="generate-btn w-100">
                                                         <i class="bi bi-camera"></i> Prendre une Photo
                                                     </button>
@@ -921,17 +921,18 @@
             
             // S'assurer que la signature est bien enregistrée avant soumission
 
-            /*
             
             form.addEventListener("submit", function (event) {
                 
                 saveSignature(); // Enregistre la signature avant l'envoi
 
+                /*
                 // Récupérer l'équipier et les éléments de la section Réalisation
                 const equipierInput = document.getElementById("equipier");
                 const realisationSection = document.getElementById("accordion_collapse_realisation");
                 const realisationButton = document.querySelector('[data-bs-target="#accordion_collapse_realisation"]');
 
+                
                 // Vérifier que l'équipier est rempli
                 if (!equipierInput.value || equipierInput.value.trim() === "") {
                     event.preventDefault(); // Empêcher la soumission
@@ -995,12 +996,7 @@
                     return; // Arrêter le traitement
                 }
 
-                */
-
-
                 // Vérifier que la signature n'est pas vide
-
-                /*
 
                 if (!signatureInput.value || signaturePad.isEmpty()) {
                     event.preventDefault(); // Empêcher la soumission
@@ -1042,9 +1038,9 @@
                     }, 10000);
                 } 
             });
-
             */
 
+            });
         });
     </script>
     
