@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TokenLinks;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Token;
-use App\Models\TokenLinksRapport;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 
 class ClientController extends Controller
@@ -177,6 +177,56 @@ class ClientController extends Controller
         }
 
         return true;
+    }
+
+
+    public static function createDevis($organisation_id, $document, $devis_id, array $validated = null) {
+        if (empty($organisation_id) || empty($document) || empty($devis_id) || !$validated) {
+            return false;
+        }
+
+
+        // Préparation du chemin et des données
+        $relativeFolder = "{$organisation_id}/{$document}/{$devis_id}";
+        $relativeFilePath = "{$relativeFolder}/{$devis_id}.json";
+
+        $jsonData = [
+            'dataToken' => [
+                'organisation_id'   => $organisation_id,
+                'document' => $document,
+                'devis_id'      => $devis_id,
+            ]
+        ];
+
+
+        try {
+            $validated["used"] = false;
+            // On fusionne les champs extra (ceux qui ne sont pas dans le bloc dataToken)
+            $extraFields = array_diff_key($validated, array_flip(['devis_id', 'organisation_id', 'document']));
+            $jsonData = array_merge($jsonData, $extraFields);
+
+
+            $stored = Storage::disk('public')->put(
+                    $relativeFilePath, 
+                    json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            Log::info("stored : ", ["stored" => $stored]);
+
+            // On s'assure que le fichier a bien été écrit sur le disque
+            if (!$stored) {
+                throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
+            }
+
+            return true;
+
+
+        } catch (\Exception $e) {
+            // Log de l'erreur pour le debug
+            \Log::error("Erreur lors de la création du fichier JSON: " . $e->getMessage());
+            return false;
+        }
+
     }
 
 
@@ -373,387 +423,160 @@ class ClientController extends Controller
      * @param string $entreprise Le nom du dossier/client
      * @return array La liste formatée des documents
      */
+
+
     public static function getAllDocuments(string $entreprise): array
     {
-        $basePath = "$entreprise";
-        // === RÉCUPÉRATION DE TOUS LES FICHIERS ===
-        // Charge la liste complète des fichiers du client depuis le storage
-        $files = Storage::disk('public')->allFiles($basePath);
+        // === 1. RÉCUPÉRATION ET GROUPEMENT DES FICHIERS ===
+        $files = Storage::disk('public')->allFiles($entreprise);
+        $documentsTraites = [];
 
-        // === CLASSIFICATION DES FICHIERS PAR TYPE ===
-        // Sépare les fichiers en 4 catégories distinctes selon leur chemin
-        // Cette approche permet un traitement différencié pour chaque type de document
-        $lesDevisFiles = array_filter($files, fn($f) => strpos($f, '/devis/') !== false);
-        $lesRapportInterventionFiles = array_filter($files, fn($f) => strpos($f, '/rapport_intervention/') !== false);
-        $lesCerfas15497 = array_filter($files, fn($f) => strpos($f, '/cerfa_15497/') !== false);
-        // Les fichiers qui ne correspondent à aucune catégorie (fichiers administratifs, formats, etc.)
-        $lesDocuments = array_filter($files, fn($f) => strpos($f, '/devis/') === false && strpos($f, '/rapport_intervention/') === false && strpos($f, '/cerfa_15497/') === false);
+        foreach ($files as $file) {
+            $relativePath = preg_replace('#^' . preg_quote($entreprise, '#') . '/?#', '', $file);
+            $parts = explode('/', $relativePath);
 
-        // Chargement des règles de format
-        $formatPath = 'format.json';
-        $formatRules = [];
-        if (Storage::disk('public')->exists($formatPath)) {
-            $formatContent = Storage::disk('public')->get($formatPath);
-            $formatRules = json_decode($formatContent, true);
-        }
+            // Ignorer les fichiers hors arborescence type/dossier/fichier
+            if (count($parts) < 3) continue;
 
-        // === COMPTEURS POUR LES STATISTIQUES ===
-        $nTotal = 0;   // Nombre total de documents
-        $nDevis = 0;   // Nombre de devis
-        $nBi = 0;      // Nombre de bulletins d'intervention
-        $nCerfa = 0;   // Nombre de formulaires CERFA
+            $type = $parts[0];       // ex: devis, rapport_intervention, cerfa_15497
+            $folder = $parts[1];     // ex: DEVIS_EXEMPLE
+            $fileName = end($parts); 
 
-        // ==========================================
-        // 1. TRAITEMENT DES DEVIS
-        // ==========================================
-        // Groupe les devis par dossier (plusieurs fichiers peuvent être dans le même dossier:
-        // devis.pdf, devis_certifie.pdf, devis.json, etc.)
-        $devisTraites = [];
-        foreach ($lesDevisFiles as $file) {
-            $parts = explode('/', $file);
-            $devisIndex = array_search('devis', $parts);
-            if ($devisIndex === false || !isset($parts[$devisIndex + 1])) continue;
+            // Ignorer les PDF vides de template
+            if ($fileName === "$type.pdf") continue;
 
-            $folder = $parts[$devisIndex + 1];
-            $fileName = end($parts);
+            $docKey = "$type/$folder"; 
 
-            $folderParts = explode('_', $folder);
-            $nom = $folderParts[0] ?? $folder;
-            $tokenStr = $folderParts[1] ?? null;
-            $tokenModel = $tokenStr ? Token::where('token', $tokenStr)->first() : null;
-
-            if (!isset($devisTraites[$folder])) {
-                $devisTraites[$folder] = [
-                    'nom' => $nom,
-                    'token' => $tokenModel->token ?? $tokenStr,
-                    'tiers' => $tokenModel->tiers ?? null,
-                    'has_normal' => false,
-                    'has_certifie' => false,
-                    'normal_file' => null,
+            if (!isset($documentsTraites[$docKey])) {
+                $documentsTraites[$docKey] = [
+                    'path' => $docKey,
+                    'type' => $type,
+                    'folder' => $folder,
+                    'json_file' => null,
+                    'pdf_file' => null,
                     'certifie_file' => null,
-                    'normal_last' => null,
+                    'json_last' => null,
+                    'pdf_last' => null,
                     'certifie_last' => null,
                 ];
             }
 
-            if (str_ends_with($fileName, '_certifie.pdf')) {
-                $devisTraites[$folder]['has_certifie'] = true;
-                $devisTraites[$folder]['certifie_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $devisTraites[$folder]['certifie_last'] = Storage::disk('public')->lastModified($file);
-                }
-            } elseif (str_ends_with($fileName, '.pdf')) {
-                $devisTraites[$folder]['has_normal'] = true;
-                $devisTraites[$folder]['normal_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $devisTraites[$folder]['normal_last'] = Storage::disk('public')->lastModified($file);
-                }
-            }
-        }
-
-        // ==========================================
-        // 2. TRAITEMENT DES RAPPORTS D'INTERVENTION
-        // ==========================================
-        $rapportInterventionTraites = [];
-        foreach ($lesRapportInterventionFiles as $file) {
-            if (str_ends_with($file, 'rapport_intervention/rapport_intervention.pdf')) continue;
-            
-            $parts = explode('/', $file);
-            $rapportIndex = array_search('rapport_intervention', $parts);
-            if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) continue;
-
-            $folder = $parts[$rapportIndex + 1];
-            $fileName = end($parts);
-
-            if (!isset($rapportInterventionTraites[$folder])) {
-                $rapportInterventionTraites[$folder] = [
-                    'uid' => $folder,
-                    'has_json' => false,
-                    'has_pdf' => false,
-                    'json_file' => null,
-                    'pdf_file' => null,
-                    'json_last' => null,
-                    'pdf_last' => null,
-                ];
-            }
+            $lastModified = Storage::disk('public')->lastModified($file);
 
             if (str_ends_with($fileName, '.json')) {
-                $rapportInterventionTraites[$folder]['has_json'] = true;
-                $rapportInterventionTraites[$folder]['json_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $rapportInterventionTraites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
-                }
+                $documentsTraites[$docKey]['json_file'] = $file;
+                $documentsTraites[$docKey]['json_last'] = $lastModified;
+            } elseif (str_ends_with($fileName, '_certifie.pdf')) {
+                $documentsTraites[$docKey]['certifie_file'] = $file;
+                $documentsTraites[$docKey]['certifie_last'] = $lastModified;
             } elseif (str_ends_with($fileName, '.pdf')) {
-                $rapportInterventionTraites[$folder]['has_pdf'] = true;
-                $rapportInterventionTraites[$folder]['pdf_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $rapportInterventionTraites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
-                }
+                $documentsTraites[$docKey]['pdf_file'] = $file;
+                $documentsTraites[$docKey]['pdf_last'] = $lastModified;
             }
-
         }
 
-        // ==========================================
-        // 3. TRAITEMENT DES CERFAS 15497
-        // ==========================================
-        $cerfas15497Traites = [];
-        foreach ($lesCerfas15497 as $file) {
-            if (str_ends_with($file, 'cerfa_15497/cerfa_15497.pdf')) continue;
+        // === 2. LECTURE DES JSON, RÉCUPÉRATION DES TOKENS ET FORMATAGE ===
+        $documentsFinals = [];
+
+        foreach ($documentsTraites as $doc) {
+            $type = $doc['type'];
+            $folder = $doc['folder'];
             
-            $parts = explode('/', $file);
-            $rapportIndex = array_search('cerfa_15497', $parts);
-            if ($rapportIndex === false || !isset($parts[$rapportIndex + 1])) continue;
+            $jsonData = [];
+            $token = null;
 
-            $folder = $parts[$rapportIndex + 1];
-            $fileName = end($parts);
+            if ($doc['json_file']) {
+                try {
+                    $jsonContent = Storage::disk('public')->get($doc['json_file']);
+                    $jsonData = json_decode($jsonContent, true) ?? [];
 
-            if (!isset($cerfas15497Traites[$folder])) {
-                $cerfas15497Traites[$folder] = [
-                    'uid' => $folder,
-                    'has_json' => false,
-                    'has_pdf' => false,
-                    'json_file' => null,
-                    'pdf_file' => null,
-                    'json_last' => null,
-                    'pdf_last' => null,
-                ];
-            }
+                    // Récupération robuste du token en BDD avec LIKE
+                    $tokenRecord = TokenLinks::where('paths', 'LIKE', '%' . ltrim($doc['json_file'], '/'))->latest('created_at')->first();
+                    
+                    if (!$tokenRecord) {
+                        $tokenRecord = TokenLinks::where('paths', "app/public/" . ltrim($doc['json_file'], '/'))->latest('created_at')->first();
+                    }
 
-            if (str_ends_with($fileName, '.json')) {
-                $cerfas15497Traites[$folder]['has_json'] = true;
-                $cerfas15497Traites[$folder]['json_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $cerfas15497Traites[$folder]['json_last'] = Storage::disk('public')->lastModified($file);
-                }
-            } elseif (str_ends_with($fileName, '.pdf')) {
-                $cerfas15497Traites[$folder]['has_pdf'] = true;
-                $cerfas15497Traites[$folder]['pdf_file'] = $file;
-                if (Storage::disk('public')->exists($file)) {
-                    $cerfas15497Traites[$folder]['pdf_last'] = Storage::disk('public')->lastModified($file);
+                    $token = $tokenRecord->token ?? null;
+
+                } catch (\Exception $e) {
+                    Log::error("[LIST_SAVED_DOCS] Erreur JSON/DB", ['file' => $doc['json_file'], 'error' => $e->getMessage()]);
                 }
             }
 
-            $nCerfa++;
-            $nTotal++;
-        }
-
-        \Log::info("[CLIENT_CONTROLLER] DOCUMENTS RECUEILLIS", [
-            'client' => $entreprise,
-            'nb_devis' => count($devisTraites),
-            'nb_bi' => count($rapportInterventionTraites),
-            'nb_cerfa' => count($cerfas15497Traites)
-        ]);
-
-        // ==========================================
-        // 4. CONSTRUCTION DU TABLEAU FINAL DE DOCUMENTS
-        // ==========================================
-        // Fusionne les 3 types de documents dans un seul tableau avec structure unifiée
-        // Chaque document contient: path, status (draft/signed/etc.), date, et métadonnées
-        $documents = [];
-        
-        // === FINALISATION DEVIS ===
-        // Convertit les devis traités en structure standardisée pour le frontend
-        foreach ($devisTraites as $folder => $d) {
-            $status = $d['has_certifie'] ? 'certifie' : '';
-            $traitTs = $d['normal_last'] ?? $d['certifie_last'];
-            $confTs = $d['certifie_last'] ?? null;
-
-            $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-            $dateConf = $confTs ? \Carbon\Carbon::createFromTimestamp($confTs)->toDateTimeString() : null;
-
-            $tempsRestants = 0;
-            $signable = false;
+            $docEntry = [
+                'path' => $doc['path'],
+                'status' => 'À traiter',
+                'token_rapport' => $token, // Utilisé pour les rapports et cerfas
+                'data' => []
+            ];
             
-            if ($traitTs) {
-                $dateCreation = \Carbon\Carbon::createFromTimestamp($traitTs);
-                $joursEcoules = $dateCreation->diffInDays(\Carbon\Carbon::now());
-                $tempsRestants = max(0, 30 - $joursEcoules);
-                $signable = $tempsRestants > 0;
-            }
+            $dateJson = $doc['json_last'] ? Carbon::createFromTimestamp($doc['json_last'])->toDateTimeString() : null;
+            $datePdf = $doc['pdf_last'] ? Carbon::createFromTimestamp($doc['pdf_last'])->toDateTimeString() : null;
 
-            $documents['devis/' . $folder] = [
-                'path' => 'devis/' . $folder,
-                'status' => $status,
-                'token' => $d['token'],
-                'type_document' => 'devis',
-                'data' => [
-                    "nom" => $d['nom'],
-                    "tiers" => $d['tiers'],
-                    'token' => $d['token'], // A supprimer
-                    "date_traitement" => $dateTrait,
+            // --- MAPPING DEVIS ---
+            if ($type === 'devis') {
+                $docEntry['status'] = $doc['certifie_file'] ? 'certifie' : '';
+                $traitTs = $doc['pdf_last'] ?? $doc['certifie_last'];
+                $confTs = $doc['certifie_last'];
+
+                $tempsRestants = 0;
+                $signable = false;
+                
+                if ($traitTs) {
+                    $joursEcoules = Carbon::createFromTimestamp($traitTs)->floatDiffInDays(Carbon::now());
+                    $tempsRestants = max(0, 30 - $joursEcoules);
+                    $signable = $tempsRestants > 0;
+                }
+
+                // On retire le token de la racine pour les devis
+                $docEntry['token_rapport'] = null; 
+                
+                $docEntry['data'] = [
+                    "nom" => $jsonData['titre'] ?? $folder,
+                    "tiers" => $jsonData['tiers'] ?? null,
+                    "token" => $token, // <--- LE TOKEN EST PLACÉ ICI DANS LA DATA
+                    "date_traitement" => $traitTs ? Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null,
                     "temps_restants" => $tempsRestants,
                     "signable" => $signable,
-                    "date_confirmation" => $dateConf,
+                    "date_confirmation" => $confTs ? Carbon::createFromTimestamp($confTs)->toDateTimeString() : null,
                     "par" => null
-                ]
-            ];
-
-            $nDevis++;
-            $nTotal++;
-        }
-
-        // Finalisation Rapports d'intervention
-        foreach ($rapportInterventionTraites as $folder => $r) {
-            $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
-            $traitTs = $r['json_last'];
-            $pdfTs = $r['pdf_last'];
-
-            $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-            $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
-
-            $jsonData = null;
-            if ($r['has_json'] && $r['json_file']) {
-                try {
-                    $jsonContent = Storage::disk('public')->get($r['json_file']);
-                    $jsonData = json_decode($jsonContent, true);
-                } catch (\Exception $e) {
-                    \Log::error("[BI] LECTURE JSON DANS CLIENT_CONTROLLER", ['json_file' => $r['json_file']]);
-                }
-            }
-
-            $documents['rapport_intervention/' . $folder] = [
-                'path' => 'rapport_intervention/' . $folder,
-                'status' => $status,
-                'token_rapport' => null, // A supprimer
-                'token' => null, 
-                'type_document' => "rapport_intervention",
-                'data' => [
-                    "nom" => $r['uid'],
+                ];
+            } 
+            // --- MAPPING RAPPORT INTERVENTION ---
+            elseif ($type === 'rapport_intervention') {
+                $docEntry['status'] = $doc['pdf_file'] ? 'Validé' : 'À traiter';
+                
+                $docEntry['data'] = [
+                    "nom" => $jsonData['dataToken']['uid'] ?? $folder,
                     "tiers" => $jsonData['nom_client'] ?? null,
                     "intervenant" => $jsonData['intervenant'] ?? null,
                     "description" => $jsonData['description'] ?? null,
-                    "date_traitement" => $dateTrait,
+                    "date_traitement" => $dateJson,
                     "date_pdf" => $datePdf,
                     "par" => null
-                ]
-            ];
-
-            if ($r['json_file']) {
-                $pathToken = "app/public/" . $r['json_file'];
-                $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
-                if ($tokenRapport) {
-                    $documents['rapport_intervention/' . $folder]["token_rapport"] = $tokenRapport->token; // A supprimer
-                    $documents['rapport_intervention/' . $folder]["token"] = $tokenRapport->token;
-                }
-            }
-
-            $nBi++;
-            $nTotal++;
-        }
-
-        // Finalisation Cerfas
-        foreach ($cerfas15497Traites as $folder => $r) {
-            $status = $r['has_pdf'] ? 'Validé' : 'À traiter';
-            $traitTs = $r['json_last'];
-            $pdfTs = $r['pdf_last'];
-
-            $dateTrait = $traitTs ? \Carbon\Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null;
-            $datePdf = $pdfTs ? \Carbon\Carbon::createFromTimestamp($pdfTs)->toDateTimeString() : null;
-
-            $jsonData = null;
-            if ($r['has_json'] && $r['json_file']) {
-                try {
-                    $jsonContent = Storage::disk('public')->get($r['json_file']);
-                    $jsonData = json_decode($jsonContent, true);
-                } catch (\Exception $e) {}
-            }
-
-            $documents['cerfa_15497/' . $folder] = [
-                'path' => 'cerfa_15497/' . $folder,
-                'status' => $status,
-                'token_rapport' => null, // A supprimer
-                'token' => null,
-                'type_document' => "cerfa_15497",
-                'data' => [
-                    "nom" => $r['uid'],
-                    "tiers" => $jsonData['nom_client'] ?? null,
+                ];
+            } 
+            // --- MAPPING CERFA ---
+            elseif ($type === 'cerfa_15497') {
+                $docEntry['status'] = $doc['pdf_file'] ? 'Validé' : 'À traiter';
+                
+                $docEntry['data'] = [
+                    "nom" => $jsonData['dataToken']['uid'] ?? $folder,
+                    "tiers" => $jsonData['dataToken']['client'] ?? null, 
                     "operateur" => $jsonData['operateur'] ?? null,
                     "detenteur" => $jsonData['detenteur'] ?? null,
                     "nature_intervention" => $jsonData['nature_intervention'] ?? null,
-                    "date_traitement" => $dateTrait,
+                    "date_traitement" => $dateJson,
                     "date_pdf" => $datePdf,
                     "par" => null
-                ]
-            ];
-
-            if ($r['json_file']) {
-                $pathToken = "app/public/" . $r['json_file'];
-                $tokenRapport = TokenLinksRapport::where('paths', $pathToken)->first();
-                if ($tokenRapport) {
-                    $documents['cerfa_15497/' . $folder]["token_rapport"] = $tokenRapport->token; // A supprimer
-                    $documents['cerfa_15497/' . $folder]["token"] = $tokenRapport->token;
-                }
-            }
-
-            $nCerfa++;
-            $nTotal++;
-        }
-
-        // ==========================================
-        // 5. TRAITEMENT DES AUTRES DOCUMENTS
-        // ==========================================
-
-        Log::info("Documents : ", ['documents' => $documents]);
-
-        foreach ($lesDocuments as $file) {
-            $relativePath = preg_replace('#^' . preg_quote($basePath, '#') . '/?#', '', $file);
-            $dirPath = dirname($relativePath);
-            $docType = explode('/', $relativePath)[0];
-
-            if ($dirPath === '.' || $dirPath === $basePath) {
-                continue;
-            }
-
-            if (!isset($documents[$dirPath])) {
-                $documents[$dirPath] = [
-                    'path' => $dirPath,
-                    'token_rapport' => null,
-                    'status' => 'À traiter',
-                    'data' => null
                 ];
             }
 
-            if (str_ends_with($file, '.pdf')) {
-                $documents[$dirPath]['status'] = 'Validé';
-            }
-
-            if (str_ends_with($file, '.json')) {
-                try {
-                    $jsonContent = Storage::disk('public')->get($file);
-                    $jsonData = json_decode($jsonContent, true);
-
-                    $pathToken = "app/public/" . $file;
-                    $dataToken = TokenLinksRapport::where('paths', $pathToken)->first();
-                    $documents[$dirPath]["token_rapport"] = $dataToken["token"] ?? null;
-
-                    if (isset($formatRules[$docType])) {
-                        $rules = $formatRules[$docType];
-                        $formattedData = [];
-
-                        foreach ($rules as $key => $rule) {
-                            if (is_array($rule)) {
-                                $formattedData[$key] = implode(' ', array_filter(array_map(fn($r) => $jsonData[$r] ?? '', $rule)));
-                            } elseif (is_string($rule)) {
-                                $formattedData[$key] = $jsonData[$rule] ?? null;
-                            } else {
-                                $formattedData[$key] = null;
-                            }
-                        }
-
-                        $documents[$dirPath]['data'] = $formattedData;
-                    }
-                } catch (\Exception $e) {
-                    $documents[$dirPath]['data'] = ['error' => 'Fichier JSON illisible'];
-                }
-            }
+            $documentsFinals[] = $docEntry;
         }
 
-        // Ajouter nombre de documents total et chaque type dans une balise metadata.
-
-        // === FILTRAGE FINAL ===
-        // Supprime les documents mal formés (sans chemin valide) et réindexe le tableau
-        // array_values() réinitialise les clés numériques pour éviter les trous d'indices
-        return array_values(array_filter($documents, fn($doc) => strpos($doc['path'], '/') !== false));
+        return array_values($documentsFinals);
     }
 
 
@@ -796,7 +619,7 @@ class ClientController extends Controller
      * * @param string $client Nom du client
      * @param string $document Type de document
      * @param string $uid Identifiant unique
-     * @param TokenLinksRapport|null $tokenRecord L'instance du modèle à supprimer
+     * @param TokenLinks|null $tokenRecord L'instance du modèle à supprimer
      * @return bool
      */
     public static function delete($client, $document, $uid, $tokenRecord = null): bool
