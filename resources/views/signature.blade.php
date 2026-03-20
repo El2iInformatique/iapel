@@ -915,11 +915,11 @@
                                 <div class="input-row">
                                     <div class="form-group">
                                         <label for="firstname" class="form-label">Prénom</label>
-                                        <input type="text" id="firstname" class="form-input" placeholder="Ex: Jean">
+                                        <input type="text" id="firstname" class="form-input" placeholder="Ex: Jean" maxlength="20">
                                     </div>
                                     <div class="form-group">
                                         <label for="lastname" class="form-label">Nom</label>
-                                        <input type="text" id="lastname" class="form-input" placeholder="Ex: Dupont">
+                                        <input type="text" id="lastname" class="form-input" placeholder="Ex: Dupont" maxlength="30">
                                     </div>
                                 </div>
                                 <button type="button" class="generate-btn" id="generate-fullname" style="width: 100%;">
@@ -949,7 +949,7 @@
             <div class="footer-branding">
                 <div class="branding-content">
                     <div class="company-name">APEL - Solution de signature électronique</div>
-                    <div class="developer-info">Développé par EL2i informatique</div>
+                    <div class="developer-info">Développé par EL2i informatique - {{ $organisation_id }}</div>
                 </div>
             </div>
         </div>
@@ -1116,7 +1116,7 @@
             initSignaturePad();
 
             // Sauvegarder la signature au format Base64
-            function saveSignature() {
+            function saveSignature() { 
                 if (signaturePad.isEmpty()) {
                     // Animation d'erreur sur le canvas
                     canvas.style.borderColor = "#ef4444";
@@ -1252,8 +1252,8 @@
             });
             
             // Gestion PDF
-            var pdfUrl = "{{ url('devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
-            var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
+            var pdfUrl = "{{ url('devis/' . $organisation_id . '/' . $devis_id ) }}";
+            var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id ) }}";
             var viewPdfBtn = document.getElementById("viewPdfBtn");
 
             viewPdfBtn.addEventListener("click", function () {
@@ -1324,12 +1324,35 @@
             const clearFullnameButton = document.getElementById('clear-fullname');
             const submitFullnameButton = document.getElementById('submit-fullname');
 
+            // Fonction pour calculer la taille de police adaptée à la longueur du texte
+            function calculateFontSize(text) {
+                const textLength = text.length;
+                let fontSize;
+                
+                if (textLength <= 10) {
+                    fontSize = 3.0;
+                } else if (textLength <= 15) {
+                    fontSize = 2.5;
+                } else if (textLength <= 20) {
+                    fontSize = 2.0;
+                } else if (textLength <= 25) {
+                    fontSize = 1.5;
+                } else if (textLength <= 30) {
+                    fontSize = 1.2;
+                } else {
+                    fontSize = 1.0;
+                }
+                
+                return fontSize + 'rem';
+            }
+
             generateFullnameButton.addEventListener('click', function () {
                 const firstname = firstnameInput.value.trim();
                 const lastname = lastnameInput.value.trim();
                 if (firstname && lastname) {
                     const fullname = `${firstname} ${lastname}`;
-                    fullnamePreview.innerHTML = `<div class="fullname-signature">${fullname}</div>`;
+                    const adaptiveFontSize = calculateFontSize(fullname);
+                    fullnamePreview.innerHTML = `<div class="fullname-signature" style="font-size: ${adaptiveFontSize};">${fullname}</div>`;
                     fullnamePreview.classList.add('has-signature');
                 } else {
                     fullnamePreview.innerHTML = `<div class="preview-placeholder">Votre signature apparaîtra ici</div>`;
