@@ -18,6 +18,9 @@ Route::prefix('api')->group(function () {
     Route::post('/upload-pdf', [PdfController::class, 'upload'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
+    Route::post('/devis-refuse/{token}', [DevisController::class, 'refuse'])
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
         
     /*
         RAPPORT INTERVENTION / CERFA

@@ -1637,10 +1637,11 @@ public function upload(Request $request)
     }
 
 
-    static public function generateDevisPdf(string $pdfOriginalPath, string $outputPath, string $signaturePath, array $data) : bool 
+    static public function generateDevisPdf(string $pdfOriginalPath, string $outputPath, string $signaturePath, array $data): bool 
     {
         try {
-            $coords = json_decode($data["coords"], true);
+            // Sécurisation : on vérifie si "coords" est une chaîne (JSON) ou déjà un tableau
+            $coords = is_string($data["coords"]) ? json_decode($data["coords"], true) : $data["coords"];
 
             $pdf = new Fpdi();
             $pdf->SetAutoPageBreak(false);
@@ -1650,32 +1651,36 @@ public function upload(Request $request)
 
             $pageCount = $pdf->setSourceFile($pdfOriginalPath);
             
-            // Attention : Si $data a été décodé avec "true", $data["nb_pages"] est un tableau, pas un objet.
-            // J'utilise la syntaxe tableau ["nb_pages"] pour être cohérent avec json_decode(..., true)
-            $pagesAEnlever = isset($data["nb_pages"]) ? $data["nb_pages"] : 0;
-            $pageSignature = $pageCount - $pagesAEnlever; 
+            // CORRECTION DU BUG : Si pageCount = 1 et nb_pages = 1, ça donnait 0. On force minimum la page 1.
+            $pagesAEnlever = isset($data["nb_pages"]) ? (int)$data["nb_pages"] : 0;
+            $pageSignature = max(1, $pageCount - $pagesAEnlever); 
 
-            Log::info("[PDF] Début du traitement des pages", ['total_pages' => $pageCount, 'page_signature' => $pageSignature]);
+            Log::info("[PDF] Début du traitement des pages", [
+                'total_pages' => $pageCount, 
+                'page_signature' => $pageSignature
+            ]);
 
             for ($i = 1; $i <= $pageCount; $i++) {
                 $pdf->AddPage();
                 $tplIdx = $pdf->importPage($i);
                 $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
 
-                // Si on est sur la page prévue pour la signature MAQUEUESIMEUH
-                if ($i == $pageSignature) {
+                // Application de la signature sur la bonne page
+                if ($i === $pageSignature) {
                     $ratioConversion = 6.98;
                     
-                    // --- 1. Ajout de la date ---
-                    $pdf->SetXY($coords["x_date"] / $ratioConversion, $coords["y_date"] / $ratioConversion);
+                    // 1. Ajout de la date
+                    $xDate = ($coords["x_date"] ?? 0) / $ratioConversion;
+                    $yDate = ($coords["y_date"] ?? 0) / $ratioConversion;
+                    
+                    $pdf->SetXY($xDate, $yDate);
                     $pdf->Write(10, date('d/m/Y'));
 
-                    // --- 2. Ajout de la signature ---
+                    // 2. Ajout de la signature
                     list($width, $height) = getimagesize($signaturePath);
                     $maxWidth = 31;
                     $maxHeight = 13;
                     
-                    // Maintien du ratio d'aspect de la signature
                     if ($width > $height) {
                         $newWidth = $maxWidth;
                         $newHeight = ($height / $width) * $maxWidth;
@@ -1684,16 +1689,15 @@ public function upload(Request $request)
                         $newWidth = ($width / $height) * $maxHeight;
                     }
 
-                    $xImage = $coords["x_signature"] / $ratioConversion; 
-                    $yImage = $coords["y_signature"] / $ratioConversion;
+                    $xImage = ($coords["x_signature"] ?? 0) / $ratioConversion; 
+                    $yImage = ($coords["y_signature"] ?? 0) / $ratioConversion;
                     
-                    // Insertion dans le PDF
                     $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-                    Log::info("[PDF] Signature et date apposées sur la page", ['page' => $i]);
+                    
+                    Log::info("[PDF] Signature et date apposées avec succès", ['page' => $i, 'x' => $xImage, 'y' => $yImage]);
                 }
             }
 
-            // Génération physique du fichier
             $pdf->Output($outputPath, 'F');
             Log::info("[PDF] Fichier PDF intermédiaire généré avec succès", ['chemin' => $outputPath]);
             
@@ -1701,75 +1705,85 @@ public function upload(Request $request)
 
         } catch (\Exception $e) {
             Log::error("[PDF] Erreur critique lors de la génération FPDI", [
-                'erreur' => $e->getMessage(),
-                'ligne'  => $e->getLine(),
-                'fichier'=> $e->getFile()
+                'erreur'  => $e->getMessage(),
+                'ligne'   => $e->getLine(),
+                'fichier' => $e->getFile()
             ]);
-            return false; // Renvoie false pour déclencher l'erreur proprement dans la fonction sign()
+            return false; 
         }
     }
 
 
     /**
-     * Intègre la signature et la date dans le PDF original.
+     * Intègre la signature par nom complet et la date dans le PDF original.
      */
     static public function generateDevisPdfFullName(string $pdfPath, string $outputPath, string $signaturePath, array $data): bool
     {
-        $pdf = new Fpdi();
-        $pdf->SetAutoPageBreak(false);
-        
-        $pageCount = $pdf->setSourceFile($pdfPath);
+        try {
+            $pdf = new Fpdi();
+            $pdf->SetAutoPageBreak(false);
+            $pdf->SetMargins(0, 0, 0);
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+            
+            $pageCount = $pdf->setSourceFile($pdfPath);
 
-        // Extraction sécurisée des coordonnées depuis le JSON
-        $coords = isset($data['coords']) ? json_decode($data['coords'], true) : [];
-        $xDate = $coords['x_date'] ?? 0;
-        $yDate = $coords['y_date'] ?? 0;
-        $xSignature = $coords['x_signature'] ?? 0;
-        $ySignature = $coords['y_signature'] ?? 0;
-        
-        $nbPagesOffsets = $data['nb_pages'] ?? 0;
+            // Extraction sécurisée des coordonnées
+            $coords = isset($data['coords']) ? (is_string($data["coords"]) ? json_decode($data["coords"], true) : $data["coords"]) : [];
+            $xDate = $coords['x_date'] ?? 0;
+            $yDate = $coords['y_date'] ?? 0;
+            $xSignature = $coords['x_signature'] ?? 0;
+            $ySignature = $coords['y_signature'] ?? 0;
+            
+            // Calcul de la page de signature avec sécurité max(1, ...)
+            $nbPagesOffsets = isset($data['nb_pages']) ? (int)$data['nb_pages'] : 0;
+            $pageSignature = max(1, $pageCount - $nbPagesOffsets);
 
-        for ($i = 1; $i <= $pageCount; $i++) {
-            $pdf->AddPage();
-            $tplIdx = $pdf->importPage($i);
-            $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $pdf->AddPage();
+                $tplIdx = $pdf->importPage($i);
+                $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
 
-            // Application de la signature sur la bonne page
-            if ($i == ($pageCount - $nbPagesOffsets)) {
-                $ratioConversion = 6.98;
+                // Application de la signature sur la bonne page
+                if ($i === $pageSignature) {
+                    $ratioConversion = 6.98;
 
-                // 1. Intégration de la date
-                $date_signature = date('d/m/Y');
-                $pdf->SetXY($xDate / $ratioConversion, $yDate / $ratioConversion);
-                $pdf->Write(10, $date_signature);
+                    // 1. Intégration de la date
+                    $date_signature = date('d/m/Y');
+                    $pdf->SetXY($xDate / $ratioConversion, $yDate / $ratioConversion);
+                    $pdf->Write(10, $date_signature);
 
-                // 2. Intégration de la signature
-                list($width, $height) = getimagesize($signaturePath);
-                
-                $maxWidth = 50;  // 50mm
-                $maxHeight = 20; // 20mm
-                
-                if ($width > $height) {
-                    $newWidth = $maxWidth;
-                    $newHeight = ($height / $width) * $maxWidth;
-                } else {
-                    $newHeight = $maxHeight;
-                    $newWidth = ($width / $height) * $maxHeight;
+                    // 2. Intégration de la signature
+                    list($width, $height) = getimagesize($signaturePath);
+                    
+                    $maxWidth = 50;  // 50mm pour signature manuscrite
+                    $maxHeight = 20; // 20mm
+                    
+                    if ($width > $height) {
+                        $newWidth = $maxWidth;
+                        $newHeight = ($height / $width) * $maxWidth;
+                    } else {
+                        $newHeight = $maxHeight;
+                        $newWidth = ($width / $height) * $maxHeight;
+                    }
+                    
+                    $xImage = $xSignature / $ratioConversion; 
+                    $yImage = $ySignature / $ratioConversion;
+                    
+                    $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
                 }
-                
-                $xImage = $xSignature / $ratioConversion; 
-                $yImage = $ySignature / $ratioConversion;
-                
-                $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
             }
-        }
+            
+            $pdf->Output($outputPath, 'F');
+            return true;
 
-        $pdf->SetMargins(0, 0, 0);
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        
-        $pdf->Output($outputPath, 'F');
-        
-        return true;
+        } catch (\Exception $e) {
+            Log::error("[PDF] Erreur génération devis signe FULLNAME", [
+                'erreur'  => $e->getMessage(),
+                'fichier' => $e->getFile(),
+                'ligne'   => $e->getLine()
+            ]);
+            return false;
+        }
     }
 }

@@ -109,6 +109,8 @@ class SignatureController extends Controller
         $montant_TTC     = $data['montant_TTC'] ?? $dataToken->montant_TTC ?? null;
         $montant_TVA     = $data['montant_TVA'] ?? $dataToken->montant_TVA ?? null;
 
+        $refused = $data["refused"] ?? false;
+
         // Retour de la vue
         return view($view, compact(
             'token',
@@ -119,8 +121,8 @@ class SignatureController extends Controller
             'titre',
             'montant_HT',
             'montant_TTC',
-            'montant_TVA'
-            
+            'montant_TVA',
+            'refused'  
         ));
     }
 
@@ -132,6 +134,7 @@ class SignatureController extends Controller
      * 2. Génère un fichier intermédiaire signé (non certifié)
      * 3. Fait signer électroniquement le PDF par un script Python (certificat)
      */
+
     public function sign(Request $request, $token)
     {
         Log::info("[SIGNATURE] DEBUT DU PROCESSUS", [
@@ -150,17 +153,9 @@ class SignatureController extends Controller
             'signature' => 'required|string'
         ]);
 
-        // Sécurité : Vérification stricte du format Base64 de l'image (évite les fichiers malveillants)
         $signatureBase64 = $request->input('signature');
         if (!preg_match('/^data:image\/(png|jpg|jpeg);base64,/', $signatureBase64)) {
-            Log::warning("[SIGNATURE] FORMAT IMAGE INVALIDE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'ip'       => $request->ip(),
-                'raison'   => 'format base64 incorrect'
-            ]);
+            Log::warning("[SIGNATURE] FORMAT IMAGE INVALIDE", ['token' => $token, 'raison' => 'format base64 incorrect']);
             return response()->json(['message' => 'Format de signature invalide. Seules les images sont acceptées.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -172,44 +167,21 @@ class SignatureController extends Controller
             ->first();
 
         if (!$dataToken) {
-            Log::warning("[TOKEN] TOKEN INVALIDE OU EXPIRÉ", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'ip'       => $request->ip(),
-                'raison'   => 'token introuvable en base ou expiré'
-            ]);
+            Log::warning("[TOKEN] TOKEN INVALIDE OU EXPIRÉ", ['token' => $token]);
             return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
         }
 
         $filePath = storage_path($dataToken->paths);
 
-        // Sécurité : On s'assure que c'est bien un fichier et qu'il existe
         if (!is_file($filePath)) {
-            Log::critical("[FICHIER] JSON DE DONNEES INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath,
-                'ip'       => $request->ip(),
-                'severite' => 'critique'
-            ]);
+            Log::critical("[FICHIER] JSON DE DONNEES INTROUVABLE", ['chemin' => $filePath]);
             return response()->json(['message' => 'Erreur interne : Données du devis introuvables.'], Response::HTTP_NOT_FOUND);
         }
 
         $data = json_decode(file_get_contents($filePath), true);
 
-        if ($data["used"] == true) {
-            Log::warning("[TOKEN] TOKEN DEJA UTILISE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'ip'       => $request->ip(),
-                'raison'   => 'signature déjà effectuée'
-            ]);
+        if (isset($data["used"]) && $data["used"] == true) {
+            Log::warning("[TOKEN] TOKEN DEJA UTILISE", ['token' => $token]);
             return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
         }
 
@@ -227,15 +199,7 @@ class SignatureController extends Controller
         $pdfCertifiePath = storage_path("{$baseDir}/{$nomDoc}_certifie.pdf");
 
         if (!is_file($pdfOriginalPath)) {
-            Log::critical("[PDF] FICHIER ORIGINAL INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $pdfOriginalPath,
-                'devis_id' => $devisId,
-                'severite' => 'critique'
-            ]);
+            Log::critical("[PDF] FICHIER ORIGINAL INTROUVABLE", ['chemin' => $pdfOriginalPath]);
             return response()->json(['message' => 'Le document original est introuvable.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -243,28 +207,11 @@ class SignatureController extends Controller
         // CRÉATION DE L'IMAGE DE SIGNATURE
         // ==========================================
         try {
-            // Nettoyage de l'en-tête base64 et conversion en binaire
             $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
             file_put_contents($signaturePath, $signatureData);
-            Log::info("[SIGNATURE] IMAGE SAUVEGARDEE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $signaturePath,
-                'taille'   => filesize($signaturePath) . ' bytes',
-                'statut'   => 'succès'
-            ]);
+            Log::info("[SIGNATURE] IMAGE SAUVEGARDEE", ['chemin' => $signaturePath]);
         } catch (\Exception $e) {
-            Log::error("[SIGNATURE] ERREUR SAUVEGARDE IMAGE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $signaturePath,
-                'erreur'   => $e->getMessage(),
-                'code'     => $e->getCode()
-            ]);
+            Log::error("[SIGNATURE] ERREUR SAUVEGARDE IMAGE", ['erreur' => $e->getMessage()]);
             return response()->json(['message' => 'Erreur lors de la sauvegarde de la signature.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -272,17 +219,7 @@ class SignatureController extends Controller
         // GÉNÉRATION DU PDF SIGNÉ (VIA FPDI)
         // ==========================================
         if (!PdfController::generateDevisPdf($pdfOriginalPath, $pdfSignePath, $signaturePath, $data)) {
-            Log::error("[PDF] ERREUR GENERATION DEVIS SIGNE", [
-                'token'              => $token,
-                'fonction'           => __FUNCTION__,
-                'fichier'            => basename(__FILE__),
-                'ligne'              => __LINE__,
-                'pdfOriginalPath'    => $pdfOriginalPath, 
-                'pdfSignePath'       => $pdfSignePath,
-                'signaturePath'      => $signaturePath,
-                'devis_id'           => $devisId,
-                'raison'             => 'generateDevisPdf() retourné false'
-            ]);
+            Log::error("[PDF] ERREUR GENERATION DEVIS SIGNE", ['pdfOriginalPath' => $pdfOriginalPath]);
             return response()->json(['message' => 'Erreur lors de la génération du document signé.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -290,124 +227,63 @@ class SignatureController extends Controller
         // CERTIFICATION ÉLECTRONIQUE (PYTHON)
         // ==========================================
         $scriptPath = storage_path('app/signature/sign.py');
-        
-        // Recherche automatique de l'exécutable Python
         $executableFinder = new ExecutableFinder();
         $pythonPath = $executableFinder->find('python3') ?? $executableFinder->find('python');
 
         if (!$pythonPath) {
-            Log::critical("[PYTHON] EXECUTABLE NON TROUVE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'recherche' => 'python3 ou python',
-                'severite' => 'critique'
-            ]);
+            Log::critical("[PYTHON] EXECUTABLE NON TROUVE");
             return response()->json(['message' => 'Erreur configuration serveur.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        Log::info("[PYTHON] CERTIFICATION EN COURS", [
-            'token'       => $token,
-            'fonction'    => __FUNCTION__,
-            'fichier'     => basename(__FILE__),
-            'ligne'       => __LINE__,
-            'script'      => $scriptPath, 
-            'python_path' => $pythonPath,
-            'entrees'     => [$pdfSignePath, $pdfCertifiePath],
-            'statut'      => 'en cours'
-        ]);
+        Log::info("[PYTHON] CERTIFICATION EN COURS");
 
         try {
-            // FIX WINDOWS : On récupère les variables d'environnement vitales pour Python/asyncio
             $env = [
                 'SystemRoot'  => getenv('SystemRoot') ?: 'C:\\Windows',
                 'SystemDrive' => getenv('SystemDrive') ?: 'C:',
                 'PATH'        => getenv('PATH'),
             ];
 
-            // On ajoute l'environnement ($env) en 3ème paramètre
-            $process = new Process(
-                [$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath],
-                null, // Répertoire de travail par défaut
-                $env  // Variables d'environnement injectées
-            );
-            
+            $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath], null, $env);
             $process->run();
 
             if (!$process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
 
-            Log::info("[PDF] CERTIFICATION REUSSIE", [
-                'token'         => $token,
-                'fonction'      => __FUNCTION__,
-                'fichier'       => basename(__FILE__),
-                'ligne'         => __LINE__,
-                'devis_id'      => $devisId,
-                'chemin_sortie' => $pdfCertifiePath,
-                'methode'       => 'python',
-                'statut'        => 'succès'
-            ]);
+            Log::info("[PDF] CERTIFICATION REUSSIE", ['chemin_sortie' => $pdfCertifiePath]);
 
+            // ==========================================
+            // MISE À JOUR DU JSON
+            // ==========================================
             $data["used"] = true;
+            
+            // On nettoie le chemin stocké en BDD pour l'utiliser avec Storage::disk('public')
+            $jsonRelativePath = preg_replace('#^app/public/#', '', ltrim($dataToken->paths, '/'));
+            
             $stored = Storage::disk('public')->put(
-                    $dataToken->paths, 
-                    json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                $jsonRelativePath,
+                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             );
 
-            // On s'assure que le fichier a bien été écrit sur le disque
             if (!$stored) {
                 throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
             }
 
         } catch (\Exception $e) {
-            Log::critical("[PYTHON] ERREUR CERTIFICATION", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'devis_id' => $devisId,
-                'erreur'   => $e->getMessage(),
-                'code'     => $e->getCode(),
-                'type'     => get_class($e),
-                'severite' => 'critique'
-            ]);
+            Log::critical("[PYTHON] ERREUR CERTIFICATION", ['erreur' => $e->getMessage()]);
             return response()->json(['message' => 'Erreur lors de la certification sécurisée du document.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         // ==========================================
         // FINALISATION ET NETTOYAGE
         // ==========================================
-        // On verrouille le token en base de données
-
-        Log::info("[TOKEN] MARQUE COMME UTILISE", [
-            'token'    => $token,
-            'fonction' => __FUNCTION__,
-            'fichier'  => basename(__FILE__),
-            'ligne'    => __LINE__,
-            'devis_id' => $devisId,
-            'client'   => $client,
-            'statut'   => 'signature finalisée'
-        ]);
+        Log::info("[TOKEN] MARQUE COMME UTILISE", ['devis_id' => $devisId]);
         
-        // Suppression silencieuse des fichiers de travail temporaires
-        $deletedPdfSigne = @unlink($pdfSignePath);
-        $deletedSignature = @unlink($signaturePath);
+        // Suppression des fichiers de travail temporaires
+        @unlink($pdfSignePath);
+        @unlink($signaturePath);
         
-        Log::info("[NETTOYAGE] FICHIERS TEMPORAIRES SUPPRIMES", [
-            'token'    => $token,
-            'fonction' => __FUNCTION__,
-            'fichier'  => basename(__FILE__),
-            'ligne'    => __LINE__,
-            'devis_id' => $devisId,
-            'client'   => $client,
-            'pdf_signe_supprime' => $deletedPdfSigne,
-            'signature_supprimee' => $deletedSignature,
-            'statut'   => 'nettoyage complet'
-        ]);
-        
-        // Réponse finale pour le frontend
         return response()->json([
             'message' => 'Le document a été signé et certifié avec succès.',
             'status'  => 'success'
@@ -636,7 +512,7 @@ class SignatureController extends Controller
             // Sauvegarde de l'état "used" dans le JSON
             $data["used"] = true;
             $stored = Storage::disk('public')->put(
-                $dataToken->paths, 
+                "/$client/devis/$devisId/$devisId.json",
                 json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             );
 

@@ -396,4 +396,61 @@ class DevisController extends Controller
         return response()->download($pdfPathCertifie, "{$uid}.pdf");
 
     }
+
+    public function refuse(Request $request, $token) {
+
+        \Log::info("Debut refut token");
+
+        $dataToken = TokenLinks::where('token', $token)->first();
+
+        // Si le token n'existe pas, on bloque l'accès
+        if (!$dataToken) {
+            \Log::error("[DATA_TOKEN] TOKEN INTROUVABLE", [
+                'token'    => $token,
+                'fonction' => __FUNCTION__,
+                'fichier'  => basename(__FILE__),
+                'ligne'    => __LINE__
+            ]);
+            return response()->json(['exists' => false], 404);
+        }
+
+        // Construire le chemin absolu du fichier JSON
+        // storage_path() va transformer "app/public/Apple/devis/..." en "/chemin/vers/ton/projet/storage/app/public/Apple/devis/..."
+        $filePath = storage_path($dataToken->paths);
+
+        // Vérifier que le JSON existe physiquement
+        if (!file_exists($filePath)) {
+            \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
+                'token'    => $token,
+                'fonction' => __FUNCTION__,
+                'fichier'  => basename(__FILE__),
+                'ligne'    => __LINE__,
+                'chemin'   => $filePath
+            ]);
+            return response()->json(['error' => "file not found"], 404);
+        }
+
+        // Lire et décoder le JSON pour construire la vue
+        $data = json_decode(file_get_contents($filePath), true);
+
+        $client = $data["dataToken"]["organisation_id"];
+        $devisId = $data["dataToken"]["devis_id"];
+
+        $data["refused"] = true;
+
+        $stored = Storage::disk('public')->put(
+                    "/$client/devis/$devisId/$devisId.json", 
+                    json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+
+        \Log::info("Devis refuser !");
+
+        // On s'assure que le fichier a bien été écrit sur le disque
+        if (!$stored) {
+            throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
+        }
+
+        \Log::info("Renvoye reponse !");
+        return response()->json(["found" => true], 200);
+    }
 }
