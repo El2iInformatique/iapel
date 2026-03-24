@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\ClientController;
 use App\Models\TokenLinks;
+use App\Services\JsonReader;
 
 
 /**
@@ -154,13 +155,10 @@ class DevisController extends Controller
                 'request_data'    => $finalData
             ]);
 
-            // Décodage du JSON pour "coords"
-            $coords = json_decode($finalData['coords'], true);
-
-            // Au lieu de faire un return direct, on lève une exception pour centraliser l'erreur dans le catch
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \Exception('Invalid JSON in coords: ' . json_last_error_msg());
-            }
+            $coords = rescue(
+                fn() => json_decode($finalData['coords'], true, 512, JSON_THROW_ON_ERROR),
+                fn() => throw new \Exception('Les coordonnées JSON sont malformées.')
+            );
 
             // Génération du Token
             $token = TokenController::generateToken($fullPathForToken, 'devis');
@@ -229,24 +227,12 @@ class DevisController extends Controller
             return response()->json(['error' => 'Token introuvable'], 404);
         }
 
-        // Construire le chemin absolu du fichier JSON
-        $filePath = storage_path($dataToken->paths);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => response()->json(['error' => 'Erreur lors de la récupération des données.'], 404)
+        );
 
-        // Vérifier que le JSON existe physiquement
-        if (!file_exists($filePath)) {
-            \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath
-            ]);
-            // CORRECTION ICI : 'error' => 'Fichier...' au lieu de 'error', 'Fichier...'
-            return response()->json(['error' => 'Fichier introuvable'], 404); 
-        }
-
-        // Lire et décoder le JSON pour construire la vue
-        $data = json_decode(file_get_contents($filePath), true);
+        if ($data instanceof JsonResponse) return $data;
 
         // Extraction des variables de base (priorité au JSON, fallback sur la DB)
         $uid    = $data["dataToken"]['devis_id'] ?? "";
@@ -270,7 +256,8 @@ class DevisController extends Controller
                 'fonction' => __FUNCTION__,
                 'fichier'  => basename(__FILE__),
                 'ligne'    => __LINE__,
-                'chemin'   => $filePath
+                'chemin'   => storage_path($dataToken->paths)
+
             ]);
 
             return response()->json(['success' => 'Devis supprimé avec succès'], 200);
@@ -299,7 +286,7 @@ class DevisController extends Controller
      *
      * @note Cette méthode ne renvoie jamais le contenu du fichier, uniquement son existence.
      */
-    public function check(Request $request, $token){
+    public function check(Request $request, $token): JsonResponse {
         // Récupération des infos liées au token
         $dataToken = TokenLinks::where('token', $token)->first();
 
@@ -314,24 +301,12 @@ class DevisController extends Controller
             return response()->json(['exists' => false], 200);
         }
 
-        // Construire le chemin absolu du fichier JSON
-        // storage_path() va transformer "app/public/Apple/devis/..." en "/chemin/vers/ton/projet/storage/app/public/Apple/devis/..."
-        $filePath = storage_path($dataToken->paths);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => response()->json(['error' => 'Erreur lors de la récupération des données.'], 404)
+        );
 
-        // Vérifier que le JSON existe physiquement
-        if (!file_exists($filePath)) {
-            \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath
-            ]);
-            return response()->json(['exists' => false], 200);
-        }
-
-        // Lire et décoder le JSON pour construire la vue
-        $data = json_decode(file_get_contents($filePath), true);
+        if ($data instanceof JsonResponse) return $data;
 
         // Extraction des variables de base (priorité au JSON, fallback sur la DB)
         $devis_id       = $data["dataToken"]['devis_id'] ?? "";
@@ -367,28 +342,19 @@ class DevisController extends Controller
             return response()->json(['exists' => false], 404);
         }
 
-        // Construire le chemin absolu du fichier JSON
-        // storage_path() va transformer "app/public/Apple/devis/..." en "/chemin/vers/ton/projet/storage/app/public/Apple/devis/..."
-        $filePath = storage_path($dataToken->paths);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => response()->json(['error' => 'Erreur lors de la récupération des données.'], 404)
+        );
 
-        // Vérifier que le JSON existe physiquement
-        if (!file_exists($filePath)) {
-            \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath
-            ]);
-            return response()->json(['exists' => false], 404);
-        }
+        if ($data instanceof JsonResponse) return $data;
 
-        // Lire et décoder le JSON pour construire la vue
-        $data = json_decode(file_get_contents($filePath), true);
         $client = $data["dataToken"]["organisation_id"];
         $uid = $data["dataToken"]["devis_id"];
         
         $pdfPathCertifie = storage_path("app/public/{$client}/devis/{$uid}/{$uid}_certifie.pdf");
+        $filePath = storage_path($dataToken->paths);
+
         if (!file_exists($filePath)) {
             return response()->json(['exists' => false], 404);
         }
@@ -414,24 +380,13 @@ class DevisController extends Controller
             return response()->json(['exists' => false], 404);
         }
 
-        // Construire le chemin absolu du fichier JSON
-        // storage_path() va transformer "app/public/Apple/devis/..." en "/chemin/vers/ton/projet/storage/app/public/Apple/devis/..."
-        $filePath = storage_path($dataToken->paths);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => response()->json(['succes' => false], 400)
+        );
 
-        // Vérifier que le JSON existe physiquement
-        if (!file_exists($filePath)) {
-            \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath
-            ]);
-            return response()->json(['error' => "file not found"], 404);
-        }
+        if ($data instanceof JsonResponse) return $data;
 
-        // Lire et décoder le JSON pour construire la vue
-        $data = json_decode(file_get_contents($filePath), true);
 
         $client = $data["dataToken"]["organisation_id"];
         $devisId = $data["dataToken"]["devis_id"];
@@ -439,8 +394,8 @@ class DevisController extends Controller
         $data["refused"] = true;
 
         $stored = Storage::disk('public')->put(
-                    "/$client/devis/$devisId/$devisId.json", 
-                    json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            "/$client/devis/$devisId/$devisId.json", 
+            json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
 
         \Log::info("Devis refuser !");
@@ -451,6 +406,6 @@ class DevisController extends Controller
         }
 
         \Log::info("Renvoye reponse !");
-        return response()->json(["found" => true], 200);
+        return response()->json(["succes" => true], 200);
     }
 }

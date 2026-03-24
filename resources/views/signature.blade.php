@@ -272,7 +272,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="info_modal_signature" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal fade" id="info_modal_signature" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -280,11 +280,10 @@
                         <i class="bi bi-hourglass-split me-2"></i>
                         Signature en cours
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
                     <div class="d-flex align-items-center">
-                        <div class="loading-spinner me-3"></div>
+                        <div class="spinner-border text-primary me-3" role="status"></div>
                         <span>Veuillez patienter pendant la génération de la signature de votre devis...</span>
                     </div>
                 </div>
@@ -297,84 +296,46 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // --- LOGIQUE COMMUNE (Toujours disponible) ---
+            
+            const infoModalElement = document.getElementById("info_modal_signature");
+            const infoModal = new bootstrap.Modal(infoModalElement);
 
-            // Gestion PDF (Placé ici pour être actif même si le devis est refusé)
+            // --- LOGIQUE COMMUNE (PDF) ---
             var pdfUrl = "{{ url('devis/' . $organisation_id . '/' . $devis_id ) }}";
             var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id ) }}";
             var viewPdfBtn = document.getElementById("viewPdfBtn");
 
             if (viewPdfBtn) {
                 viewPdfBtn.addEventListener("click", function () {
-                    if (window.innerWidth > 768) { // Si PC (écran large)
+                    if (window.innerWidth > 768) {
                         var pdfViewer = document.getElementById("pdfViewer");
                         pdfViewer.src = pdfUrl;
                         var pdfModal = new bootstrap.Modal(document.getElementById("pdfModal"));
                         pdfModal.show();
-                    } else { // Si mobile
-                        window.location.href = pdfDownloadUrl; // Téléchargement direct
+                    } else {
+                        window.location.href = pdfDownloadUrl;
                     }
                 });
             }
 
             // --- LOGIQUE CONDITIONNELLE (Signature) ---
-
             const isSignable = {{ $actualSignable ? 'true' : 'false' }};
             const disableReason = "{{ $isRefused ? 'Devis refusé' : 'Devis expiré' }}";
             
             let canvas = document.getElementById("signature-pad");
-            let signatureInput = document.getElementById("signature");
-            let clearButton = document.getElementById("clear-signature");
             let submitButton = document.getElementById("submit-signature");
+            let clearButton = document.getElementById("clear-signature");
             let placeholder = document.getElementById("signature-placeholder");
             let signaturePad;
 
-            // Si le devis n'est pas signable, désactiver uniquement la section signature
             if (!isSignable) {
-                if(canvas) {
-                    canvas.style.cursor = 'not-allowed';
-                    canvas.style.opacity = '0.5';
-                    canvas.style.pointerEvents = 'none';
-                }
-                
-                if(clearButton) {
-                    clearButton.disabled = true;
-                    clearButton.style.opacity = '0.5';
-                }
-
-                if(submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.style.opacity = '0.5';
-                    submitButton.innerHTML = `<i class="bi bi-x-circle"></i> <span>Signature impossible - ${disableReason}</span>`;
-                }
-                
-                const firstnameInput = document.getElementById('firstname');
-                const lastnameInput = document.getElementById('lastname');
-                const generateFullnameButton = document.getElementById('generate-fullname');
-                const clearFullnameButton = document.getElementById('clear-fullname');
-                const submitFullnameButton = document.getElementById('submit-fullname');
-                
-                if(firstnameInput) firstnameInput.disabled = true;
-                if(lastnameInput) lastnameInput.disabled = true;
-                if(generateFullnameButton) generateFullnameButton.disabled = true;
-                if(clearFullnameButton) clearFullnameButton.disabled = true;
-                
-                if(submitFullnameButton) {
-                    submitFullnameButton.disabled = true;
-                    submitFullnameButton.style.opacity = '0.5';
-                    submitFullnameButton.innerHTML = `<i class="bi bi-x-circle"></i> <span>Signature impossible - ${disableReason}</span>`;
-                }
-                
-                const signatureTypeButtons = document.querySelectorAll('.signature-type-btn');
-                signatureTypeButtons.forEach(btn => {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.5';
-                });
-                
-                // On ne fait pas de return immédiat pour laisser le reste des animations/logiciels s'exécuter
+                // Désactivation des éléments si non signable
+                if(canvas) { canvas.style.pointerEvents = 'none'; canvas.style.opacity = '0.5'; }
+                if(submitButton) { submitButton.disabled = true; submitButton.innerHTML = `<span>${disableReason}</span>`; }
+                // ... autres désactivations si nécessaire
             }
 
-            // Initialisation Signature Pad (seulement si signable)
+            // Initialisation Signature Pad
             if (isSignable && canvas) {
                 function resizeCanvas() {
                     const rect = canvas.getBoundingClientRect();
@@ -388,23 +349,17 @@
                 signaturePad = new SignaturePad(canvas, {
                     backgroundColor: 'rgba(255, 255, 255, 1)',
                     penColor: "#334155",
-                    onBegin: () => {
-                        canvas.classList.add("active");
-                        placeholder.classList.add("hidden");
-                    }
+                    onBegin: () => { placeholder.classList.add("hidden"); }
                 });
 
                 window.addEventListener('resize', resizeCanvas);
                 resizeCanvas();
 
+                // Submit Manuel
                 submitButton.addEventListener("click", function () {
-                    if (signaturePad.isEmpty()) {
-                        alert("Veuillez signer avant de soumettre.");
-                        return;
-                    }
+                    if (signaturePad.isEmpty()) return alert("Veuillez signer avant de soumettre.");
                     
                     submitButton.disabled = true;
-                    const infoModal = new bootstrap.Modal(document.getElementById("info_modal_signature"));
                     infoModal.show();
 
                     fetch("{{ url('/signature/' . $token) }}", {
@@ -427,7 +382,7 @@
                 });
             }
 
-            // Gestion Nom/Prénom (si signable)
+            // Gestion Nom/Prénom
             if (isSignable) {
                 const generateFullnameButton = document.getElementById('generate-fullname');
                 const submitFullnameButton = document.getElementById('submit-fullname');
@@ -444,25 +399,33 @@
                     }
                 });
 
+                // Submit Fullname (AJOUT DE LA POPUP ICI)
                 submitFullnameButton.addEventListener('click', () => {
                     const fn = firstnameInput.value.trim();
                     const ln = lastnameInput.value.trim();
+                    
                     if (!fn || !ln) return alert("Nom et prénom requis");
+                    if (!fullnamePreview.classList.contains('has-signature')) return alert("Veuillez d'abord afficher la signature");
 
                     submitFullnameButton.disabled = true;
+                    infoModal.show(); // Affiche la pop-up "Signature en cours"
+
                     fetch("{{ url('/signature-fullname/' . $token) }}", {
                         method: "POST",
                         headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
                         body: JSON.stringify({ firstname: fn, lastname: ln })
                     })
+                    .then(response => response.ok ? response.json() : Promise.reject())
                     .then(() => window.location.reload())
                     .catch(() => {
+                        alert("Erreur lors de la signature.");
                         submitFullnameButton.disabled = false;
+                        infoModal.hide();
                     });
                 });
             }
 
-            // Sélecteur de type de signature
+            // Sélecteur d'onglets Signature
             const typeButtons = document.querySelectorAll('.signature-type-btn');
             typeButtons.forEach(button => {
                 button.addEventListener('click', function () {
@@ -487,14 +450,12 @@
                             body: JSON.stringify({ devis_id: "{{ $devis_id }}" })
                         })
                         .then(() => window.location.reload())
-                        .catch(() => {
-                            btnRefuseDevis.disabled = false;
-                        });
+                        .catch(() => { btnRefuseDevis.disabled = false; });
                     }
                 });
             }
 
-            // Animations
+            // Animations d'entrée
             const elements = document.querySelectorAll('.info-alert, .document-details, .signature-section');
             elements.forEach((el, i) => {
                 el.style.opacity = '0';

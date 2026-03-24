@@ -11,6 +11,8 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\ExecutableFinder;
+use App\Services\JsonReader; // Service pour lire les fichiers JSON de documents
+
 
 class SignatureController extends Controller
 {
@@ -35,24 +37,10 @@ class SignatureController extends Controller
             abort(404, 'Accès refusé | Lien vers le devis introuvable.', ['Content-Type' => 'text/html']);
         }
 
-        // Construire le chemin absolu du fichier JSON
-        // storage_path() va transformer "app/public/Apple/devis/..." en "/chemin/vers/ton/projet/storage/app/public/Apple/devis/..."
-        $filePath = storage_path($dataToken->paths);
-
-        // Vérifier que le JSON existe physiquement
-        if (!file_exists($filePath)) {
-            Log::error("[JSON] FICHIER JSON INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath
-            ]);
-            abort(404, 'Fichier introuvable');
-        }
-
-        // Lire et décoder le JSON pour construire la vue
-        $data = json_decode(file_get_contents($filePath), true);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => abort(500, "Erreur lors de la récupération de vos données.")
+        );
 
         // Extraction des variables de base (priorité au JSON, fallback sur la DB)
         $uid       = $data["dataToken"]['devis_id'] ?? "";
@@ -171,14 +159,11 @@ class SignatureController extends Controller
             return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
         }
 
-        $filePath = storage_path($dataToken->paths);
-
-        if (!is_file($filePath)) {
-            Log::critical("[FICHIER] JSON DE DONNEES INTROUVABLE", ['chemin' => $filePath]);
-            return response()->json(['message' => 'Erreur interne : Données du devis introuvables.'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode(file_get_contents($filePath), true);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => abort(500, "Erreur lors de la récupération de vos données.")
+        );
+        
 
         if (isset($data["used"]) && $data["used"] == true) {
             Log::warning("[TOKEN] TOKEN DEJA UTILISE", ['token' => $token]);
@@ -336,22 +321,10 @@ class SignatureController extends Controller
             return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
         }
 
-        $filePath = storage_path($dataToken->paths);
-
-        if (!is_file($filePath)) {
-            Log::critical("[FICHIER] JSON DE DONNEES INTROUVABLE (FULLNAME)", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath,
-                'ip'       => $request->ip(),
-                'severite' => 'critique'
-            ]);
-            return response()->json(['message' => 'Erreur interne : Données du devis introuvables.'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode(file_get_contents($filePath), true);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => abort(500, "Erreur lors de la récupération de vos données.")
+        );
 
         if ($data["used"] == true) {
             Log::warning("[TOKEN] TOKEN DEJA UTILISE (FULLNAME)", [
