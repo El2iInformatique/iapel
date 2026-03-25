@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\DevisController;
 use App\Http\Controllers\TokenController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
@@ -57,12 +56,6 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
 });
 
 
-Route::get('/67', function () {
-    $txt = base64_decode("c2l4K3NldmVu");
-    return redirect()->away("https://www.google.com/search?q={$txt}");
-});
-
-
 Route::get('/unsigned', function() {
     return view('unsigned');
 });
@@ -79,7 +72,7 @@ Route::post('/revision/check', [RevisionController::class, 'check'])->name('revi
 Route::get('/documents/{client}', [BiController::class, 'getDocuments']);
 
 // Fonction de vérification de l'état du document d'intervention
-Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check'])->middleware('VerifSecretToken'); // Legacy
+Route::get('/check/{client}/{document}/{uid}', [BiController::class, 'check'])->middleware('VerifSecretToken');
 // Listing de tous les documents enregistrés pour un client
 Route::get('/list/{client}', [BiController::class, 'listSavedDocs'])->middleware('VerifSecretToken');
 // Affichage d'un PDF de devis
@@ -154,8 +147,7 @@ Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('s
 Route::post('/signature-fullname/{token}', [SignatureController::class, 'signWithFullName'])->name('signature.signFullName');
 
 Route::get('/devis/{client}/{uid}', function ($client, $uid) {
-
-    $filePath = storage_path("app/public/{$client}/devis/{$uid}/{$uid}.pdf");
+    $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid . '.pdf');
     if (!file_exists($filePath)) {
         abort(404);
     }
@@ -166,4 +158,11 @@ Route::get('/devis/{client}/{uid}', function ($client, $uid) {
 });
 
 
-Route::get('/download-devis/{token}', [DevisController::class, 'downloadDevis']);
+Route::get('/download-devis/{client}/{filename}', function ($client, $uid) {
+    $filePath = storage_path('app/public/'.$client.'/devis/'.$uid. '/' . $uid .'_certifie.pdf');
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+
+    return response()->download($filePath, "{$uid}.pdf");
+});

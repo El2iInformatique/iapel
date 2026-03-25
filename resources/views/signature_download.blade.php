@@ -566,7 +566,7 @@
             // Simulation du processus de génération
             setTimeout(() => {
                 // Création du lien de téléchargement
-                const pdfUrl = "{{ url('download-devis/' . $token) }}";
+                const pdfUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id.'_'.$token ) }}";
                 const link = document.createElement("a");
                 link.href = pdfUrl;
                 link.download = "Devis_{{ $devis_id }}_signe.pdf";
