@@ -133,6 +133,7 @@ class PdfController extends Controller
         // Récupère les données du token depuis la base de données
         $dataToken = TokenLinks::where('token', $token)->get()->first();
 
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -630,6 +631,7 @@ class PdfController extends Controller
 
          // === ÉTAPE 1 : CHARGEMENT ET RÉCUPÉRATION DES DONNÉES ===
         // Charge les données du fichier JSON contenant tous les détails du bulletin d'intervention
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromPath($client, $document, $uid, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -1092,6 +1094,7 @@ class PdfController extends Controller
 
         // === ÉTAPE 5 : CHARGEMENT DES DONNÉES ===
         // Récupère tous les données du formulaire depuis le fichier JSON
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromPath($client, $document, $uid, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -1513,6 +1516,7 @@ public function upload(Request $request)
         return response()->json(['message' => 'Lien du token invalide ou expiré.'], Response::HTTP_FORBIDDEN);
     }
 
+    // Permet en cas de d'excption de la capturer et d'utiliser abort()
     $data = rescue(
         fn() => JsonReader::fromToken($dataToken, __CLASS__),
         fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -1601,6 +1605,7 @@ public function upload(Request $request)
             return response()->json(['message' => 'Lien du token invalide ou expiré.'], Response::HTTP_FORBIDDEN);
         }
 
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")

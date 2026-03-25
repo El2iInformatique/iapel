@@ -37,6 +37,7 @@ class SignatureController extends Controller
             abort(404, 'Accès refusé | Lien vers le devis introuvable.', ['Content-Type' => 'text/html']);
         }
 
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -159,6 +160,7 @@ class SignatureController extends Controller
             return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
         }
 
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -321,6 +323,7 @@ class SignatureController extends Controller
             return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
         }
 
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")

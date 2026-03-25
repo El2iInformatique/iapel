@@ -155,6 +155,7 @@ class DevisController extends Controller
                 'request_data'    => $finalData
             ]);
 
+             // Permet en cas de d'excption de la capturer et d'en renvoyer une autre
             $coords = rescue(
                 fn() => json_decode($finalData['coords'], true, 512, JSON_THROW_ON_ERROR),
                 fn() => throw new \Exception('Les coordonnées JSON sont malformées.')
@@ -227,6 +228,7 @@ class DevisController extends Controller
             return response()->json(['error' => 'Token introuvable'], 404);
         }
 
+        // Permet en cas de d'excption de la capturer et de renvoyer une reponse json
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => response()->json(['error' => 'Erreur lors de la récupération des données.'], 404)
@@ -301,6 +303,7 @@ class DevisController extends Controller
             return response()->json(['exists' => false], 200);
         }
 
+        // Permet en cas de d'excption de la capturer et de renvoyer une reponse json
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => response()->json(['error' => 'Erreur lors de la récupération des données.'], 404)
@@ -379,7 +382,8 @@ class DevisController extends Controller
             ]);
             return response()->json(['exists' => false], 404);
         }
-
+        
+        // Permet en cas de d'excption de la capturer et de renvoyer une reponse json
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => response()->json(['succes' => false], 400)

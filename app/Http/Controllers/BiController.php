@@ -285,7 +285,8 @@ class BiController extends Controller
     {
         // Recherche du token en base pour retrouver le chemin du JSON associé
         $dataToken = TokenLinks::where('token', $token)->get()->first();
-
+        
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -422,6 +423,7 @@ class BiController extends Controller
         $dataToken = TokenLinks::where('token', $token)->get()->first();
         
         try {
+            // Permet en cas de d'excption de la capturer et d'utiliser abort()
             $data = rescue(
                 fn() => JsonReader::fromToken($dataToken, __CLASS__),
                 fn() => abort(500, "Erreur lors de la récupération de vos données.")
@@ -502,7 +504,8 @@ class BiController extends Controller
         if (!$dataToken) {
             return response()->json(['error' => 'Lien vers le rapport introuvable.'], 404);
         }
-
+        
+        // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $jsonData = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
