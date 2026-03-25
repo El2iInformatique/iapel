@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\TokenController; // Contrôleur pour gérer les tokens de rapport
 use App\Http\Controllers\ClientController; // Contrôleur pour gérer les documents clients
-use App\Models\TokenLinksRapport; // Modèle de liaison entre token et rapport
+use App\Models\TokenLinks; // Modèle de liaison entre token et rapport
+use App\Services\JsonReader; // Service pour lire les fichiers JSON de documents
 
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
+use RuntimeException;
 
 /**
  * @class BiController
@@ -72,29 +74,14 @@ class BiController extends Controller
      */
     public function getDocuments($client)
     {
-        // Construction du chemin vers le fichier JSON du client
-        $filePath = storage_path('app/public/' . $client . '/documents.json');
-
-        // Vérifier si le fichier existe
-        if (!file_exists($filePath)) {
-            \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
-                'client' => $client,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'chemin' => $filePath
-            ]);
-            return response()->json(['error' => 'Fichier introuvable'], 404);
+        try {
+            $data = JsonReader::documentsList($client, __CLASS__);
+            // Retourner les données au format JSON
+            return response()->json($data);
         }
-
-        // Lire le contenu du fichier JSON
-        $json = file_get_contents($filePath);
-
-        // Décoder le JSON en tableau associatif
-        $data = json_decode($json, true); // true => convertir en tableau associatif
-
-        // Retourner les données au format JSON
-        return response()->json($data);
+        catch(Exception $ex) {
+            return response()->json(["error" => $ex->getMessage()], 500);
+        }
     }
 
 
@@ -106,7 +93,7 @@ class BiController extends Controller
      * - la présence physique du fichier PDF dans le stockage.
      *
      * @param string $jsonPath Chemin absolu vers le fichier JSON existant.
-     * @param array $dataToken Données issues de la table TokenLinksRapport.
+     * @param array $dataToken Données issues de la table TokenLinks.
      * @return bool true si le PDF existe déjà, false sinon.
      */
     public function checkExistPdf($jsonPath, $dataToken): bool {
@@ -265,7 +252,7 @@ class BiController extends Controller
 
             // Génération du Token
             $fullPathForToken = "app/public/{$relativeFilePath}";
-            $token = TokenController::generateTokenRapport($request, $fullPathForToken);
+            $token = TokenController::generateToken($fullPathForToken, $document); // requete + path + type document
 
             return response()->json([
                 'message' => 'Document créé avec succès',
@@ -297,25 +284,12 @@ class BiController extends Controller
     public function download($token)
     {
         // Recherche du token en base pour retrouver le chemin du JSON associé
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = TokenLinks::where('token', $token)->get()->first();
 
-        // Construire le chemin du fichier JSON stocké
-        $filePath = storage_path($dataToken['paths']);
-
-        // Vérifier si le fichier JSON existe avant de le lire
-        if (!file_exists($filePath)) {
-            \Log::error("[TELECHARGEMENT] FICHIER JSON INTROUVABLE", [
-                'token' => $token,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'chemin' => $filePath
-            ]);
-            abort(404, 'Fichier introuvable');
-        }
-
-        // Lire et décoder le fichier JSON pour récupérer les métadonnées
-        $data = json_decode(file_get_contents($filePath), true);
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => abort(500, "Erreur lors de la récupération de vos données.")
+        );
 
         // Extraire les éléments nécessaires depuis le JSON
         $client = $data["dataToken"]["client"];
@@ -378,101 +352,59 @@ class BiController extends Controller
      */
     public function show($token)
     {
-        // Récupération des infos liées au token
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = TokenLinks::where('token', $token)->first();
 
-        // Si le token n'existe pas, on bloque l'accès
         if (!$dataToken) {
             \Log::error("[DATA_TOKEN] TOKEN INTROUVABLE", [
-                'token' => $token,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__
+                'token' => $token, 'fonction' => __FUNCTION__, 'fichier' => basename(__FILE__), 'ligne' => __LINE__
             ]);
-            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+            abort(404, 'Accès refusé | Lien introuvable.');
         }
 
-        // Construire le chemin du fichier JSON à partir du token
-        $filePath = storage_path($dataToken['paths']);
-
-        // Vérifier que le JSON existe
-        if (!file_exists($filePath)) {
-            \Log::error("[JSON] FICHIER JSON INTROUVABLE", [
-                'token' => $token,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'chemin' => $filePath
-            ]);
-            abort(404, 'Fichier introuvable');
-        }
-
-        // Si un PDF existe déjà, on refuse l'accès pour éviter les doublons
+        // Vérification existence PDF
+        $filePath = storage_path($dataToken->paths);
         if ($this->checkExistPdf($filePath, $dataToken)) {
-            $client = $dataToken['client'] ?? 'unknown_client';
-            \Log::warning("[JSON] ACCES REFUSER", [
-                'client' => $client,
-                'token' => $token,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'chemin' => $filePath
-            ]);
-            abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
+            \Log::warning("[JSON] ACCES REFUSE", ['token' => $token, 'chemin' => $filePath]);
+            abort(403, 'Bon d\'intervention déjà généré.');
         }
 
-        // lire et décoder le JSON pour construire la vue
-        $data = json_decode(file_get_contents($filePath), true);
+        // Lecture JSON avec rescue (élégant et sécurisé)
+        $data = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => abort(500, "Erreur lors de la récupération de vos données.")
+        );
 
-        $client = $data["dataToken"]["client"];
-        $document = $data["dataToken"]["document"];
-        $uid = $data["dataToken"]["uid"];
+        // Extraction rapide des variables
+        ['client' => $client, 'document' => $document, 'uid' => $uid] = $data["dataToken"];
         $token = $dataToken->token;
 
-        // Si on a un cerfa spécifique, on utilise sa vue dédiée
+        // Logique d'affichage des vues
         if (str_starts_with($document, 'cerfa_15497_')) {
             return view('cerfa_15497', compact('data', 'token', 'uid', 'client', 'document'));
         }
-        // Si le document commence par cerfa, on affiche la vue correspondante
-        else if (str_starts_with($document, 'cerfa')) {
+
+        if (str_starts_with($document, 'cerfa')) {
             return view($document, compact('data', 'token', 'uid', 'client', 'document'));
-        } else {
-
-            // Si la date d'intervention est présente, on la formate
-            if (isset($data["date_intervention"])) {
-                $data["date_intervention"] = $this->formatDate($data["date_intervention"]) ?? null;
-            }
-
-            // Récupération des options BI pour le client
-            $allOption = ClientController::getOptionsBI($client);
-            
-            // Initialisation des tableaux d'options
-            $optionsConstat = [];
-            $optionsVerification = [];
-            $optionsNotesParticuliere = [];
-            $optionsPointVigilance = [];
-
-            // On vérifie qu'on a bien reçu les 4 tableaux attendus
-            if (is_array($allOption) && count($allOption) >= 4) {
-                $optionsConstat           = $allOption[0];
-                $optionsVerification      = $allOption[1];
-                $optionsNotesParticuliere = $allOption[2];
-                $optionsPointVigilance    = $allOption[3];
-            }
-
-            // IMPORTANT : Ajoute toutes les options dans le compact pour les utiliser en front
-            return view('bi', compact(
-                'data', 
-                'token', 
-                'uid', 
-                'client', 
-                'document', 
-                'optionsConstat',
-                'optionsVerification', 
-                'optionsNotesParticuliere', 
-                'optionsPointVigilance'
-            ));
         }
+
+        // Cas par défaut : Bon d'Intervention (BI)
+        if (isset($data["date_intervention"])) {
+            $data["date_intervention"] = $this->formatDate($data["date_intervention"]);
+        }
+
+        // Récupération et décomposition des options
+        $allOption = ClientController::getOptionsBI($client);
+        
+        // On utilise collect() pour extraire les index de manière sécurisée (évite les erreurs d'index inexistant)
+        $optionsConstat             = $allOption[0] ?? [];
+        $optionsVerification        = $allOption[1] ?? [];
+        $optionsNotesParticuliere   = $allOption[2] ?? [];
+        $optionsPointVigilance      = $allOption[3] ?? [];
+
+        return view('bi', compact(
+            'data', 'token', 'uid', 'client', 'document', 
+            'optionsConstat', 'optionsVerification', 'optionsNotesParticuliere', 'optionsPointVigilance'
+        ));
     }
 
     /**
@@ -487,58 +419,30 @@ class BiController extends Controller
     public function submit(Request $request, $token)
     {
         // Récupération du token en DB
-        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
+        $dataToken = TokenLinks::where('token', $token)->get()->first();
+        
+        try {
+            $data = rescue(
+                fn() => JsonReader::fromToken($dataToken, __CLASS__),
+                fn() => abort(500, "Erreur lors de la récupération de vos données.")
+            );
+            
+            ['client' => $client, 'document' => $document, 'uid' => $uid] = $data["dataToken"];
 
-        // Si token introuvable, bloquer
-        if (!$dataToken) {
-            abort(404, 'Accès refusé | Lien vers le rapport d\'intervention introuvable.', ['Content-Type' => 'text/html']);
+            // Délégation au ClientController pour stocker le fichier PDF et mettre à jour les données
+            $succes = ClientController::store($client, $document, $uid, $request, $data);
+
+            // En cas d'échec, on remonte une erreur
+            if (!$succes) {
+                abort(500, "Une erreur est survenue lors de l'enregistrement des données.");
+            }
+
+            // Rediriger vers la vue PDF finale
+            return redirect()->route('pdf.view', ['token' => $token]);
         }
-
-        // Construire le chemin du JSON associé
-        $filePath = storage_path($dataToken['paths']);
-
-        // Vérifier que le fichier JSON existe
-        if (!file_exists($filePath)) {
-            \Log::error("[JSON] TOKEN INTROUVABLE", [
-                'token' => $token,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'chemin' => $filePath
-            ]);
-            abort(404, "Fichier introuvable");
-        }
-
-        // Vérifier si un PDF existe déjà pour éviter les doublons
-        if ($this->checkExistPdf($filePath, $dataToken)) {
-            $client = $dataToken['client'] ?? 'unknown_client';
-            \Log::error("[REFUSE] SOUMISSION REFUSER", [
-                'client' => $client,
-                'token' => $token,
-                'fonction' => __FUNCTION__,
-                'fichier' => basename(__FILE__),
-                'ligne' => __LINE__,
-                'chemin' => $filePath
-            ]);
-            abort(403, 'Bon d\'intervention déjà généré.', ['Content-Type' => 'text/html']);
-        }
-
-        // Lecture du JSON existant pour récupérer les métadonnées
-        $data = json_decode(file_get_contents($filePath), true);
-        $document = $data['dataToken']['document'];
-        $client = $data['dataToken']['client'];
-        $uid = $data['dataToken']['uid'];
-
-        // Délégation au ClientController pour stocker le fichier PDF et mettre à jour les données
-        $succes = ClientController::store($client, $document, $uid, $request, $data);
-
-        // En cas d'échec, on remonte une erreur
-        if (!$succes) {
+        catch(Exception $ex) {
             abort(500, "Une erreur est survenue lors de l'enregistrement des données.");
         }
-
-        // Rediriger vers la vue PDF finale
-        return redirect()->route('pdf.view', ['token' => $token]);
     }
 
 
@@ -592,28 +496,19 @@ class BiController extends Controller
     public function delete(Request $request, $token): JsonResponse
     {
         // 1. Récupération du lien via le token
-        $dataToken = TokenLinksRapport::where('token', $token)->first();
+        $dataToken = TokenLinks::where('token', $token)->first();
 
         // Si le token n'existe pas, on renvoie 404
         if (!$dataToken) {
             return response()->json(['error' => 'Lien vers le rapport introuvable.'], 404);
         }
 
-        // Récupération du chemin du fichier JSON pour extraire les infos de client/document/uid
-        // Note : On utilise storage_path car 'paths' en base contient souvent 'app/public/...'
-        $filePath = storage_path($dataToken->paths);
-
-        // Si le fichier JSON n'existe plus, on nettoie la DB et renvoie un message d'erreur
-        if (!file_exists($filePath)) {
-            $dataToken->delete();
-            return response()->json(['error' => 'Fichier JSON déjà absent du serveur. Nettoyage DB effectué.'], 404);
-        }
+        $jsonData = rescue(
+            fn() => JsonReader::fromToken($dataToken, __CLASS__),
+            fn() => abort(500, "Erreur lors de la récupération de vos données.")
+        );
 
         try {
-            // Lire le JSON pour récupérer le contenu
-            $content = file_get_contents($filePath);
-            $jsonData = json_decode($content, true);
-            
             $client   = $jsonData['dataToken']['client'] ?? null;
             $document = $jsonData['dataToken']['document'] ?? null;
             $uid      = $jsonData['dataToken']['uid'] ?? null;
@@ -633,7 +528,7 @@ class BiController extends Controller
 
         } catch (\Throwable $th) {
             // Log en cas d'erreur inattendue
-            \Log::error("[BI_CONTROLLER] Erreur delete", ['msg' => $th->getMessage()]);
+            \Log::error("[BI_CONTROLLER] Erreur delete", ['error' => $th->getMessage()]);
             return response()->json(['error' => 'Erreur interne lors de la suppression.'], 500);
         }
     }
