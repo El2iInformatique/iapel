@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // On renomme d'abord la table
-        Schema::rename('token_links_rapport', 'token_links');
+        if (Schema::hasTable("token_links_rapport")) {
+            // On renomme d'abord la table
+            Schema::rename('token_links_rapport', 'token_links');
+        }
+    
 
         // On ajoute le nouveau champ 'document' à la table renommée
         Schema::table('token_links', function (Blueprint $table) {
@@ -28,12 +31,16 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //  On supprime d'abord la colonne de la nouvelle table
-        Schema::table('token_links', function (Blueprint $table) {
-            $table->dropColumn('documents');
-        });
 
-        // On redonne à la table son nom d'origine
-        Schema::rename('token_links', 'token_links_rapport');
+        if (Schema::hasTable("token_links")) {
+            //  On supprime d'abord la colonne de la nouvelle table
+            Schema::table('token_links', function (Blueprint $table) {
+                $table->dropColumn('documents');
+            });
+            
+            // On redonne à la table son nom d'origine
+            Schema::rename('token_links', 'token_links_rapport');
+        }
+
     }
 };
