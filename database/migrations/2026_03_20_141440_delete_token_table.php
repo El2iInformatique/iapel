@@ -1,12 +1,28 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('tokens', function (Blueprint $table) {
+        // Supprime la table uniquement si elle existe dans la base de données
+        Schema::dropIfExists('tokens');
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // On recrée la structure de base si on annule la migration
+        // (Attention : la table sera vide, les anciennes données sont perdues)
+         Schema::create('tokens', function (Blueprint $table) {
             $table->id();
             $table->string('token', 40)->unique();
             $table->unsignedBigInteger('organisation_id')->nullable();
@@ -21,10 +37,4 @@ return new class extends Migration {
             $table->timestamps();
         });
     }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('tokens');
-    }
 };
-
