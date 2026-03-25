@@ -11,8 +11,6 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\ExecutableFinder;
-use App\Services\JsonReader; // Service pour lire les fichiers JSON de documents
-
 
 class SignatureController extends Controller
 {

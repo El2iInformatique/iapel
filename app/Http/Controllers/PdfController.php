@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Response;
-use App\Services\JsonReader;
 
 
 /**
@@ -305,19 +304,13 @@ class PdfController extends Controller
      * @warning Nécessite un fichier JSON préalablement créé contenant toutes les données du formulaire.
      * @see generateDownloadPDF() Pour la création initiale du fichier JSON de données.
      */
-    /*
     public function generateAttestationTVA(Request $request)
     {
         // === ÉTAPE 1 : RÉCUPÉRATION DES PARAMÈTRES ===
         // Accepte les requêtes JSON (POST) ou les paramètres URL (GET)
         if ($request->isJson()) {
             // Requête POST avec JSON
-            
-            $jsonPath = JsonReader::path($client, $document, $uid);
-            $data = rescue(
-                fn() => JsonReader::fromPath($client, $document, $uid, __CLASS__),
-                fn() => abort(500, "Erreur lors de la récupération de vos données.")
-            );
+            $data = json_decode($request->getContent(), true);
             $uid = $data['uid'];
             $document = $data['document'];
             $client = $data['client'];
@@ -542,7 +535,6 @@ class PdfController extends Controller
             'Content-Disposition' => 'inline; filename="' . $uid . '"'
         ]);
     }
-    */
 
     
     public function checkExistAndIsValidePdf($jsonPath, $client, $document, $uid): bool 
@@ -608,14 +600,28 @@ class PdfController extends Controller
      */
     public function generateBi(Request $request)
     {
+        $token = $request->query('token');
         $uid = $request->query('uid');
         $document = $request->query('document');
         $client = $request->query('client');
+        $isAndroid = $request->query('isAndroid');
 
         $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF d'origine
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
 
-        $jsonPath = JsonReader::path($client, $document, $uid);
+        // Lire le fichier JSON
+        $jsonPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.json');
+        if (!file_exists($jsonPath)) {
+            \Log::error("[DOCUMENT] FICHIER JSON INTROUVABLE", [
+                'client' => $client,
+                'uid' => $uid,
+                'fonction' => __FUNCTION__,
+                'fichier' => basename(__FILE__),
+                'ligne' => __LINE__,
+                'chemin' => $jsonPath
+            ]);
+            return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
+        }
 
         if ($this->checkExistAndIsValidePdf($jsonPath, $client, $document, $uid)) {
             \Log::info("[DOCUMENT] FICHIER PDF DEJA EXISTANT", [
@@ -1077,7 +1083,12 @@ class PdfController extends Controller
         // === ÉTAPE 2 : CHEMINS DES FICHIERS ===
         $pdfPath = storage_path('app/public/'.$client.'/'.$document.'/'.$document.'.pdf'); // PDF modèle
         $outputPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.pdf'); // PDF généré
-        $jsonPath = JsonReader::path($client, $document, $uid);
+        $jsonPath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'.json'); // Données JSON
+
+        // === ÉTAPE 3 : VALIDATION - FICHIER JSON EXISTE-T-IL ? ===
+        if (!file_exists($jsonPath)) {
+            return response()->json(['error' => 'Fichier JSON '.$jsonPath.' non trouvé'], 404);
+        }
 
         // === ÉTAPE 4 : VÉRIFIER SI LE PDF EST DÉJÀ GÉNÉRÉ ===
         if ($this->checkExistAndIsValidePdf($jsonPath, $client, $document, $uid)) {
@@ -1413,46 +1424,34 @@ class PdfController extends Controller
         $pdf->MultiCell($largeur, 10, ($data['observations']."\n" ?? '')); 
         
 
-        // === GESTION DES SIGNATURES ===
-        // --- Signature Opérateur ---
+        //Gestion des signatures
         $pdf->SetXY(45, 258);
         $pdf->Write(10, ($data['nom_signataire_operateur'] ?? ''));   
         $pdf->SetXY(45, 264.5);
         $pdf->Write(10, ($data['qualite_signataire_operateur'] ?? ''));  
         $pdf->SetXY(45, 274);
-        $pdf->Write(10, ($data['date_signature_operateur'] ?? '')); 
+        $pdf->Write(10, ($data['date_signature_operateur'] ?? '')); // Possiblement a refaire pour formater la date dans le format français
 
-        $signatureBase64Op = $data['signature-operateur'] ?? '';
-        if (!empty($signatureBase64Op)) {
-            $signatureDataOp = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64Op));
-            $signaturePathOp = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_operateur.png');
-            file_put_contents($signaturePathOp, $signatureDataOp);
-            
-            // Taille fixe pour la signature opérateur
-            if (file_exists($signaturePathOp) && filesize($signaturePathOp) > 0) {
-                $pdf->Image($signaturePathOp, 67, 275, 35, 6.5);
-            }
-        }
+        $signatureBase64 = $data['signature-operateur'];
+        $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
+        $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_operateur.png');
+        file_put_contents($signaturePath, $signatureData);
+        // Taille fixe pour la signature opérateur
+        $pdf->Image($signaturePath, 67, 275, 35, 6.5);
         
-        // --- Signature Détenteur ---
         $pdf->SetXY(125, 258);
         $pdf->Write(10, ($data['nom_signataire_detenteur'] ?? ''));   
         $pdf->SetXY(125, 264.5);
         $pdf->Write(10, ($data['qualite_signataire_detenteur'] ?? ''));  
         $pdf->SetXY(125, 274);
-        $pdf->Write(10, ($data['date_signature_detenteur'] ?? ''));  
+        $pdf->Write(10, ($data['date_signature_detenteur'] ?? ''));  // Possiblement a refaire pour formater la date dans le format français
 
-        $signatureBase64Det = $data['signature-detenteur'] ?? '';
-        if (!empty($signatureBase64Det)) {
-            $signatureDataDet = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64Det));
-            $signaturePathDet = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_detenteur.png');
-            file_put_contents($signaturePathDet, $signatureDataDet);
-            
-            // Taille fixe pour la signature détenteur
-            if (file_exists($signaturePathDet) && filesize($signaturePathDet) > 0) {
-                $pdf->Image($signaturePathDet, 147, 275, 35, 6.5);
-            }
-        }
+        $signatureBase64 = $data['signature-detenteur'];
+        $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
+        $signaturePath = storage_path('app/public/'.$client.'/'.$document.'/'.$uid.'/'.$uid.'_signature_detenteur.png');
+        file_put_contents($signaturePath, $signatureData);
+        // Taille fixe pour la signature détenteur
+        $pdf->Image($signaturePath, 147, 275, 35, 6.5);
 
         // Aplatir le PDF en l'empêchant d'être modifié
         $pdf->Output($outputPath,'F'); 
