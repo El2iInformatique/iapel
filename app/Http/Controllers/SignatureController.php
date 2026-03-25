@@ -2,128 +2,75 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TokenLinks;
+use App\Models\Token;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Process\ExecutableFinder;
 
 class SignatureController extends Controller
 {
 
     // Afficher la page de signature
-
-
     public function show($token)
     {
-        // Récupération des infos liées au token
-        $dataToken = TokenLinks::where('token', $token)->first();
+        $tokenEntry = Token::where('token', $token)
+            //->where('used', false)
+            //->where('expires_at', '>', now())
+            ->first();
 
-        // Si le token n'existe pas, on bloque l'accès
-        if (!$dataToken) {
-            Log::error("[TOKEN] TOKEN INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'action'   => 'show()'
-            ]);
-            abort(404, 'Accès refusé | Lien vers le devis introuvable.', ['Content-Type' => 'text/html']);
+        if (!$tokenEntry) {
+            abort(403);
         }
 
-        // Construire le chemin absolu du fichier JSON
-        // storage_path() va transformer "app/public/Apple/devis/..." en "/chemin/vers/ton/projet/storage/app/public/Apple/devis/..."
-        $filePath = storage_path($dataToken->paths);
+        // On vérifie si le devis a été signé en vérifiant la présence du PDF certifié
+        $uid = $tokenEntry->devis_id;
+        $document = 'devis';
+        $client = $tokenEntry->organisation_id;
+        $devisName = $uid . '_' . $token;
+        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '.pdf');
+        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $devisName . '/' . $devisName . '_certifie.pdf');
 
-        // Vérifier que le JSON existe physiquement
-        if (!file_exists($filePath)) {
-            Log::error("[JSON] FICHIER JSON INTROUVABLE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath
-            ]);
-            abort(404, 'Fichier introuvable');
+        // Calcul du temps restant (devis valide 30 jours)
+        $tempsRestants = 0;
+        $signable = false;
+        
+        if (file_exists($pdfPath)) {
+            $dateCreation = \Carbon\Carbon::createFromTimestamp(filemtime($pdfPath));
+            $joursEcoules = (int) substr((string)$dateCreation->diffInDays(\Carbon\Carbon::now()), 0, 2);
+            $tempsRestants = max(0, 30 - $joursEcoules);
+            $signable = $tempsRestants > 0;
         }
 
-        // Lire et décoder le JSON pour construire la vue
-        $data = json_decode(file_get_contents($filePath), true);
-
-        // Extraction des variables de base (priorité au JSON, fallback sur la DB)
-        $uid       = $data["dataToken"]['devis_id'] ?? "";
-        $client    = $data["dataToken"]['organisation_id'] ?? "";
-        $devisName = "{$uid}";
-
-
-        // Gestion du PDF existant
-        // Ici on utilise le chemin relatif car on interroge le disk 'public' de Laravel
-        $basePath        = "{$client}/devis/{$devisName}/";
-        $pdfCertifiePath = $basePath . $devisName . '_certifie.pdf';
-
-        // Si le PDF existe, on affiche la vue de téléchargement
-        if (Storage::disk('public')->exists($pdfCertifiePath)) {
-            Log::info("[DEVIS] SIGNATURE EXISTANTE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'client'   => $client,
-                'devis_id' => $uid,
-                'chemin'   => $pdfCertifiePath,
-                'statut'   => 'prêt au téléchargement'
+        if (file_exists($pdfCertifiePath)) {
+            return view('signature_download', [
+                'token' => $token,
+                'devis_id' => $tokenEntry->devis_id,
+                'organisation_id' => $tokenEntry->organisation_id,
+                'titre' => $tokenEntry->titre,
+                'montant_HT' => $tokenEntry->montant_HT,
+                'montant_TVA' => $tokenEntry->montant_TVA,
+                'montant_TTC' => $tokenEntry->montant_TTC,
+                'temps_restants' => $tempsRestants,
+                'signable' => $signable
             ]);
-            $view = 'signature_download';
         } else {
-            Log::info("[DEVIS] EN ATTENTE DE SIGNATURE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'client'   => $client,
-                'devis_id' => $uid,
-                'statut'   => 'signature requise'
+            return view('signature', [
+                'token' => $token,
+                'devis_id' => $tokenEntry->devis_id,
+                'organisation_id' => $tokenEntry->organisation_id,
+                'titre' => $tokenEntry->titre,
+                'montant_HT' => $tokenEntry->montant_HT,
+                'montant_TVA' => $tokenEntry->montant_TVA,
+                'montant_TTC' => $tokenEntry->montant_TTC,
+                'temps_restants' => $tempsRestants,
+                'signable' => $signable
             ]);
-            $view = 'signature';
         }
-
-        // Calcul de validité (Spécifique au devis)
-        $now = now();
-        $expirationDate = $dataToken->expires_at;
-
-        $temps_restants = $now->diffInDays($expirationDate, false);
-        $temps_restants = $temps_restants > 0 ? (int) $temps_restants : 0;
-
-        $signable   = $now->lessThan($expirationDate) && !$dataToken->used;
-        $is_expired = $now->greaterThan($expirationDate);
-
-        // Préparation des variables finales pour la vue
-        $devis_id        = $uid;
-        $organisation_id = $client;
-        $titre           = $data['titre'] ?? $dataToken->titre_devis ?? null;
-        $montant_HT      = $data['montant_HT'] ?? $dataToken->montant_HT ?? null;
-        $montant_TTC     = $data['montant_TTC'] ?? $dataToken->montant_TTC ?? null;
-        $montant_TVA     = $data['montant_TVA'] ?? $dataToken->montant_TVA ?? null;
-
-        $refused = $data["refused"] ?? false;
-
-        // Retour de la vue
-        return view($view, compact(
-            'token',
-            'organisation_id',
-            'temps_restants',
-            'signable',
-            'devis_id',
-            'titre',
-            'montant_HT',
-            'montant_TTC',
-            'montant_TVA',
-            'refused'  
-        ));
     }
 
     /**
@@ -134,160 +81,208 @@ class SignatureController extends Controller
      * 2. Génère un fichier intermédiaire signé (non certifié)
      * 3. Fait signer électroniquement le PDF par un script Python (certificat)
      */
-
     public function sign(Request $request, $token)
     {
-        Log::info("[SIGNATURE] DEBUT DU PROCESSUS", [
-            'token'    => $token,
-            'fonction' => __FUNCTION__,
-            'fichier'  => basename(__FILE__),
-            'ligne'    => __LINE__,
-            'ip'       => $request->ip(),
-            'type'     => 'manuscrite'
-        ]);
+        \Log::info("DEBUG: Début du processus de signature pour le token : " . $token);
         
-        // ==========================================
-        // VALIDATION DE LA REQUÊTE
-        // ==========================================
+        // === VALIDATION ===
+        // La signature arrive en base64 depuis l'appli frontend (SignaturePad.js)
         $request->validate([
-            'signature' => 'required|string'
+            'signature' => 'required|string' // Signature encodée en base64
         ]);
+        \Log::info("DEBUG: Validation de la signature réussie");
 
-        $signatureBase64 = $request->input('signature');
-        if (!preg_match('/^data:image\/(png|jpg|jpeg);base64,/', $signatureBase64)) {
-            Log::warning("[SIGNATURE] FORMAT IMAGE INVALIDE", ['token' => $token, 'raison' => 'format base64 incorrect']);
-            return response()->json(['message' => 'Format de signature invalide. Seules les images sont acceptées.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        // ==========================================
-        // VÉRIFICATION DU TOKEN ET DES DONNÉES
-        // ==========================================
-        $dataToken = TokenLinks::where('token', $token)
-            ->where('expires_at', '>', now())
+        $tokenEntry = Token::where('token', $token)
+            //->where('used', false)
+            //->where('expires_at', '>', now())
             ->first();
 
-        if (!$dataToken) {
-            Log::warning("[TOKEN] TOKEN INVALIDE OU EXPIRÉ", ['token' => $token]);
-            return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
-        }
-
-        $filePath = storage_path($dataToken->paths);
-
-        if (!is_file($filePath)) {
-            Log::critical("[FICHIER] JSON DE DONNEES INTROUVABLE", ['chemin' => $filePath]);
-            return response()->json(['message' => 'Erreur interne : Données du devis introuvables.'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode(file_get_contents($filePath), true);
-
-        if (isset($data["used"]) && $data["used"] == true) {
-            Log::warning("[TOKEN] TOKEN DEJA UTILISE", ['token' => $token]);
-            return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
-        }
-
-        // ==========================================
-        // PRÉPARATION DES CHEMINS ET FICHIERS
-        // ==========================================
-        $devisId = $data["dataToken"]["devis_id"];
-        $client  = $data["dataToken"]["organisation_id"];
-        $nomDoc  = "{$devisId}";
-        $baseDir = "app/public/{$client}/devis/{$nomDoc}";
+        \Log::info("DEBUG: Recherche du token dans la base de données", ['token_found' => $tokenEntry ? 'true' : 'false']);
         
-        $pdfOriginalPath = storage_path("{$baseDir}/{$nomDoc}.pdf");
-        $signaturePath   = storage_path("{$baseDir}/{$nomDoc}_signature.png");
-        $pdfSignePath    = storage_path("{$baseDir}/{$nomDoc}_signe.pdf");
-        $pdfCertifiePath = storage_path("{$baseDir}/{$nomDoc}_certifie.pdf");
-
-        if (!is_file($pdfOriginalPath)) {
-            Log::critical("[PDF] FICHIER ORIGINAL INTROUVABLE", ['chemin' => $pdfOriginalPath]);
-            return response()->json(['message' => 'Le document original est introuvable.'], Response::HTTP_NOT_FOUND);
+        if (!$tokenEntry) {
+            \Log::error("DEBUG: Token non trouvé ou invalide", ['token' => $token]);
+            //return response()->json(['message' => 'Token invalide ou expiré'], Response::HTTP_FORBIDDEN);
         }
 
-        // ==========================================
-        // CRÉATION DE L'IMAGE DE SIGNATURE
-        // ==========================================
-        try {
-            $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
-            file_put_contents($signaturePath, $signatureData);
-            Log::info("[SIGNATURE] IMAGE SAUVEGARDEE", ['chemin' => $signaturePath]);
-        } catch (\Exception $e) {
-            Log::error("[SIGNATURE] ERREUR SAUVEGARDE IMAGE", ['erreur' => $e->getMessage()]);
-            return response()->json(['message' => 'Erreur lors de la sauvegarde de la signature.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        \Log::info("DEBUG: Informations du token", [
+            'devis_id' => $tokenEntry->devis_id,
+            'organisation_id' => $tokenEntry->organisation_id,
+            'used' => $tokenEntry->used
+        ]);
 
-        // ==========================================
-        // GÉNÉRATION DU PDF SIGNÉ (VIA FPDI)
-        // ==========================================
-        if (!PdfController::generateDevisPdf($pdfOriginalPath, $pdfSignePath, $signaturePath, $data)) {
-            Log::error("[PDF] ERREUR GENERATION DEVIS SIGNE", ['pdfOriginalPath' => $pdfOriginalPath]);
-            return response()->json(['message' => 'Erreur lors de la génération du document signé.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        // Marquer le token comme utilisé
+        $tokenEntry->used = true;
+        $tokenEntry->save();
+        \Log::info("DEBUG: Token marqué comme utilisé");
 
-        // ==========================================
-        // CERTIFICATION ÉLECTRONIQUE (PYTHON)
-        // ==========================================
-        $scriptPath = storage_path('app/signature/sign.py');
-        $executableFinder = new ExecutableFinder();
-        $pythonPath = $executableFinder->find('python3') ?? $executableFinder->find('python');
+        // On modifie le pdf pour inclure la signature du client
+        $uid = $tokenEntry->devis_id;
+        $document = 'devis';
+        $nomDoc = $uid . '_' . $token;
+        $client = $tokenEntry->organisation_id;
+        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '.pdf'); // PDF du devis initial
+        $outputPath = storage_path(path: 'app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf'); // PDF du devis avec signature client
 
-        if (!$pythonPath) {
-            Log::critical("[PYTHON] EXECUTABLE NON TROUVE");
-            return response()->json(['message' => 'Erreur configuration serveur.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        \Log::info("DEBUG: Chemins des fichiers calculés", [
+            'pdfPath' => $pdfPath,
+            'outputPath' => $outputPath,
+            'pdf_exists' => file_exists($pdfPath)
+        ]);
 
-        Log::info("[PYTHON] CERTIFICATION EN COURS");
+        // === ÉTAPE 1 : INTÉGRATION DE LA SIGNATURE DANS LE PDF ===
+        // Charge le PDF du devis et ajoute l'image de signature du client
+        $pdf = new Fpdi();
+        $pdf->SetAutoPageBreak(false);
+        \Log::info("DEBUG: Instance FPDI créée");
 
-        try {
-            $env = [
-                'SystemRoot'  => getenv('SystemRoot') ?: 'C:\\Windows',
-                'SystemDrive' => getenv('SystemDrive') ?: 'C:',
-                'PATH'        => getenv('PATH'),
-            ];
+        // Récupère le nombre total de pages pour traiter chacune
+        $pageCount = $pdf->setSourceFile($pdfPath);
+        \Log::info("DEBUG: PDF source chargé", ['pageCount' => $pageCount]);
 
-            $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath], null, $env);
-            $process->run();
-
-            if (!$process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            Log::info("[PDF] CERTIFICATION REUSSIE", ['chemin_sortie' => $pdfCertifiePath]);
-
-            // ==========================================
-            // MISE À JOUR DU JSON
-            // ==========================================
-            $data["used"] = true;
+        // Importer toutes les pages
+        for ($i = 1; $i <= $pageCount; $i++) {
+            \Log::info("DEBUG: Traitement de la page", ['page' => $i, 'total' => $pageCount]);
             
-            // On nettoie le chemin stocké en BDD pour l'utiliser avec Storage::disk('public')
-            $jsonRelativePath = preg_replace('#^app/public/#', '', ltrim($dataToken->paths, '/'));
-            
-            $stored = Storage::disk('public')->put(
-                $jsonRelativePath,
-                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-            );
+            $pdf->AddPage();
+            $tplIdx = $pdf->importPage($i);
+            $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
 
-            if (!$stored) {
-                throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
+            // Si avant-dernière page, appliquer signature et date
+            if ($i == $pageCount - $tokenEntry->nb_pages) {
+                \Log::info("DEBUG: Application de la signature sur la page", ['page' => $i]);
+                
+                // === COORDONNÉES DE PLACEMENT ===
+                // Les coordonnées en base de données sont en pixels (du frontend)
+                // ratioConversion = conversion pixels → millimètres pour FPDI
+                $hauteurSignature = $tokenEntry->position_signature;
+                $ratioConversion = 6.98; // ratio calibré : 1 pixel = 6.98 autres unités
+                
+                // Récupère les coordonnées X,Y stockées pour date et signature
+                $xDate = $tokenEntry->x_date;
+                $yDate = $tokenEntry->y_date;
+                $xSignature = $tokenEntry->x_signature;
+                $ySignature = $tokenEntry->y_signature;
+
+                \Log::info("DEBUG: Positions calculées", [
+                    'xDate' => $xDate,
+                    'yDate' => $yDate,
+                    'xSignature' => $xSignature,
+                    'ySignature' => $ySignature
+                ]);
+
+                // Intégration de la date
+                $date_signature = date('d/m/Y');
+                $pdf->SetXY( $xDate/$ratioConversion, $yDate/$ratioConversion);
+                $pdf->Write(10, $date_signature);
+                \Log::info("DEBUG: Date ajoutée au PDF", ['date' => $date_signature]);
+
+                // Intégration de la signature
+                $signatureBase64 = $request->input('signature');
+                $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureBase64));
+                $signaturePath = storage_path('app/public/' . $client . '/' . $document . '/'  . $nomDoc . '/' . $nomDoc . '_signature.png');
+                file_put_contents($signaturePath, $signatureData);
+                \Log::info("DEBUG: Fichier signature créé", ['signaturePath' => $signaturePath]);
+                
+                list($width, $height) = getimagesize($signaturePath); // Récupère la taille originale
+                $maxWidth = 31;
+                $maxHeight = 13;
+                // Calcul du redimensionnement en conservant le ratio
+                if ($width > $height) {
+                    $newWidth = $maxWidth;
+                    $newHeight = ($height / $width) * $maxWidth;
+                } else {
+                    $newHeight = $maxHeight;
+                    $newWidth = ($width / $height) * $maxHeight;
+                }
+                
+                \Log::info("DEBUG: Dimensions de la signature", [
+                    'original_width' => $width,
+                    'original_height' => $height,
+                    'new_width' => $newWidth,
+                    'new_height' => $newHeight
+                ]);
+
+                // Calcul des positions pour centrer dans le carré
+                $xImage = $xSignature / $ratioConversion; 
+                $yImage = $ySignature / $ratioConversion;
+                
+                \Log::info("DEBUG: Positions finales pour l'image", [
+                    'xImage' => $xImage,
+                    'yImage' => $yImage,
+                    'ratioConversion' => $ratioConversion
+                ]);
+                
+                \Log::info("DEBUG: Tentative d'ajout de l'image au PDF");
+                
+                try {
+                    $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+                    \Log::info("DEBUG: Image signature ajoutée au PDF avec succès");
+                } catch (\Exception $e) {
+                    \Log::error("DEBUG: Erreur lors de l'ajout de l'image", [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    throw $e;
+                }
+
+                /** Mettre page de fin ici */
+
             }
-
-        } catch (\Exception $e) {
-            Log::critical("[PYTHON] ERREUR CERTIFICATION", ['erreur' => $e->getMessage()]);
-            return response()->json(['message' => 'Erreur lors de la certification sécurisée du document.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        // ==========================================
-        // FINALISATION ET NETTOYAGE
-        // ==========================================
-        Log::info("[TOKEN] MARQUE COMME UTILISE", ['devis_id' => $devisId]);
+        // Désactiver les en-têtes et pieds de page
+        $pdf->SetMargins(0, 0, 0);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        \Log::info("DEBUG: Configuration PDF finalisée");
+
+        // Aplatir le PDF en l'empêchant d'être modifié
+        $pdf->Output($outputPath, 'F');
+        \Log::info("DEBUG: PDF signé généré", ['outputPath' => $outputPath, 'file_exists' => file_exists($outputPath)]);
+
+        // === ÉTAPE 2 : SIGNATURE ÉLECTRONIQUE (CERTIFICAT) ===
+        // Lance un script Python qui applique une signature électronique certificative
+        // Cela ajoute une preuve légale que le PDF n'a pas été modifié après signature
+        $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf'); // PDF intermédiaire avec signature manuscrite
+        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_certifie.pdf'); // PDF final certifié
+        $scriptPath = storage_path('app/signature/sign.py'); // Script Python pour signature électronique
         
-        // Suppression des fichiers de travail temporaires
-        @unlink($pdfSignePath);
-        @unlink($signaturePath);
+        \Log::info("DEBUG: Préparation de la signature électronique", [
+            'pdfSignePath' => $pdfSignePath,
+            'pdfCertifiePath' => $pdfCertifiePath,
+            'scriptPath' => $scriptPath,
+            'script_exists' => file_exists($scriptPath)
+        ]);
         
-        return response()->json([
-            'message' => 'Le document a été signé et certifié avec succès.',
-            'status'  => 'success'
-        ], Response::HTTP_OK);
+        $pythonPath = trim(shell_exec("which python3"));
+        \Log::info("DEBUG: Chemin Python trouvé", ['pythonPath' => $pythonPath]);
+        
+        $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath]);
+        $process->run();
+
+        \Log::info("DEBUG: Processus Python exécuté", [
+            'exit_code' => $process->getExitCode(),
+            'output' => $process->getOutput(),
+            'error_output' => $process->getErrorOutput()
+        ]);
+
+        // === VÉRIFICATION DE LA SIGNATURE ÉLECTRONIQUE ===
+        // Si le script Python échoue, on log l'erreur et on rejette la signature
+        if (!$process->isSuccessful()) {
+            \Log::error("DEBUG: Échec du processus Python", [
+                'exit_code' => $process->getExitCode(),
+                'error_output' => $process->getErrorOutput()
+            ]);
+            throw new ProcessFailedException($process); // Affiche l'erreur dans Laravel
+        }
+
+        \Log::info("DEBUG: Signature électronique réussie", ['pdfCertifiePath' => $pdfCertifiePath]);
+
+        // Suppression des fichiers temporaires
+        unlink($outputPath);
+        unlink($signaturePath);
+        \Log::info("DEBUG: Fichiers temporaires supprimés - Processus de signature terminé avec succès");
     }
 
     /**
@@ -297,266 +292,175 @@ class SignatureController extends Controller
      * - Génère une image de signature élégante avec le nom complet du client
      * - Puis suit le même processus que sign() : intégration + certification électronique
      */
-
     public function signWithFullName(Request $request, $token)
     {
-        Log::info("[SIGNATURE_FULLNAME] DEBUT DU PROCESSUS", [
-            'token'    => $token,
-            'fonction' => __FUNCTION__,
-            'fichier'  => basename(__FILE__),
-            'ligne'    => __LINE__,
-            'ip'       => $request->ip(),
-            'type'     => 'nom complet'
-        ]);
+        \Log::info("DEBUG: Début du processus de signature par nom et prénom pour le token : " . $token);
         
-        // ==========================================
-        // VALIDATION DES ENTRÉES
-        // ==========================================
+        // === VALIDATION DES ENTRÉES ===
+        // Valide que les champs nom et prénom ne sont pas vides
         $request->validate([
             'firstname' => 'required|string|max:50',
-            'lastname'  => 'required|string|max:50'
+            'lastname' => 'required|string|max:50'
         ]);
+        \Log::info("DEBUG: Validation du nom et prénom réussie");
 
-        // ==========================================
-        // VÉRIFICATION DU TOKEN ET DES DONNÉES
-        // ==========================================
-        $dataToken = TokenLinks::where('token', $token)
-            ->where('expires_at', '>', now())
+        $tokenEntry = Token::where('token', $token)
             ->first();
 
-        if (!$dataToken) {
-            Log::warning("[TOKEN] TOKEN INVALIDE OU EXPIRÉ (FULLNAME)", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'ip'       => $request->ip(),
-                'raison'   => 'token introuvable en base ou expiré'
-            ]);
-            return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
-        }
-
-        $filePath = storage_path($dataToken->paths);
-
-        if (!is_file($filePath)) {
-            Log::critical("[FICHIER] JSON DE DONNEES INTROUVABLE (FULLNAME)", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $filePath,
-                'ip'       => $request->ip(),
-                'severite' => 'critique'
-            ]);
-            return response()->json(['message' => 'Erreur interne : Données du devis introuvables.'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode(file_get_contents($filePath), true);
-
-        if ($data["used"] == true) {
-            Log::warning("[TOKEN] TOKEN DEJA UTILISE (FULLNAME)", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'ip'       => $request->ip(),
-                'raison'   => 'signature déjà effectuée'
-            ]);
-            return response()->json(['message' => 'Lien de signature invalide ou expiré.'], Response::HTTP_FORBIDDEN);
-        }
-
-        // ==========================================
-        // PRÉPARATION DES CHEMINS ET FICHIERS
-        // ==========================================
-        $devisId = $data["dataToken"]["devis_id"];
-        $client  = $data["dataToken"]["organisation_id"];
-        $nomDoc  = "{$devisId}";
-        $baseDir = "app/public/{$client}/devis/{$nomDoc}";
+        \Log::info("DEBUG: Recherche du token dans la base de données", ['token_found' => $tokenEntry ? 'true' : 'false']);
         
-        $pdfOriginalPath = storage_path("{$baseDir}/{$nomDoc}.pdf");
-        $signaturePath   = storage_path("{$baseDir}/{$nomDoc}_signature.png");
-        $pdfSignePath    = storage_path("{$baseDir}/{$nomDoc}_signe.pdf");
-        $pdfCertifiePath = storage_path("{$baseDir}/{$nomDoc}_certifie.pdf");
-
-        // Création du dossier s'il n'existe pas
-        if (!file_exists(storage_path($baseDir))) {
-            mkdir(storage_path($baseDir), 0755, true);
+        if (!$tokenEntry) {
+            \Log::error("DEBUG: Token non trouvé ou invalide", ['token' => $token]);
+            return response()->json(['message' => 'Token invalide'], Response::HTTP_FORBIDDEN);
         }
 
-        if (!is_file($pdfOriginalPath)) {
-            Log::critical("[PDF] FICHIER ORIGINAL INTROUVABLE (FULLNAME)", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $pdfOriginalPath,
-                'devis_id' => $devisId,
-                'severite' => 'critique'
-            ]);
-            return response()->json(['message' => 'Le document original est introuvable.'], Response::HTTP_NOT_FOUND);
-        }
-
-        // ==========================================
-        // CRÉATION DE L'IMAGE DE SIGNATURE
-        // ==========================================
-        $firstname = ucfirst(strtolower(trim($request->input('firstname'))));
-        $lastname  = ucfirst(strtolower(trim($request->input('lastname'))));
-        
-        try {
-            $this->generateFullNameSignature($firstname, $lastname, $signaturePath);
-            Log::info("[SIGNATURE] IMAGE GENEREE AVEC SUCCES", [
-                'token'        => $token,
-                'fonction'     => __FUNCTION__,
-                'fichier'      => basename(__FILE__),
-                'ligne'        => __LINE__,
-                'chemin'       => $signaturePath,
-                'prenom'       => $firstname,
-                'nom'          => $lastname,
-                'taille'       => filesize($signaturePath) . ' bytes',
-                'statut'       => 'succès'
-            ]);
-        } catch (\Exception $e) {
-            Log::error("[SIGNATURE] ERREUR GENERATION IMAGE", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'chemin'   => $signaturePath,
-                'prenom'   => $firstname,
-                'nom'      => $lastname,
-                'erreur'   => $e->getMessage(),
-                'code'     => $e->getCode()
-            ]);
-            return response()->json(['message' => 'Erreur lors de la génération de la signature.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        // ==========================================
-        // GÉNÉRATION DU PDF SIGNÉ (VIA MÉTHODE EXTRAITE)
-        // ==========================================
-        try {
-            // NOTE: Si PdfController::generateDevisPdf() fait EXACTEMENT la même chose, tu peux l'utiliser à la place.
-            // Sinon, utilise la méthode séparée ci-dessous.
-            if (!PdfController::generateDevisPdfFullName($pdfOriginalPath, $pdfSignePath, $signaturePath, $data)) {
-                Log::error("[PDF] ERREUR GENERATION DEVIS SIGNE FULLNAME", [
-                    'token'              => $token,
-                    'fonction'           => __FUNCTION__,
-                    'fichier'            => basename(__FILE__),
-                    'ligne'              => __LINE__,
-                    'pdfOriginalPath'    => $pdfOriginalPath, 
-                    'pdfSignePath'       => $pdfSignePath,
-                    'signaturePath'      => $signaturePath,
-                    'devis_id'           => $devisId,
-                    'raison'             => 'generateDevisPdfFullName() retourné false'
-                ]);
-                return response()->json(['message' => 'Erreur lors de la génération du document signé.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-        } catch (\Exception $e) {
-            Log::error("[PDF] EXCEPTION GENERATION DEVIS FULLNAME", [
-                'token'              => $token,
-                'fonction'           => __FUNCTION__,
-                'fichier'            => basename(__FILE__),
-                'ligne'              => __LINE__,
-                'pdfOriginalPath'    => $pdfOriginalPath,
-                'devis_id'           => $devisId,
-                'erreur'             => $e->getMessage(),
-                'code'               => $e->getCode(),
-                'type'               => get_class($e)
-            ]);
-            return response()->json(['message' => 'Erreur lors de la génération du document signé.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        // ==========================================
-        // CERTIFICATION ÉLECTRONIQUE (PYTHON)
-        // ==========================================
-        $scriptPath = storage_path('app/signature/sign.py');
-        $executableFinder = new ExecutableFinder();
-        $pythonPath = $executableFinder->find('python3') ?? $executableFinder->find('python');
-
-        if (!$pythonPath) {
-            Log::critical("[PYTHON] EXECUTABLE NON TROUVE (FULLNAME)", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'recherche' => 'python3 ou python',
-                'severite' => 'critique'
-            ]);
-            return response()->json(['message' => 'Erreur configuration serveur.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        try {
-            $env = [
-                'SystemRoot'  => getenv('SystemRoot') ?: 'C:\\Windows',
-                'SystemDrive' => getenv('SystemDrive') ?: 'C:',
-                'PATH'        => getenv('PATH'),
-            ];
-
-            $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath], null, $env);
-            $process->run();
-
-            if (!$process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            Log::info("[PDF] CERTIFICATION REUSSIE FULLNAME", [
-                'token'         => $token,
-                'fonction'      => __FUNCTION__,
-                'fichier'       => basename(__FILE__),
-                'ligne'         => __LINE__,
-                'devis_id'      => $devisId,
-                'chemin_sortie' => $pdfCertifiePath,
-                'methode'       => 'python (fullname)',
-                'statut'        => 'succès'
-            ]);
-
-            // Sauvegarde de l'état "used" dans le JSON
-            $data["used"] = true;
-            $stored = Storage::disk('public')->put(
-                "/$client/devis/$devisId/$devisId.json",
-                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-            );
-
-            if (!$stored) {
-                throw new \Exception("Échec de l'écriture du fichier JSON sur le disque.");
-            }
-
-        } catch (\Exception $e) {
-            Log::critical("[PYTHON] ERREUR CERTIFICATION FULLNAME", [
-                'token'    => $token,
-                'fonction' => __FUNCTION__,
-                'fichier'  => basename(__FILE__),
-                'ligne'    => __LINE__,
-                'devis_id' => $devisId,
-                'erreur'   => $e->getMessage(),
-                'code'     => $e->getCode(),
-                'type'     => get_class($e),
-                'severite' => 'critique'
-            ]);
-            return response()->json(['message' => 'Erreur lors de la certification sécurisée du document.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        // ==========================================
-        // FINALISATION ET NETTOYAGE
-        // ==========================================
-        $deletedPdfSigne = @unlink($pdfSignePath);
-        $deletedSignature = @unlink($signaturePath);
-        
-        Log::info("[NETTOYAGE] FICHIERS TEMPORAIRES SUPPRIMES FULLNAME", [
-            'token'    => $token,
-            'fonction' => __FUNCTION__,
-            'fichier'  => basename(__FILE__),
-            'ligne'    => __LINE__,
-            'devis_id' => $devisId,
-            'client'   => $client,
-            'pdf_signe_supprime' => $deletedPdfSigne,
-            'signature_supprimee' => $deletedSignature,
-            'statut'   => 'nettoyage complet'
+        \Log::info("DEBUG: Informations du token", [
+            'devis_id' => $tokenEntry->devis_id,
+            'organisation_id' => $tokenEntry->organisation_id,
+            'used' => $tokenEntry->used
         ]);
+
+        // Marquer le token comme utilisé
+        $tokenEntry->used = true;
+        $tokenEntry->save();
+        \Log::info("DEBUG: Token marqué comme utilisé");
+
+        // Générer une signature basée sur le nom et prénom
+        $firstname = ucfirst(strtolower(trim($request->input('firstname'))));
+        $lastname = ucfirst(strtolower(trim($request->input('lastname'))));
         
-        return response()->json([
-            'message' => 'Le document a été signé et certifié avec succès.',
-            'status'  => 'success'
-        ], Response::HTTP_OK);
+        // Créer un répertoire s'il n'existe pas
+        $uid = $tokenEntry->devis_id;
+        $document = 'devis';
+        $nomDoc = $uid . '_' . $token;
+        $client = $tokenEntry->organisation_id;
+        
+        $signatureDir = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc);
+        if (!file_exists($signatureDir)) {
+            mkdir($signatureDir, 0755, true);
+        }
+        
+        $signaturePath = $signatureDir . '/' . $nomDoc . '_signature.png';
+        
+        // Générer l'image de signature avec le nom et prénom complets
+        $this->generateFullNameSignature($firstname, $lastname, $signaturePath);
+        \Log::info("DEBUG: Signature par nom et prénom générée", ['signaturePath' => $signaturePath]);
+
+        // Continuer avec le même processus que la signature manuelle
+        $pdfPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '.pdf');
+        $outputPath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf');
+
+        \Log::info("DEBUG: Chemins des fichiers calculés", [
+            'pdfPath' => $pdfPath,
+            'outputPath' => $outputPath,
+            'pdf_exists' => file_exists($pdfPath)
+        ]);
+
+        // Charger le PDF source
+        $pdf = new Fpdi();
+        $pdf->SetAutoPageBreak(false);
+        \Log::info("DEBUG: Instance FPDI créée");
+
+        $pageCount = $pdf->setSourceFile($pdfPath);
+        \Log::info("DEBUG: PDF source chargé", ['pageCount' => $pageCount]);
+
+        // Importer toutes les pages
+        for ($i = 1; $i <= $pageCount; $i++) {
+            \Log::info("DEBUG: Traitement de la page", ['page' => $i, 'total' => $pageCount]);
+            
+            $pdf->AddPage();
+            $tplIdx = $pdf->importPage($i);
+            $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
+
+            // Si avant-dernière page, appliquer signature et date
+            if ($i == $pageCount - $tokenEntry->nb_pages) {
+                \Log::info("DEBUG: Application de la signature par nom et prénom sur la page", ['page' => $i]);
+                
+                $ratioConversion = 6.98;
+
+                $xDate = $tokenEntry->x_date;
+                $yDate = $tokenEntry->y_date;
+                $xSignature = $tokenEntry->x_signature;
+                $ySignature = $tokenEntry->y_signature;
+
+                // Intégration de la date
+                $date_signature = date('d/m/Y');
+                $pdf->SetXY($xDate/$ratioConversion, $yDate/$ratioConversion);
+                $pdf->Write(10, $date_signature);
+                \Log::info("DEBUG: Date ajoutée au PDF", ['date' => $date_signature]);
+
+                // Intégration de la signature par nom et prénom
+                list($width, $height) = getimagesize($signaturePath);
+                
+                // TAILLE AUGMENTÉE pour meilleure lisibilité dans le PDF
+                $maxWidth = 50;  // Augmentation de 31 à 50mm
+                $maxHeight = 20; // Augmentation de 13 à 20mm
+                
+                if ($width > $height) {
+                    $newWidth = $maxWidth;
+                    $newHeight = ($height / $width) * $maxWidth;
+                } else {
+                    $newHeight = $maxHeight;
+                    $newWidth = ($width / $height) * $maxHeight;
+                }
+                
+                $xImage = $xSignature / $ratioConversion; 
+                $yImage = $ySignature / $ratioConversion;
+                
+                \Log::info("DEBUG: Dimensions signature dans PDF", [
+                    'maxWidth' => $maxWidth,
+                    'maxHeight' => $maxHeight,
+                    'newWidth' => $newWidth,
+                    'newHeight' => $newHeight
+                ]);
+                
+                try {
+                    $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+                    \Log::info("DEBUG: Image signature par nom et prénom ajoutée au PDF avec succès");
+                } catch (\Exception $e) {
+                    \Log::error("DEBUG: Erreur lors de l'ajout de l'image", [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    throw $e;
+                }
+            }
+        }
+
+        // Configuration PDF
+        $pdf->SetMargins(0, 0, 0);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        
+        $pdf->Output($outputPath, 'F');
+        \Log::info("DEBUG: PDF signé avec nom et prénom généré", ['outputPath' => $outputPath]);
+
+        // Signature électronique
+        $pdfSignePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_signe.pdf');
+        $pdfCertifiePath = storage_path('app/public/' . $client . '/' . $document . '/' . $nomDoc . '/' . $nomDoc . '_certifie.pdf');
+        $scriptPath = storage_path('app/signature/sign.py');
+        
+        $pythonPath = trim(shell_exec("which python3"));
+        $process = new Process([$pythonPath, $scriptPath, $pdfSignePath, $pdfCertifiePath]);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            \Log::error("DEBUG: Échec du processus Python pour signature nom et prénom", [
+                'exit_code' => $process->getExitCode(),
+                'error_output' => $process->getErrorOutput()
+            ]);
+            throw new ProcessFailedException($process);
+        }
+
+        \Log::info("DEBUG: Signature électronique par nom et prénom réussie");
+
+        // Suppression des fichiers temporaires
+        unlink($outputPath);
+        unlink($signaturePath);
+        \Log::info("DEBUG: Processus de signature par nom et prénom terminé avec succès");
+        
+        return response()->json(['success' => true, 'message' => 'Signature par nom et prénom réussie']);
     }
 
     /**
@@ -623,6 +527,7 @@ class SignatureController extends Controller
             if (file_exists($fontFile)) {
                 $fontPath = $fontFile;
                 $fontName = basename($fontFile);
+                \Log::info("DEBUG: Police trouvée", ['font' => $fontPath]);
                 break;
             }
         }
@@ -666,19 +571,50 @@ class SignatureController extends Controller
                 // Flourish décoratif au début
                 $this->drawFlourishStart($image, $lineStartX - 15, $lineY, $lineColor);
                 
+                \Log::info("DEBUG: Signature élégante créée avec police TrueType", [
+                    'font' => $fontName,
+                    'fontPath' => $fontPath,
+                    'fullName' => $fullName,
+                    'fontSize' => $fontSize,
+                    'dimensions' => $width . 'x' . $height,
+                    'color' => 'noir pur',
+                    'style' => 'professionnel avec flourish',
+                    'os' => 'Ubuntu/Linux'
+                ]);
+                
             } catch (\Exception $e) {
+                \Log::warning("DEBUG: Erreur avec police TrueType, fallback vers style personnalisé", [
+                    'error' => $e->getMessage()
+                ]);
                 $fontPath = null;
             }
         }
         
         if (!$fontPath) {
             // Fallback : créer une signature élégante avec police système
+            \Log::warning("DEBUG: Aucune police TrueType trouvée, utilisation du fallback", [
+                'searched_paths' => array_slice($possibleFonts, 0, 5)
+            ]);
             $this->createElegantHandwrittenSignature($image, $fullName, $textColor, $lineColor, $width, $height);
         }
         
         // Sauvegarder l'image en PNG haute qualité
         imagepng($image, $outputPath, 0);
         imagedestroy($image);
+        
+        // Vérification finale
+        if (file_exists($outputPath)) {
+            $fileSize = filesize($outputPath);
+            \Log::info("DEBUG: Signature professionnelle créée", [
+                'fullName' => $fullName,
+                'outputPath' => $outputPath,
+                'fileSize' => $fileSize . ' bytes',
+                'dimensions' => $width . 'x' . $height,
+                'font' => $fontName,
+                'color' => 'noir pur',
+                'style' => $fontPath ? 'police professionnelle' : 'manuscrit élégant personnalisé'
+            ]);
+        }
     }
     
     /**
@@ -710,6 +646,12 @@ class SignatureController extends Controller
         imagesetthickness($image, 2);
         imageline($image, $x, $lineY, $x + $textWidth, $lineY, $lineColor);
         imagesetthickness($image, 1);
+        
+        \Log::info("DEBUG: Signature élégante créée avec police système", [
+            'fullName' => $fullName,
+            'color' => 'noir pur',
+            'technique' => 'police système avec décoration'
+        ]);
     }
     
     /**
@@ -740,6 +682,6 @@ class SignatureController extends Controller
         for ($i = 0; $i < count($points) - 2; $i += 2) {
             imageline($image, $points[$i], $points[$i+1], $points[$i+2], $points[$i+3], $color);
         }
-        imagesetthickness($image, 3);
+        imagesetthickness($image, 1);
     }
 }

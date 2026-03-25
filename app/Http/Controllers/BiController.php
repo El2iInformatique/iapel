@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\TokenController; // Contrôleur pour gérer les tokens de rapport
 use App\Http\Controllers\ClientController; // Contrôleur pour gérer les documents clients
-use App\Models\TokenLinks; // Modèle de liaison entre token et rapport
+use App\Models\TokenLinksRapport; // Modèle de liaison entre token et rapport
 
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -106,7 +106,7 @@ class BiController extends Controller
      * - la présence physique du fichier PDF dans le stockage.
      *
      * @param string $jsonPath Chemin absolu vers le fichier JSON existant.
-     * @param array $dataToken Données issues de la table TokenLinks.
+     * @param array $dataToken Données issues de la table TokenLinksRapport.
      * @return bool true si le PDF existe déjà, false sinon.
      */
     public function checkExistPdf($jsonPath, $dataToken): bool {
@@ -265,7 +265,7 @@ class BiController extends Controller
 
             // Génération du Token
             $fullPathForToken = "app/public/{$relativeFilePath}";
-            $token = TokenController::generateToken($fullPathForToken, $document); // requete + path + type document
+            $token = TokenController::generateTokenRapport($request, $fullPathForToken);
 
             return response()->json([
                 'message' => 'Document créé avec succès',
@@ -297,7 +297,7 @@ class BiController extends Controller
     public function download($token)
     {
         // Recherche du token en base pour retrouver le chemin du JSON associé
-        $dataToken = TokenLinks::where('token', $token)->get()->first();
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Construire le chemin du fichier JSON stocké
         $filePath = storage_path($dataToken['paths']);
@@ -379,7 +379,7 @@ class BiController extends Controller
     public function show($token)
     {
         // Récupération des infos liées au token
-        $dataToken = TokenLinks::where('token', $token)->get()->first();
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Si le token n'existe pas, on bloque l'accès
         if (!$dataToken) {
@@ -487,7 +487,7 @@ class BiController extends Controller
     public function submit(Request $request, $token)
     {
         // Récupération du token en DB
-        $dataToken = TokenLinks::where('token', $token)->get()->first();
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Si token introuvable, bloquer
         if (!$dataToken) {
@@ -592,7 +592,7 @@ class BiController extends Controller
     public function delete(Request $request, $token): JsonResponse
     {
         // 1. Récupération du lien via le token
-        $dataToken = TokenLinks::where('token', $token)->first();
+        $dataToken = TokenLinksRapport::where('token', $token)->first();
 
         // Si le token n'existe pas, on renvoie 404
         if (!$dataToken) {

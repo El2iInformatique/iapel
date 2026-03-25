@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TokenLinks;
+use App\Models\Token;
+use App\Models\TokenLinksRapport;
 
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Http\Request;
@@ -10,7 +11,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
-use Illuminate\Http\Response;
 
 
 /**
@@ -110,7 +110,7 @@ class PdfController extends Controller
      * @brief Affiche un document PDF à partir d'un token d'accès.
      *
      * Cette méthode :
-     * - Recherche le fichier PDF correspondant au token fourni dans TokenLinks.
+     * - Recherche le fichier PDF correspondant au token fourni dans TokenLinksRapport.
      * - Vérifie l'existence du fichier JSON associé contenant les métadonnées.
      * - Extrait les informations du client, document et UID.
      * - Retourne la vue d'affichage PDF avec les données nécessaires.
@@ -123,14 +123,14 @@ class PdfController extends Controller
      * @throws \Exception Si le fichier JSON associé n'existe pas.
      *
      * @note Cette méthode est utilisée pour l'affichage dans le navigateur, pas pour le téléchargement direct.
-     * @see TokenLinks Pour la gestion des tokens et leurs liens.
+     * @see TokenLinksRapport Pour la gestion des tokens et leurs liens.
      * @par Exemple:
      * GET /pdf/show/abc123 pour afficher le PDF associé au token "abc123".
      */
     public function show($token)
     {
         // Récupère les données du token depuis la base de données
-        $dataToken = TokenLinks::where('token', $token)->get()->first();
+        $dataToken = TokenLinksRapport::where('token', $token)->get()->first();
 
         // Construit le chemin complet du fichier JSON contenant les données
         $filePath = storage_path( $dataToken['paths']);
@@ -1494,92 +1494,54 @@ class PdfController extends Controller
      * @par Exemple:
      * POST /upload avec un fichier "ABC123.pdf" crée le chemin ORG001/devis/DEV456_ABC123/DEV456_ABC123.pdf
      */
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'pdf_file' => 'required|file|mimes:pdf',
+        ]);
 
+        if (!$request->hasFile('pdf_file')) {
+            return response()->json(['message' => 'Aucun fichier reçu'], 400);
+        }
 
-public function upload(Request $request)
-{
-    // 1. Validation stricte
-    $request->validate([
-        'pdf_file' => 'required|file|mimes:pdf|max:10240', // Max 10Mo
-        'token'    => 'required|string'
-    ]);
-
-    $token = $request->token;
-
-    // ==========================================
-    // VÉRIFICATION DU TOKEN ET DES DONNÉES
-    // ==========================================
-    $dataToken = TokenLinks::where('token', $token)
-        ->where('expires_at', '>', now())
-        ->first();
-
-    if (!$dataToken) {
-        Log::warning("[SIGNATURE] Token introuvable, déjà utilisé ou expiré", ['token' => $token]);
-        return response()->json(['message' => 'Lien du token invalide ou expiré.'], Response::HTTP_FORBIDDEN);
-    }
-
-    $filePath = storage_path($dataToken->paths);
-
-    // Sécurité : On s'assure que c'est bien un fichier et qu'il existe
-    if (!is_file($filePath)) {
-        Log::critical("[SIGNATURE] Fichier JSON de données introuvable", ['chemin' => $filePath, 'token' => $token]);
-        return response()->json(['message' => 'Erreur interne : Données du devis introuvables.'], Response::HTTP_NOT_FOUND);
-    }
-
-    $data = json_decode(file_get_contents($filePath), true);
-
-    // 3. Vérification de sécurité (Expiration et Usage)
-    if ($data["used"]) {
-        return response()->json(['message' => 'Ce devis a déjà été signé/validé'], 403);
-    }
-
-    $devis_id = $data["dataToken"]["devis_id"];
-    $organisation_id = $data["dataToken"]["organisation_id"];
-
-    try {
         $file = $request->file('pdf_file');
-        
-        // Construction du nom et du dossier
-        $fileName = $devis_id . ".pdf";
-        
-        // Chemin relatif : organisation_id/devis/devis_id_token/
-        $relativePath = "{$organisation_id}/devis/{$devis_id}";
+        $originalFilename = $file->getClientOriginalName();
+        $noToken = pathinfo($originalFilename, PATHINFO_FILENAME);
 
-        // 4. Stockage automatique (Laravel crée les dossiers tout seul)
-        // On utilise le disk 'public' (configuré dans config/filesystems.php)
-        $path = $file->storeAs($relativePath, $fileName, 'public');
+        $token = Token::where('token', $noToken)->first();
 
-        // 5. Log avec les bonnes variables
+        if (!$token) {
+            return response()->json(['message' => 'Token non trouvé'], 404);
+        }
+
+        $name = $token->devis_id . '_' . $noToken;
+        $newFilename = $name . '.pdf';
+
+        $relativePath = $token->organisation_id . '/devis/' . $name . '/';
+        $fullPath = storage_path('app/public/' . $relativePath);
+
+        if (!File::exists($fullPath)) {
+            File::makeDirectory($fullPath, 0755, true);
+        }
+
+        $file->move($fullPath, $newFilename);
+
+        $finalPath = $relativePath . '/' . $newFilename;
+        
         \Log::info("Fichier PDF uploadé avec succès", [
-            'token' => $token,
-            'devis_id' => $devis_id,
-            'nom_fichier' => $fileName,
-            'organisation' => $organisation_id,
-            'chemin_stockage' => $path,
+            'token' => $noToken,
+            'devis_id' => $token->devis_id,
+            'nom_fichier' => $newFilename,
+            'organisation' => $token->organisation_id,
+            'chemin_complet' => $finalPath,
         ]);
 
         return response()->json([
             'message' => 'Upload réussi', 
-            'path' => $path,
-            'original_filename' => $file->getClientOriginalName()
+            'path' => $finalPath,
+            'original_filename' => $originalFilename
         ], 200);
-
     }
-    catch(\Exception $e) {
-        \Log::info("Fichier PDF uploadé avec succès", [
-            'token' => $token,
-            'devis_id' => $devis_id,
-            'nom_fichier' => $fileName,
-            'organisation' => $organisation_id,
-            'chemin_complet' => $path,
-        ]);
-
-        return response()->json([
-            'message' => 'Upload fail', 
-            'error' => "{$e}"
-        ], 500);
-    }
-}
 
     /**
      * @brief Affiche la vue d'un devis PDF avec vérification du statut de certification.
@@ -1604,186 +1566,21 @@ public function upload(Request $request)
      * GET /devis/ABC123 affiche le devis associé au token "ABC123" avec son statut de certification.
      */
     public function viewDevis(Request $request, $token){
-        $dataToken = TokenLinks::where('token', $token)->first();
+        $leToken = Token::where('token', $token)->first();
 
-        if (!$dataToken) {
-            Log::warning("[SIGNATURE] Token introuvable, déjà utilisé ou expiré", ['token' => $token]);
-            return response()->json(['message' => 'Lien du token invalide ou expiré.'], Response::HTTP_FORBIDDEN);
+        if (!$leToken) {
+            abort(404);
         }
 
-        $filePath = storage_path($dataToken->paths);
-
-        // Sécurité : On s'assure que c'est bien un fichier et qu'il existe
-        if (!is_file($filePath)) {
-            Log::critical("[SIGNATURE] Fichier JSON de données introuvable", ['chemin' => $filePath, 'token' => $token]);
-            return response()->json(['message' => 'Erreur interne : Données du devis introuvables.'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode(file_get_contents($filePath), true);
-
-        $devis_id = $data["dataToken"]["devis_id"];
-        $organisation_id = $data["dataToken"]["organisation_id"];
-
-        $devisName = $devis_id;
-        $certifiedPath = "{$organisation_id}/devis/{$devisName}/{$devisName}_certifie.pdf";
+        $devisName = $leToken->devis_id . '_' . $token;
+        $certifiedPath = $leToken->organisation_id . '/devis/' . $devisName . '/' . $devisName . '_certifie.pdf';
         $isCertified = Storage::disk('public')->exists($certifiedPath);
 
         return view('devis_pdf', [
-            'client' => $organisation_id,
+            'client' => $leToken->organisation_id,
             'token' => $token,
-            'nomDevis' => $devis_id,
+            'nomDevis' => $leToken->devis_id,
             'isCertified' => $isCertified
         ]);
-    }
-
-
-    static public function generateDevisPdf(string $pdfOriginalPath, string $outputPath, string $signaturePath, array $data): bool 
-    {
-        try {
-            // Sécurisation : on vérifie si "coords" est une chaîne (JSON) ou déjà un tableau
-            $coords = is_string($data["coords"]) ? json_decode($data["coords"], true) : $data["coords"];
-
-            $pdf = new Fpdi();
-            $pdf->SetAutoPageBreak(false);
-            $pdf->SetMargins(0, 0, 0);
-            $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
-
-            $pageCount = $pdf->setSourceFile($pdfOriginalPath);
-            
-            // CORRECTION DU BUG : Si pageCount = 1 et nb_pages = 1, ça donnait 0. On force minimum la page 1.
-            $pagesAEnlever = isset($data["nb_pages"]) ? (int)$data["nb_pages"] : 0;
-            $pageSignature = max(1, $pageCount - $pagesAEnlever); 
-
-            Log::info("[PDF] Début du traitement des pages", [
-                'total_pages' => $pageCount, 
-                'page_signature' => $pageSignature
-            ]);
-
-            for ($i = 1; $i <= $pageCount; $i++) {
-                $pdf->AddPage();
-                $tplIdx = $pdf->importPage($i);
-                $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
-
-                // Application de la signature sur la bonne page
-                if ($i === $pageSignature) {
-                    $ratioConversion = 6.98;
-                    
-                    // 1. Ajout de la date
-                    $xDate = ($coords["x_date"] ?? 0) / $ratioConversion;
-                    $yDate = ($coords["y_date"] ?? 0) / $ratioConversion;
-                    
-                    $pdf->SetXY($xDate, $yDate);
-                    $pdf->Write(10, date('d/m/Y'));
-
-                    // 2. Ajout de la signature
-                    list($width, $height) = getimagesize($signaturePath);
-                    $maxWidth = 31;
-                    $maxHeight = 13;
-                    
-                    if ($width > $height) {
-                        $newWidth = $maxWidth;
-                        $newHeight = ($height / $width) * $maxWidth;
-                    } else {
-                        $newHeight = $maxHeight;
-                        $newWidth = ($width / $height) * $maxHeight;
-                    }
-
-                    $xImage = ($coords["x_signature"] ?? 0) / $ratioConversion; 
-                    $yImage = ($coords["y_signature"] ?? 0) / $ratioConversion;
-                    
-                    $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-                    
-                    Log::info("[PDF] Signature et date apposées avec succès", ['page' => $i, 'x' => $xImage, 'y' => $yImage]);
-                }
-            }
-
-            $pdf->Output($outputPath, 'F');
-            Log::info("[PDF] Fichier PDF intermédiaire généré avec succès", ['chemin' => $outputPath]);
-            
-            return true;
-
-        } catch (\Exception $e) {
-            Log::error("[PDF] Erreur critique lors de la génération FPDI", [
-                'erreur'  => $e->getMessage(),
-                'ligne'   => $e->getLine(),
-                'fichier' => $e->getFile()
-            ]);
-            return false; 
-        }
-    }
-
-
-    /**
-     * Intègre la signature par nom complet et la date dans le PDF original.
-     */
-    static public function generateDevisPdfFullName(string $pdfPath, string $outputPath, string $signaturePath, array $data): bool
-    {
-        try {
-            $pdf = new Fpdi();
-            $pdf->SetAutoPageBreak(false);
-            $pdf->SetMargins(0, 0, 0);
-            $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
-            
-            $pageCount = $pdf->setSourceFile($pdfPath);
-
-            // Extraction sécurisée des coordonnées
-            $coords = isset($data['coords']) ? (is_string($data["coords"]) ? json_decode($data["coords"], true) : $data["coords"]) : [];
-            $xDate = $coords['x_date'] ?? 0;
-            $yDate = $coords['y_date'] ?? 0;
-            $xSignature = $coords['x_signature'] ?? 0;
-            $ySignature = $coords['y_signature'] ?? 0;
-            
-            // Calcul de la page de signature avec sécurité max(1, ...)
-            $nbPagesOffsets = isset($data['nb_pages']) ? (int)$data['nb_pages'] : 0;
-            $pageSignature = max(1, $pageCount - $nbPagesOffsets);
-
-            for ($i = 1; $i <= $pageCount; $i++) {
-                $pdf->AddPage();
-                $tplIdx = $pdf->importPage($i);
-                $pdf->useTemplate($tplIdx, 0, 0, null, null, true);
-
-                // Application de la signature sur la bonne page
-                if ($i === $pageSignature) {
-                    $ratioConversion = 6.98;
-
-                    // 1. Intégration de la date
-                    $date_signature = date('d/m/Y');
-                    $pdf->SetXY($xDate / $ratioConversion, $yDate / $ratioConversion);
-                    $pdf->Write(10, $date_signature);
-
-                    // 2. Intégration de la signature
-                    list($width, $height) = getimagesize($signaturePath);
-                    
-                    $maxWidth = 50;  // 50mm pour signature manuscrite
-                    $maxHeight = 20; // 20mm
-                    
-                    if ($width > $height) {
-                        $newWidth = $maxWidth;
-                        $newHeight = ($height / $width) * $maxWidth;
-                    } else {
-                        $newHeight = $maxHeight;
-                        $newWidth = ($width / $height) * $maxHeight;
-                    }
-                    
-                    $xImage = $xSignature / $ratioConversion; 
-                    $yImage = $ySignature / $ratioConversion;
-                    
-                    $pdf->Image($signaturePath, $xImage, $yImage, $newWidth, $newHeight, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-                }
-            }
-            
-            $pdf->Output($outputPath, 'F');
-            return true;
-
-        } catch (\Exception $e) {
-            Log::error("[PDF] Erreur génération devis signe FULLNAME", [
-                'erreur'  => $e->getMessage(),
-                'fichier' => $e->getFile(),
-                'ligne'   => $e->getLine()
-            ]);
-            return false;
-        }
     }
 }
