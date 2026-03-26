@@ -37,6 +37,10 @@ class SignatureController extends Controller
             abort(404, 'Accès refusé | Lien vers le devis introuvable.', ['Content-Type' => 'text/html']);
         }
 
+        if (!str_starts_with($dataToken->documents, "devis")) {
+            return redirect()->away("/bi/{$token}");
+        }
+
         // Permet en cas de d'excption de la capturer et d'utiliser abort()
         $data = rescue(
             fn() => JsonReader::fromToken($dataToken, __CLASS__),
@@ -99,6 +103,7 @@ class SignatureController extends Controller
         $montant_TVA     = $data['montant_TVA'] ?? $dataToken->montant_TVA ?? null;
 
         $refused = $data["refused"] ?? false;
+        $depasser = $dataToken->isExpired() ?? false;
 
         // Retour de la vue
         return view($view, compact(
@@ -111,7 +116,8 @@ class SignatureController extends Controller
             'montant_HT',
             'montant_TTC',
             'montant_TVA',
-            'refused'  
+            'refused',
+            'depasser'  
         ));
     }
 

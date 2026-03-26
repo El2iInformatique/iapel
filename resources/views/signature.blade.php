@@ -10,27 +10,94 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     
     <style>
-        /* Style demandé : Couleurs pleines (état hover) par défaut pour le bouton Refuser */
-        .btn-refuse-permanent {
-            background-color: #dc3545 !important;
-            color: #ffffff !important;
-            border: 2px solid #dc3545 !important;
+        /* Nouvelle disposition pour les boutons de signature */
+        .signature-controls-flex {
+            display: flex;
+            gap: 10px; /* Espace entre les boutons */
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        /* Styles de base pour les boutons dans le flex */
+        .signature-controls-flex .btn-base {
             border-radius: 12px;
             font-weight: 600;
-            text-decoration: none;
-            transition: opacity 0.2s ease;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            border: none;
         }
-        .btn-refuse-permanent:hover {
-            opacity: 0.85; /* Léger effet au survol pour garder une interactivité */
-            color: #ffffff !important;
+
+        /* Bouton Effacer (25%) */
+        .w-25-custom {
+            flex: 0 0 calc(25% - 7.5px); /* Ajustement avec le gap */
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+        .w-25-custom:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* Bouton Refuser (25%) */
+        .btn-refuse-action {
+            flex: 0 0 calc(25% - 7.5px); /* Ajustement avec le gap */
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+        .btn-refuse-action:hover {
+            background-color: #bb2d3b;
+            color: #ffffff;
+        }
+
+        /* Bouton Valider (50%) */
+        .w-50-custom {
+            flex: 0 0 calc(50% - 5px); /* Ajustement avec le gap */
+            background-color: #198754;
+            color: #ffffff;
+        }
+        .w-50-custom:hover {
+            background-color: #157347;
+        }
+
+        /* STYLE POUR LES BOUTONS D'ÉTAT (Pleine largeur) */
+        .btn-status-full {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+            cursor: not-allowed;
+            margin-top: 1rem;
+        }
+
+        .btn-status-refused {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-status-expired {
+            background-color: #f59e0b; /* Orange */
+            color: white;
+        }
+
+        /* Désactivation */
+        .signature-controls-flex .btn-base:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
     @php
-        // Logique de refus : on vérifie si l'URL contient ?refused=1
         $isRefused = $refused ?? false;
-        // Le devis est réellement signable s'il est valide ($signable) ET non refusé
         $actualSignable = $signable && !$isRefused;
     @endphp
 
@@ -49,9 +116,9 @@
                             <span style="color: #ffffff;">Devis refusé</span>
                         </div>
                     @else
-                        <div class="status-badge" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);">
+                        <div class="status-badge" style="background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4);">
                             <i class="bi bi-x-circle"></i>
-                            <span>Devis expiré</span>
+                            <span style="color: #ffffff;">Délai dépassé</span>
                         </div>
                     @endif
                     <h1 class="header-title">Signature électronique</h1>
@@ -71,12 +138,12 @@
                         </div>
                     </div>
                 @elseif(!$signable)
-                    <div class="info-alert" style="background: #fee2e2; border-color: #ef4444;">
-                        <div class="info-icon" style="background: #ef4444;">
-                            <i class="bi bi-exclamation-triangle"></i>
+                    <div class="info-alert" style="background: #fff7ed; border-color: #f59e0b;">
+                        <div class="info-icon" style="background: #f59e0b;">
+                            <i class="bi bi-exclamation-triangle" style="color: white;"></i>
                         </div>
                         <div class="info-content">
-                            <h3 style="color: #ef4444;">Devis expiré</h3>
+                            <h3 style="color: #d97706;">Délai dépassé</h3>
                             <p>Ce devis n'est plus valide. La période de validité de 30 jours est dépassée. Veuillez contacter APEL - EL2i informatique pour obtenir un nouveau devis.</p>
                         </div>
                     </div>
@@ -166,13 +233,6 @@
                         <i class="bi bi-file-earmark-pdf"></i>
                         <span>Consulter le devis complet</span>
                     </button>
-
-                    @if($actualSignable)
-                        <button type="button" id="btn-refuse-devis" class="btn btn-refuse-permanent w-100 p-3 d-flex align-items-center justify-content-center gap-2 mb-2">
-                            <i class="bi bi-trash3"></i>
-                            <span>Refuser le devis</span>
-                        </button>
-                    @endif
                 </div>
 
                 <div class="signature-section">
@@ -181,6 +241,7 @@
                         <span>Votre signature</span>
                     </h3>
 
+                    @if($actualSignable)
                     <div class="signature-type-selector">
                         <button class="signature-type-btn active" data-target="#manual-signature">
                             <i class="bi bi-pencil"></i>
@@ -191,28 +252,49 @@
                             <span>Signature par nom et prénom</span>
                         </button>
                     </div>
+                    @endif
 
                     <div id="manual-signature" class="signature-method active">
                         <div style="position: relative;">
                             <canvas id="signature-pad" class="signature-canvas" style="width: 100%; height: 200px;"></canvas>
+                            @if($actualSignable)
                             <div id="signature-placeholder" class="signature-placeholder">
                                 <i class="bi bi-pencil" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
                                 Cliquez et dessinez votre signature dans cette zone
                             </div>
+                            @endif
                         </div>
                         <input type="hidden" name="signature" id="signature">
-                        <div class="signature-controls">
-                            <button type="button" class="clear-button" id="clear-signature">
-                                <i class="bi bi-arrow-counterclockwise"></i>
-                                <span>Effacer</span>
+                        
+                        @if($actualSignable)
+                            <div class="signature-controls-flex">
+                                <button type="button" class="btn-base w-25-custom" id="clear-signature">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    <span>Effacer</span>
+                                </button>
+
+                                <button type="button" class="btn-base btn-refuse-action btn-refuse-devis">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>Refuser</span>
+                                </button>
+
+                                <button type="button" class="btn-base w-50-custom" id="submit-signature">
+                                    <i class="bi bi-check-lg"></i>
+                                    <span>Accepter et Signer</span>
+                                </button>
+                            </div>
+                        @elseif($isRefused)
+                            <button class="btn-status-full btn-status-refused" disabled>
+                                <i class="bi bi-x-octagon-fill"></i> Devis refusé
                             </button>
-                            <button type="button" class="sign-button" id="submit-signature">
-                                <i class="bi bi-check-lg"></i>
-                                <span>Signer électroniquement</span>
+                        @else
+                            <button class="btn-status-full btn-status-expired" disabled>
+                                <i class="bi bi-clock-fill"></i> Délai dépassé
                             </button>
-                        </div>
+                        @endif
                     </div>
 
+                    @if($actualSignable)
                     <div id="fullname-signature" class="signature-method">
                         <div class="fullname-section">
                             <div class="fullname-input-group">
@@ -234,18 +316,26 @@
                             <div class="fullname-preview" id="fullname-preview">
                                 <div class="preview-placeholder">Votre signature apparaîtra ici</div>
                             </div>
-                            <div class="signature-controls">
-                                <button type="button" class="clear-button" id="clear-fullname">
+                            
+                            <div class="signature-controls-flex">
+                                <button type="button" class="btn-base w-25-custom" id="clear-fullname">
                                     <i class="bi bi-arrow-counterclockwise"></i>
                                     <span>Effacer</span>
                                 </button>
-                                <button type="button" class="sign-button" id="submit-fullname">
+
+                                <button type="button" class="btn-base btn-refuse-action btn-refuse-devis">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>Refuser</span>
+                                </button>
+
+                                <button type="button" class="btn-base w-50-custom" id="submit-fullname">
                                     <i class="bi bi-check-lg"></i>
-                                    <span>Signer électroniquement</span>
+                                    <span>Accepter et Signer</span>
                                 </button>
                             </div>
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
 
@@ -296,11 +386,10 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            
             const infoModalElement = document.getElementById("info_modal_signature");
             const infoModal = new bootstrap.Modal(infoModalElement);
 
-            // --- LOGIQUE COMMUNE (PDF) ---
+            // PDF Logic
             var pdfUrl = "{{ url('devis/' . $organisation_id . '/' . $devis_id ) }}";
             var pdfDownloadUrl = "{{ url('download-devis/' . $organisation_id . '/' .$devis_id ) }}";
             var viewPdfBtn = document.getElementById("viewPdfBtn");
@@ -318,24 +407,15 @@
                 });
             }
 
-            // --- LOGIQUE CONDITIONNELLE (Signature) ---
             const isSignable = {{ $actualSignable ? 'true' : 'false' }};
-            const disableReason = "{{ $isRefused ? 'Devis refusé' : 'Devis expiré' }}";
             
+            // Signature Pad Logic
             let canvas = document.getElementById("signature-pad");
             let submitButton = document.getElementById("submit-signature");
             let clearButton = document.getElementById("clear-signature");
             let placeholder = document.getElementById("signature-placeholder");
             let signaturePad;
 
-            if (!isSignable) {
-                // Désactivation des éléments si non signable
-                if(canvas) { canvas.style.pointerEvents = 'none'; canvas.style.opacity = '0.5'; }
-                if(submitButton) { submitButton.disabled = true; submitButton.innerHTML = `<span>${disableReason}</span>`; }
-                // ... autres désactivations si nécessaire
-            }
-
-            // Initialisation Signature Pad
             if (isSignable && canvas) {
                 function resizeCanvas() {
                     const rect = canvas.getBoundingClientRect();
@@ -349,83 +429,99 @@
                 signaturePad = new SignaturePad(canvas, {
                     backgroundColor: 'rgba(255, 255, 255, 1)',
                     penColor: "#334155",
-                    onBegin: () => { placeholder.classList.add("hidden"); }
+                    onBegin: () => { if(placeholder) placeholder.classList.add("hidden"); }
                 });
 
                 window.addEventListener('resize', resizeCanvas);
                 resizeCanvas();
 
-                // Submit Manuel
-                submitButton.addEventListener("click", function () {
-                    if (signaturePad.isEmpty()) return alert("Veuillez signer avant de soumettre.");
-                    
-                    submitButton.disabled = true;
-                    infoModal.show();
+                if(submitButton) {
+                    submitButton.addEventListener("click", function () {
+                        if (signaturePad.isEmpty()) return alert("Veuillez signer avant de soumettre.");
+                        submitButton.disabled = true;
+                        infoModal.show();
 
-                    fetch("{{ url('/signature/' . $token) }}", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
-                        body: JSON.stringify({ signature: signaturePad.toDataURL("image/png") })
-                    })
-                    .then(response => response.ok ? response.json() : Promise.reject())
-                    .then(() => window.location.reload())
-                    .catch(() => {
-                        alert("Erreur lors de la signature.");
-                        submitButton.disabled = false;
-                        infoModal.hide();
+                        fetch("{{ url('/signature/' . $token) }}", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                            body: JSON.stringify({ signature: signaturePad.toDataURL("image/png") })
+                        })
+                        .then(response => response.ok ? response.json() : Promise.reject())
+                        .then(() => window.location.reload())
+                        .catch(() => {
+                            alert("Erreur lors de la signature.");
+                            submitButton.disabled = false;
+                            infoModal.hide();
+                        });
                     });
-                });
+                }
 
-                clearButton.addEventListener("click", () => {
-                    signaturePad.clear();
-                    placeholder.classList.remove("hidden");
-                });
+                if(clearButton) {
+                    clearButton.addEventListener("click", () => {
+                        signaturePad.clear();
+                        if(placeholder) placeholder.classList.remove("hidden");
+                    });
+                }
             }
 
-            // Gestion Nom/Prénom
+            // Fullname Logic
             if (isSignable) {
                 const generateFullnameButton = document.getElementById('generate-fullname');
                 const submitFullnameButton = document.getElementById('submit-fullname');
+                const clearFullnameButton = document.getElementById('clear-fullname');
                 const firstnameInput = document.getElementById('firstname');
                 const lastnameInput = document.getElementById('lastname');
                 const fullnamePreview = document.getElementById('fullname-preview');
 
-                generateFullnameButton.addEventListener('click', () => {
-                    const fn = firstnameInput.value.trim();
-                    const ln = lastnameInput.value.trim();
-                    if (fn && ln) {
-                        fullnamePreview.innerHTML = `<div class="fullname-signature">${fn} ${ln}</div>`;
-                        fullnamePreview.classList.add('has-signature');
-                    }
-                });
-
-                // Submit Fullname (AJOUT DE LA POPUP ICI)
-                submitFullnameButton.addEventListener('click', () => {
-                    const fn = firstnameInput.value.trim();
-                    const ln = lastnameInput.value.trim();
-                    
-                    if (!fn || !ln) return alert("Nom et prénom requis");
-                    if (!fullnamePreview.classList.contains('has-signature')) return alert("Veuillez d'abord afficher la signature");
-
-                    submitFullnameButton.disabled = true;
-                    infoModal.show(); // Affiche la pop-up "Signature en cours"
-
-                    fetch("{{ url('/signature-fullname/' . $token) }}", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
-                        body: JSON.stringify({ firstname: fn, lastname: ln })
-                    })
-                    .then(response => response.ok ? response.json() : Promise.reject())
-                    .then(() => window.location.reload())
-                    .catch(() => {
-                        alert("Erreur lors de la signature.");
-                        submitFullnameButton.disabled = false;
-                        infoModal.hide();
+                if(generateFullnameButton) {
+                    generateFullnameButton.addEventListener('click', () => {
+                        const fn = firstnameInput.value.trim();
+                        const ln = lastnameInput.value.trim();
+                        if (fn && ln) {
+                            fullnamePreview.innerHTML = `<div class="fullname-signature">${fn} ${ln}</div>`;
+                            fullnamePreview.classList.add('has-signature');
+                        } else {
+                            alert("Veuillez saisir votre nom et prénom.");
+                        }
                     });
-                });
+                }
+
+                if(clearFullnameButton) {
+                    clearFullnameButton.addEventListener('click', () => {
+                        firstnameInput.value = '';
+                        lastnameInput.value = '';
+                        fullnamePreview.innerHTML = '<div class="preview-placeholder">Votre signature apparaîtra ici</div>';
+                        fullnamePreview.classList.remove('has-signature');
+                    });
+                }
+
+                if(submitFullnameButton) {
+                    submitFullnameButton.addEventListener('click', () => {
+                        const fn = firstnameInput.value.trim();
+                        const ln = lastnameInput.value.trim();
+                        if (!fn || !ln) return alert("Nom et prénom requis");
+                        if (!fullnamePreview.classList.contains('has-signature')) return alert("Veuillez d'abord afficher la signature");
+
+                        submitFullnameButton.disabled = true;
+                        infoModal.show();
+
+                        fetch("{{ url('/signature-fullname/' . $token) }}", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                            body: JSON.stringify({ firstname: fn, lastname: ln })
+                        })
+                        .then(response => response.ok ? response.json() : Promise.reject())
+                        .then(() => window.location.reload())
+                        .catch(() => {
+                            alert("Erreur lors de la signature.");
+                            submitFullnameButton.disabled = false;
+                            infoModal.hide();
+                        });
+                    });
+                }
             }
 
-            // Sélecteur d'onglets Signature
+            // Tab Switching Logic
             const typeButtons = document.querySelectorAll('.signature-type-btn');
             typeButtons.forEach(button => {
                 button.addEventListener('click', function () {
@@ -438,24 +534,24 @@
                 });
             });
 
-            // Logique Refuser
-            const btnRefuseDevis = document.getElementById('btn-refuse-devis');
-            if (btnRefuseDevis) {
-                btnRefuseDevis.addEventListener('click', function() {
+            // Universal Refuse Logic (Handles both buttons)
+            const refuseButtons = document.querySelectorAll('.btn-refuse-devis');
+            refuseButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
                     if (confirm('Êtes-vous sûr de vouloir refuser ce devis ?')) {
-                        btnRefuseDevis.disabled = true;
+                        btn.disabled = true;
                         fetch("{{ url('/api/devis-refuse/' . $token) }}", {
                             method: "POST",
                             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
                             body: JSON.stringify({ devis_id: "{{ $devis_id }}" })
                         })
                         .then(() => window.location.reload())
-                        .catch(() => { btnRefuseDevis.disabled = false; });
+                        .catch(() => { btn.disabled = false; });
                     }
                 });
-            }
+            });
 
-            // Animations d'entrée
+            // Entry animations
             const elements = document.querySelectorAll('.info-alert, .document-details, .signature-section');
             elements.forEach((el, i) => {
                 el.style.opacity = '0';

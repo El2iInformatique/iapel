@@ -12,6 +12,15 @@ class TokenLinks extends Model
     protected $fillable = ['token', 'documents', 'paths', 'expires_at', 'created_at'];
     protected $table = "token_links";
     public $timestamps = false;
+    // AJOUTE CECI :
+    protected $casts = [
+        'expires_at' => 'datetime',
+    ];
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at->isPast();
+    }
 
     public static function generateToken( $token, $path, string $documents = "" ) {
         return self::create([
