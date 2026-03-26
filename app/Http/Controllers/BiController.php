@@ -362,6 +362,10 @@ class BiController extends Controller
             abort(404, 'Accès refusé | Lien introuvable.');
         }
 
+        if (str_starts_with($dataToken->documents, "devis")) {
+            return redirect()->away("/signature/{$token}");
+        }
+
         // Vérification existence PDF
         $filePath = storage_path($dataToken->paths);
         if ($this->checkExistPdf($filePath, $dataToken)) {
@@ -526,7 +530,7 @@ class BiController extends Controller
             if ($isDeleted) {
                 return response()->json(['status' => 'Success.'], 200);
             } else {
-                return response()->json(['error' => 'Erreur lors de la suppression des fichiers.'], 500);
+                return response()->json(['status' => 'Erreur lors de la suppression des fichiers.'], 500);
             }
 
         } catch (\Throwable $th) {
@@ -536,3 +540,4 @@ class BiController extends Controller
         }
     }
 }
+
