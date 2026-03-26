@@ -142,10 +142,15 @@ class PdfController extends Controller
         $document = $data['dataToken']['document'];
         $client = $data['dataToken']['client'];
         $uid = $data['dataToken']['uid'];
-        
+
+        $documentNameTitle = match ($document) {
+            'rapport_intervention' => 'Rapport Intervention',
+            'cerfa_15497'          => 'Cerfa 15497',
+            default                => '?',
+        };
 
         // Retourne la vue PDF avec les données pour affichage
-        return view('pdf', compact('client', 'document', 'uid', 'token'));
+        return view('pdf', compact('client', 'document', 'uid', 'token', 'documentNameTitle'));
     }
 
     /**
