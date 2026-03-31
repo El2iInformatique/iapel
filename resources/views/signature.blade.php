@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signature électronique - APEL - EL2i informatique</title>
+    <title>Signature électronique - {{ __($organisation_id) }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -144,7 +144,7 @@
                         </div>
                         <div class="info-content">
                             <h3 style="color: #d97706;">Délai dépassé</h3>
-                            <p>Ce devis n'est plus valide. La période de validité de 30 jours est dépassée. Veuillez contacter APEL - EL2i informatique pour obtenir un nouveau devis.</p>
+                            <p>Ce devis n'est plus valide. La période de validité de 30 jours est dépassée. Veuillez contacter {{ __($organisation_id) }} pour obtenir un nouveau devis.</p>
                         </div>
                     </div>
                 @else
@@ -194,7 +194,7 @@
                             <h4>{{ $titre }}</h4>
                             <div class="document-meta">
                                 <i class="bi bi-building"></i>
-                                <span>APEL - EL2i informatique</span>
+                                <span>{{ __($organisation_id) }}</span>
                             </div>
                         </div>
                     </div>
