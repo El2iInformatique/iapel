@@ -56,6 +56,12 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
     
 });
 
+Route::get('/isValidApi', function() {
+    return response()->json(["succes" => "Clés api fonctionelle !"]);
+})->middleware('AuthClientApiKey')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+
+
 
 Route::get('/67', function () {
     $txt = base64_decode("c2l4K3NldmVu");
