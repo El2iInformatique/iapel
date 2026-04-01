@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'anti-spam' => \App\Http\Middleware\AntiSpamMiddleware::class,
             'VerifTokenAndSecretToken' => \App\Http\Middleware\VerifTokenWithHeaderMiddleware::class,
             'VerifSecretToken' => \App\Http\Middleware\VerifSecretToken::class,
+            'AuthClientApiKey' => \App\Http\Middleware\AuthClientApiKeyMiddleware::class,
         ]);
 
 

@@ -715,6 +715,10 @@
             signatureInputOperateur.value = "";
         });
 
+        // Intercepter l'envoi du formulaire pour charger le Base64 dans les inputs cachés
+        form.addEventListener("submit", function (event) {
+            saveSignature(); 
+        });
 
         /*
 

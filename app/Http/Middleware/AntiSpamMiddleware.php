@@ -34,7 +34,13 @@ class AntiSpamMiddleware
         if ($attempts > $maxAttempts) {
             // return redirect()->back()->withErrors(['spam' => 'Trop de tentatives. Veuillez réessayer plus tard.']);
             // ou
-            return response('Trop de tentatives de spam. Veuillez réessayer plus tard.', 429); // 429 Too Many Requests
+            if ($request->acceptsHtml()) {
+                return response('Trop de tentatives. Veuillez réessayer plus tard.', 429); // 429 Too Many Requests
+            }
+            else {
+                return response()->json(["error" => "Trop de tentatives. Veuillez réessayer plus tard."], 429, ['Content-Type' => 'application/json']); // 429 Too Many Requests
+            }
+            
         }
 
         // 5. Si pas de spam détecté, passer la requête au middleware suivant ou au contrôleur

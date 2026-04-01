@@ -1,4 +1,4 @@
-
+/* --- GARDER TOUT LE CONTENU EXISTANT DU DÉBUT --- */
 body {
     background: url('/storage/images/tweed.png');
     background-repeat: repeat;
@@ -22,7 +22,7 @@ body {
 
 .card-body {
     background-color: #f7f7f7;  
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Effet d'ombre légère */  
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 .form-control {
@@ -30,20 +30,20 @@ body {
 }
 
 .accordion-button.collapsed {
-    background-color: #d6d6d6; /* Couleur par défaut des headers fermés */
+    background-color: #d6d6d6;
     color: black;
 }
 
 .accordion-button:disabled {
     background-color: silver !important;
-    color: #6c757d !important; /* Texte en gris foncé */
+    color: #6c757d !important;
 }
 
 .info-icon {
     color: #007bff;
     font-size: 1.2rem;
     cursor: pointer;
-    margin-right: 12px; /* Espacement entre l'icône et le texte */
+    margin-right: 12px;
 }
 
 .accordion-body {
@@ -51,15 +51,11 @@ body {
 }
 
 .small-text {
-    font-size: 0.8em; /* Réduit la taille du texte */
+    font-size: 0.8em;
 }
 
-/* style.css */
-
-/* Police personnalisée BrittanySignature */
 @font-face {
     font-family: 'BrittanySignature';
-    /* Ajuste le chemin selon l'arborescence de ton dossier public */
     src: url('../fonts/BrittanySignature.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
@@ -107,16 +103,6 @@ body {
     padding: 0;
     font-weight: 400;
 }
-
-
-a:link {
-    color: var(--primary-purple);
-}
-
-a:visited {
-    color: var(--accent-orange-dark);
-}
-
 
 .main-wrapper {
     min-height: 100vh;
@@ -621,7 +607,145 @@ a:visited {
     animation: spin 1s ease-in-out infinite;
 }
 
-/* Animations */
+/* --- AJOUTS RÉCENTS : BOUTON REFUSER ET PAGE SUCCÈS --- */
+
+/* Bouton Refuser permanent  */
+.btn-refuse-permanent {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+    border: 2px solid #dc3545 !important;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+.btn-refuse-permanent:hover {
+    opacity: 0.85;
+    color: #ffffff !important;
+}
+
+/* Container pour la page de téléchargement [cite: 3] */
+.document-container {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    width: 100%;
+    max-width: 800px;
+    border: 1px solid var(--neutral-200);
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Alerte Succès [cite: 3] */
+.success-alert {
+    background: var(--success-light);
+    border: 1px solid var(--success-green);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.success-icon {
+    background: var(--success-green);
+    color: var(--white);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.success-content h3 {
+    color: var(--success-green);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+}
+
+.success-content p {
+    color: var(--neutral-600);
+    margin: 0;
+    font-size: 0.9375rem;
+}
+
+/* Bouton de téléchargement [cite: 3] */
+.download-section {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.download-button {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-orange-dark) 100%);
+    border: none;
+    color: var(--white);
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-width: 280px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(244, 162, 97, 0.4);
+}
+
+.download-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(244, 162, 97, 0.5);
+}
+
+.download-button:active {
+    transform: translateY(0);
+}
+
+.download-button:disabled {
+    background: var(--neutral-400);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.download-info {
+    margin-top: 1rem;
+    color: var(--neutral-500);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Branding Footer [cite: 3] */
+.branding-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.company-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-purple);
+}
+
+.developer-info {
+    font-size: 0.875rem;
+    color: var(--neutral-500);
+}
+
+/* Animations d'entrée */
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -643,7 +767,12 @@ a:visited {
     .generate-btn { width: 100%; justify-content: center; }
     .fullname-signature { font-size: 2rem; }
     .signature-controls { flex-direction: column; }
-    .summary-row { flex-direction: column; align-items: flex-start; }
-    .summary-amount { align-self: flex-end; }
+    .summary-row { padding: 0.75rem 1rem; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .summary-amount { align-self: flex-end; font-size: 1.0625rem; }
     .document-header { flex-direction: column; text-align: center; }
-}  
+    .download-button { width: 100%; min-width: unset; }
+}
+
+@media (min-width: 1200px) {
+    .document-container { max-width: 900px; }
+}
