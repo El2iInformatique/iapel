@@ -65,7 +65,7 @@ L'application sert de pont entre les techniciens sur le terrain et les clients f
    ```bash
    php artisan migrate --seed
    ou 
-   php artisan migrate:fresh
+   php artisan migrate
    ```
 
 5. **Lier le stockage** (Crucial pour les PDFs et images)
