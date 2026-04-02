@@ -131,42 +131,41 @@ class BiController extends Controller
 
         if ($documentType === 'cerfa_15497') {
             $specificRules = [
-                'operateur' => 'nullable|string',
-                'detenteur' => 'nullable|string',
-                'numero_attestation_capacite' => 'nullable|string',
-                'identification' => 'nullable|string',
-                'denomination' => 'nullable|string',
-                'charge' => 'nullable|string',
-                'tonnage' => 'nullable|string',
-                'identification_controle' => 'nullable|string',
-                'date_controle' => 'nullable|date',
-                'detection_fuites' => 'nullable|string',
-                'constat_fuites' => 'nullable|string',
-                'localisation_fuite_1' => 'nullable|string',
-                'localisation_fuite_2' => 'nullable|string',
-                'localisation_fuite_3' => 'nullable|string',
-                'quantite_chargee_totale' => 'nullable|string',
-                'quantite_chargee_A' => 'nullable|string',
-                'fluide_A' => 'nullable|string',
-                'quantite_chargee_B' => 'nullable|string',
-                'quantite_chargee_C' => 'nullable|string',
-                'quantite_recuperee_totale' => 'nullable|string',
-                'quantite_recuperee_D' => 'nullable|string',
-                'BSFF' => 'nullable|string',
-                'quantite_recuperee_E' => 'nullable|string',
-                'identification_E' => 'nullable|string',
-                'autre_fluide_non_inflammable' => 'nullable|string',
-                'autre_fluide_inflammable' => 'nullable|string',
+                'operateur'                       => 'nullable|string',
+                'detenteur'                       => 'nullable|string',
+                'identification'                  => 'nullable|string',
+                'denomination'                    => 'nullable|string',
+                'charge'                          => 'nullable|string',
+                'tonnage'                         => 'nullable|string',
+                'detection_fuites'                => 'nullable|string',
+                'constat_fuites'                  => 'nullable|string',
+                'localisation_fuite_1'            => 'nullable|string',
+                'localisation_fuite_2'            => 'nullable|string',
+                'localisation_fuite_3'            => 'nullable|string',
+                'quantite_chargee_totale'         => 'nullable|string',
+                'quantite_chargee_A'              => 'nullable|string',
+                'fluide_A'                        => 'nullable|string',
+                'quantite_chargee_B'              => 'nullable|string',
+                'quantite_chargee_C'              => 'nullable|string',
+                'quantite_recuperee_totale'       => 'nullable|string',
+                'quantite_recuperee_D'            => 'nullable|string',
+                'BSFF'                            => 'nullable|string',
+                'quantite_recuperee_E'            => 'nullable|string',
+                'identification_E'                => 'nullable|string',
+                'autre_fluide_non_inflammable'    => 'nullable|string',
+                'autre_fluide_inflammable'        => 'nullable|string',
                 'installation_destination_fluide' => 'nullable|string',
-                'observations' => 'nullable|string',
-                'nom_signataire_operateur' => 'nullable|string',
-                'qualite_signataire_operateur' => 'nullable|string',
-                'nom_signataire_detenteur' => 'nullable|string',
-                'qualite_signataire_detenteur' => 'nullable|string',
-                'date_signature_operateur' => 'nullable|string',
-                'signature-operateur' => 'nullable|string',
-                'date_signature_detenteur' => 'nullable|string',
-                'signature-detenteur' => 'nullable|string',
+                'observations'                    => 'nullable|string',
+                'nom_signataire_operateur'        => 'nullable|string',
+                'nom_signataire_detenteur'        => 'nullable|string',
+                'qualite_signataire_detenteur'    => 'nullable|string',
+                'date_signature_operateur'        => 'nullable|string',
+                'signature-operateur'             => 'nullable|string',
+                'date_signature_detenteur'        => 'nullable|string',
+                'signature-detenteur'             => 'nullable|string',
+                'detenteur_nom'                   => 'nullable|string',
+                'detenteur_adresse'               => 'nullable|string',
+                'detenteur_siret'                 => 'nullable|string',
             ];
         } elseif ($documentType === 'rapport_intervention') {
             $specificRules = [
@@ -389,7 +388,9 @@ class BiController extends Controller
         }
 
         if (str_starts_with($document, 'cerfa')) {
-            return view($document, compact('data', 'token', 'uid', 'client', 'document'));
+            $cerfaConfig = ClientController::getConfigCerfa($client);
+        
+            return view($document, compact('data', 'token', 'uid', 'client', 'document', 'cerfaConfig'));
         }
 
         // Cas par défaut : Bon d'Intervention (BI)

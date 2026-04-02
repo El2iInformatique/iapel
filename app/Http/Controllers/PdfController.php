@@ -552,7 +552,7 @@ class PdfController extends Controller
     
     public function checkExistAndIsValidePdf($jsonPath, $client, $document, $uid): bool 
     {
-        // return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
+        //return false; // Désactiver la validation du PDF pour éviter les problèmes de génération, à réactiver une fois les problèmes résolus
 
         // === ÉTAPE 1 : DÉTERMINER LE CHEMIN DU FICHIER PDF ===
         // Utilise le chemin JSON comme base si fourni, sinon construit le chemin complet
@@ -1105,6 +1105,29 @@ class PdfController extends Controller
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
         );
 
+        $configCera = ClientController::getConfigCerfa($client);
+        /*
+         * Tous les champs d'identification de l'opérateur sont récupérés depuis la configuration du client
+         * Cela permet de pré-remplir automatiquement les informations de l'entreprise qui réalise l'intervention dans la vue
+         * 
+         * Tous ses champs son non modifiables dans la vue et sont pré-remplis dans le PDF pour éviter les erreurs de saisie et garantir la conformité administrative
+         * 
+         * Si des champs doivent etre rajouter et sont modifiable depuis la vue; se qui se trouve dans la config deviens juste 
+         * des valeurs par défaut qui peuvent être modifiées dans la vue, a se moment il faudras prendre les données du Json ($data)
+         * 
+         * Données non modifiable depuis la vue = a prendre depuis la config : nom, adresse, siret, numeroAttestationCapacite, controleMaterielDate
+         * Données modifiable = depuis le Json et est normalement stocker lors du submit dedans se que n'est pas fait pour les configs fixe. 
+         * 
+        */
+        $nomOperateur = $configCera['nom'] . "\n" ?? '';
+        $adresseOperateur = $configCera['adresse'] . "\n" ?? '';
+        $siretOperateur = "N° Siret " . $configCera['siret'] . "\n" ?? '';
+        $numeroAttestationCapacite = $configCera['numeroAttestationCapacite'] . "\n" ?? '';
+        $controleMaterielDate = $configCera['controleMaterielDate'] . "\n" ?? date('d-m-Y') ?? '';
+
+
+
+
         // === ÉTAPE 6 : INITIALISATION DE FPDI ===
         // Charge le modèle PDF CERFA 15497-03
         $pdf = new Fpdi();
@@ -1125,24 +1148,42 @@ class PdfController extends Controller
         $pdf->MultiCell(30, 0, ($uid ?? ''));
 
         // Police et couleur standard pour les informations principales
-        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetFont('helvetica', '', 5.7);
         $pdf->SetTextColor(0, 0, 0);
 
         // === SECTION 1 : IDENTIFICATION OPÉRATEUR ET DÉTENTEUR ===
-        $largeur = 60;
+        $largeur = 75;
         
         // Opérateur (entreprise effectuant l'intervention)
-        $pdf->SetXY(44, 32.5);
-        $operateur = ($data['operateur'] ?? "") . "\n";
-        $pdf->MultiCell($largeur, 10, $operateur);
+        $pdf->SetXY(44, 33);
+        $pdf->MultiCell($largeur, 15, $nomOperateur);
+
+        $pdf->SetXY(44, 36.5);
+        $pdf->MultiCell($largeur, 15, $adresseOperateur);
+
+        $pdf->SetXY(44, 42.5);
+        $pdf->MultiCell($largeur, 15, $siretOperateur);
+
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->SetTextColor(0, 0, 0);
 
         // Détenteur (propriétaire/gestionnaire de l'équipement)
-        $pdf->SetXY(121, 33);
-        $detenteur = ($data['detenteur'] ?? "") . "\n";
-        $pdf->MultiCell($largeur, 10, $detenteur);
+        $pdf->SetXY(121, 32.5);
+        $detenteurNom = ($data['detenteur_nom'] ?? "") . "\n";
+        $pdf->MultiCell($largeur, 15, $detenteurNom);
+
+        $pdf->SetXY(121, 39.75);
+        $detenteurAdresse = ($data['detenteur_adresse'] ?? "") . "\n";
+        $pdf->MultiCell($largeur, 15, $detenteurAdresse);
+
+        $pdf->SetXY(121, 47);
+        $detenteurSiret = "N° Siret " . ($data['detenteur_siret'] ?? "") . "\n";
+        $pdf->MultiCell($largeur, 15, $detenteurSiret);
+
+        $pdf->SetFont('helvetica', '', 9);
 
         $pdf->SetXY(75, 47);
-        $pdf->Write(10, ($data['numero_attestation_capacite'] ?? ''));
+        $pdf->Write(10, ($numeroAttestationCapacite ?? ''));
 
         $pdf->SetXY(45, 60);
         $identification = ($data['identification'] ?? "") . "\n";
@@ -1196,7 +1237,7 @@ class PdfController extends Controller
         $pdf->SetXY(74, 94);
         $pdf->Write(10, ($data['identification_controle'] ?? ''));
 
-        list($year,$month,$day) = explode('-', $data['date_controle']);
+        list($year,$month,$day) = explode('-', $controleMaterielDate);
         $pdf->SetXY(152, 94);
         $pdf->Write(10, ($day ?? ''));
         $pdf->SetXY(163, 94);
