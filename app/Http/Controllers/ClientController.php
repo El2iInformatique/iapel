@@ -542,10 +542,16 @@ class ClientController extends Controller
                 }
             }
 
+            /*
+            * Structure de base commune à tous les types de documents, 
+            * avec des champs spécifiques ajoutés ensuite selon le type
+            */
             $docEntry = [
                 'path' => $doc['path'],
                 'status' => 'À traiter',
-                'token_rapport' => $token, // Utilisé pour les rapports et cerfas
+                'type' => $type, // Ex: devis, rapport_intervention, cerfa_15497
+                'token_rapport' => $token, // Legacy, à supprimer progressivement au profit de token_rapport
+                'token' => $token, // Token global, à privilégier désormais pour tous les types de documents
                 'data' => []
             ];
             
@@ -573,7 +579,7 @@ class ClientController extends Controller
                 $docEntry['data'] = [
                     "nom" => $jsonData['titre'] ?? $folder,
                     "tiers" => $jsonData['tiers'] ?? null,
-                    "token" => $token, // <--- LE TOKEN EST PLACÉ ICI DANS LA DATA
+                    "token" => $token, // Legacy, à supprimer progressivement au profit de token
                     "date_traitement" => $traitTs ? Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null,
                     "temps_restants" => $tempsRestants,
                     "signable" => $signable,
@@ -598,11 +604,13 @@ class ClientController extends Controller
             // --- MAPPING CERFA ---
             elseif ($type === 'cerfa_15497') {
                 $docEntry['status'] = $doc['pdf_file'] ? 'Validé' : 'À traiter';
+                $configCerfa = ClientController::getConfigCerfa($jsonData['dataToken']['client']);
                 
                 $docEntry['data'] = [
                     "nom" => $jsonData['dataToken']['uid'] ?? $folder,
                     "tiers" => $jsonData['dataToken']['client'] ?? null, 
                     "operateur" => $jsonData['operateur'] ?? null,
+                    "nomOperateur" => $configCerfa['nom'] ?? null,
                     "detenteur" => $jsonData['detenteur'] ?? null,
                     "nature_intervention" => $jsonData['nature_intervention'] ?? null,
                     "date_traitement" => $dateJson,
