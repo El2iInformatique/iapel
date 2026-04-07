@@ -39,8 +39,11 @@
 
     <div class="main-wrapper">
         <div class="signature-container">
-            <div class="header-section">
             <div class="header-section" style="position: relative;">
+                <a href="#" target="_blank" title="Paramètres" style="position: absolute; top: 15px; right: 20px; color: white; font-size: 1.5rem; text-decoration: none; z-index: 10;">
+                    <i class="bi bi-gear-fill"></i>
+                </a>
+
                 <div class="header-content">
                     <div class="status-badge">
                         <i class="bi bi-file-earmark-text"></i> Formulaire CERFA
