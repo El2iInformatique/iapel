@@ -36,6 +36,7 @@
     <div class="main-wrapper">
         <div class="signature-container">
             <div class="header-section">
+            <div class="header-section" style="position: relative;">
                 <div class="header-content">
                     <div class="status-badge">
                         <i class="bi bi-file-earmark-text"></i> Formulaire CERFA
@@ -79,6 +80,34 @@
                                     <div class="col-md-6 mb-3">
                                         <label for="denomination" class="form-label">Dénomination du fluide :</label>
                                         <input type="text" class="form-input" id="denomination" name="denomination" value="{{ old('denomination') }}" maxlength="7">
+=======
+                                    <div class="mb-3">
+                                        <label for="operateur_adresse" class="form-label">Adresse :<span class="required-asterisk">*</span></label>
+                                        <input type="text" class="form-input" id="operateur_adresse" value="{{ old('operateur_adresse', $cerfaConfig['adresse'] ?? '') }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="operateur_siret" class="form-label">Numéro SIRET :<span class="required-asterisk">*</span></label>
+                                        <input type="text" class="form-input" id="operateur_siret" value="{{ old('operateur_siret', $cerfaConfig['siret'] ?? '') }}" maxlength="14" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="operateur_numero_attestation_capacite" class="form-label">Numéro d'attestation de capacité :<span class="required-asterisk">*</span></label>
+                                        <input type="text" class="form-input" id="operateur_numero_attestation_capacite" value="{{ old('operateur_numero_attestation_capacite', $cerfaConfig['numeroAttestationCapacite'] ?? '') }}" maxlength="50" disabled>
+                                    </div>
+                                    
+                                    <h5 class="mt-4">[2] Détenteur</h5>
+                                    <hr>
+                                    <div class="mb-3">
+                                        <label for="detenteur_nom" class="form-label">Nom :<span class="required-asterisk">*</span></label>
+                                        <input type="text" class="form-input" id="detenteur_nom" name="detenteur_nom" value="{{ old('detenteur_nom', $data['detenteur'] ?? '') }}" required maxlength="50">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="detenteur_adresse" class="form-label">Adresse :<span class="required-asterisk">*</span></label>
+                                        <input type="text" class="form-input" id="detenteur_adresse" name="detenteur_adresse" value="{{ old('detenteur_adresse', $data['detenteur_adresse'] ?? '') }}" required maxlength="50">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="detenteur_siret" class="form-label">Numéro SIRET :<span class="required-asterisk">*</span></label>
+                                        <input type="text" class="form-input" id="detenteur_siret" name="detenteur_siret" value="{{ old('detenteur_siret', $data['detenteur_siret'] ?? '') }}" maxlength="14" required>
+>>>>>>> Stashed changes
                                     </div>
                                 </div>
 
