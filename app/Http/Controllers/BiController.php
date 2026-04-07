@@ -150,6 +150,7 @@ class BiController extends Controller
                 'quantite_recuperee_totale'       => 'nullable|string',
                 'quantite_recuperee_D'            => 'nullable|string',
                 'BSFF'                            => 'nullable|string',
+                'identification_controle'         => 'nullable|string',
                 'quantite_recuperee_E'            => 'nullable|string',
                 'identification_E'                => 'nullable|string',
                 'autre_fluide_non_inflammable'    => 'nullable|string',

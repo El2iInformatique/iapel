@@ -199,11 +199,11 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="identification_controle" class="form-label">Identification :</label>
-                                            <input type="text" class="form-input" id="identification_controle" value="{{ old('identification_controle', $cerfaConfig['identificationControle'] ?? '') }}" maxlength="20">
+                                            <input type="text" name="identification_controle" class="form-input" id="identification_controle" value="{{ old('identification_controle', $cerfaConfig['identificationControle'] ?? '') }}" maxlength="20">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="date_controle" class="form-label">Contrôlé le :</label>
-                                            <input type="date" class="form-input" id="date_controle" name="date_controle" value="{{ old('date_controle', $cerfaConfig['controleMaterielDate'] ?? date('Y-m-d')) }}" disabled>
+                                            <input type="date" class="form-input" id="date_controle" value="{{ old('date_controle', $cerfaConfig['controleMaterielDate'] ?? date('Y-m-d')) }}" disabled>
                                         </div>
                                     </div>
 

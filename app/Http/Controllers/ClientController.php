@@ -400,7 +400,7 @@ class ClientController extends Controller
                     'localisation_fuite_2', 'reparation_fuite_2', 'localisation_fuite_3', 
                     'reparation_fuite_3', 'quantite_chargee_totale', 'quantite_chargee_A', 
                     'fluide_A', 'quantite_chargee_B', 'quantite_chargee_C', 'quantite_recuperee_totale', 
-                    'quantite_recuperee_D', 'BSFF', 'quantite_recuperee_E', 'identification_E', 
+                    'quantite_recuperee_D', 'identification_controle', 'BSFF', 'quantite_recuperee_E', 'identification_E', 
                     'fluide_non_inflammable', 'autre_fluide_non_inflammable', 'fluide_inflammable', 
                     'autre_fluide_inflammable', 'installation_destination_fluide', 'observations',
                     'nom_signataire_operateur', 'qualite_signataire_operateur', 
