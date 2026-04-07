@@ -56,6 +56,43 @@ class ClientController extends Controller
         }
     }
 
+    public static function createCerfaConfigFile(string $client): bool 
+    {
+        $optionFile = "{$client}/Config_Cerfa.json";
+
+        // Si le fichier existe déjà, on ne l'écrase pas et on s'arrête là
+        if (Storage::disk('public')->exists($optionFile)) {
+            return false; 
+        }
+
+        // On prépare la structure de base en PHP (tableaux)
+        $defaultData = [
+            "numeroAttestationCapacite" => "Un numéro d'attestation de capacité",
+            "identificationControle" => "Un identificateur de controle",
+            
+            "nom" => $client,
+            "adresse" => "Une adresse - WWW",
+            "siret" => "Un numéro de SIRET",
+
+            "OperateurSignataireQualiter" => "Technicien",
+            "controleMaterielDate" => "2000-01-01"
+        ];
+
+        try {
+            // On transforme le tableau PHP en JSON bien formaté et on sauvegarde
+            $stored = Storage::disk('public')->put(
+                $optionFile,
+                json_encode($defaultData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            return $stored; // Retourne true si l'écriture s'est bien passée
+
+        } catch (\Exception $e) {
+            \Log::error("[CONFIG_CERFA] Erreur de création pour le client {$client}: " . $e->getMessage());
+            return false;
+        }
+    }
+
 
     public static function copyPdfFileToClientBI(string $client, string $document): bool 
     {
@@ -158,8 +195,8 @@ class ClientController extends Controller
                 $optionFile = "{$client}/Options_Cerfa.json";
 
                 if (!Storage::disk('public')->exists($optionFile)) {
-                    if (!ClientController::createBiOptionFile($client)) {
-                        Log::warning("Erreur lors de la création du fichier de configuration du BI : " . $optionFile);
+                    if (!ClientController::createCerfaConfigFile($client)) {
+                        Log::warning("Erreur lors de la création du fichier de configuration des cerfas : " . $optionFile);
                     }
                 }
 
@@ -355,19 +392,20 @@ class ClientController extends Controller
             } else if (str_starts_with($document, 'cerfa_15497')) {
                 // Mettre à jour les champs spécifiques au CERFA
                 $cerfaFields = [
-                    'operateur', 'detenteur', 'numero_attestation_capacite', 'identification', 
+                    'operateur', 'detenteur', 'identification', 
                     'denomination', 'charge', 'tonnage', 'nature_intervention', 'autre_valeur', 
-                    'identification_controle', 'date_controle', 'detection_fuites', 'hcfc', 
-                    'hfc_pfc', 'hfo', 'equipement_sans_detection', 'equipement_avec_detection', 
+                    'detection_fuites', 'hcfc', 'hfc_pfc', 'hfo', 
+                    'equipement_sans_detection', 'equipement_avec_detection', 
                     'constat_fuites', 'localisation_fuite_1', 'reparation_fuite_1', 
                     'localisation_fuite_2', 'reparation_fuite_2', 'localisation_fuite_3', 
                     'reparation_fuite_3', 'quantite_chargee_totale', 'quantite_chargee_A', 
                     'fluide_A', 'quantite_chargee_B', 'quantite_chargee_C', 'quantite_recuperee_totale', 
-                    'quantite_recuperee_D', 'BSFF', 'quantite_recuperee_E', 'identification_E', 
+                    'quantite_recuperee_D', 'identification_controle', 'BSFF', 'quantite_recuperee_E', 'identification_E', 
                     'fluide_non_inflammable', 'autre_fluide_non_inflammable', 'fluide_inflammable', 
                     'autre_fluide_inflammable', 'installation_destination_fluide', 'observations',
                     'nom_signataire_operateur', 'qualite_signataire_operateur', 
-                    'nom_signataire_detenteur', 'qualite_signataire_detenteur'
+                    'nom_signataire_detenteur', 'qualite_signataire_detenteur', 
+                    "detenteur_nom", "detenteur_adresse", "detenteur_siret"
                 ];
 
                 foreach ($cerfaFields as $field) {
@@ -504,10 +542,16 @@ class ClientController extends Controller
                 }
             }
 
+            /*
+            * Structure de base commune à tous les types de documents, 
+            * avec des champs spécifiques ajoutés ensuite selon le type
+            */
             $docEntry = [
                 'path' => $doc['path'],
                 'status' => 'À traiter',
-                'token_rapport' => $token, // Utilisé pour les rapports et cerfas
+                'type' => $type, // Ex: devis, rapport_intervention, cerfa_15497
+                'token_rapport' => $token, // Legacy, à supprimer progressivement au profit de token_rapport
+                'token' => $token, // Token global, à privilégier désormais pour tous les types de documents
                 'data' => []
             ];
             
@@ -535,7 +579,7 @@ class ClientController extends Controller
                 $docEntry['data'] = [
                     "nom" => $jsonData['titre'] ?? $folder,
                     "tiers" => $jsonData['tiers'] ?? null,
-                    "token" => $token, // <--- LE TOKEN EST PLACÉ ICI DANS LA DATA
+                    "token" => $token, // Legacy, à supprimer progressivement au profit de token
                     "date_traitement" => $traitTs ? Carbon::createFromTimestamp($traitTs)->toDateTimeString() : null,
                     "temps_restants" => $tempsRestants,
                     "signable" => $signable,
@@ -560,11 +604,13 @@ class ClientController extends Controller
             // --- MAPPING CERFA ---
             elseif ($type === 'cerfa_15497') {
                 $docEntry['status'] = $doc['pdf_file'] ? 'Validé' : 'À traiter';
+                $configCerfa = ClientController::getConfigCerfa($jsonData['dataToken']['client']);
                 
                 $docEntry['data'] = [
                     "nom" => $jsonData['dataToken']['uid'] ?? $folder,
                     "tiers" => $jsonData['dataToken']['client'] ?? null, 
                     "operateur" => $jsonData['operateur'] ?? null,
+                    "nomOperateur" => $configCerfa['nom'] ?? null,
                     "detenteur" => $jsonData['detenteur'] ?? null,
                     "nature_intervention" => $jsonData['nature_intervention'] ?? null,
                     "date_traitement" => $dateJson,
@@ -610,6 +656,31 @@ class ClientController extends Controller
 
         } catch (\Exception $e) {
             \Log::error("Erreur Options_BI : " . $e->getMessage());
+            return [];
+        }
+    }
+
+
+    public static function getConfigCerfa(string $client): array
+    {
+        if (empty($client)) return [];
+
+        $fileName = "{$client}/Config_Cerfa.json";
+
+        if (!Storage::disk('public')->exists($fileName)) {
+            return [];
+        }
+
+        try {
+            $content = Storage::disk('public')->get($fileName);
+            $data = json_decode($content, true);
+
+            if (!is_array($data)) return [];
+
+            return $data;
+
+        } catch (\Exception $e) {
+            \Log::error("Erreur Config_Cerfa : " . $e->getMessage());
             return [];
         }
     }
