@@ -71,11 +71,13 @@ class ClientController extends Controller
             "identificationControle" => "Un identificateur de controle",
             
             "nom" => $client,
-            "adresse" => "Une adresse - WWW",
-            "siret" => "Un numéro de SIRET",
+            "adresse" => "",
+            "siret" => "",
 
             "OperateurSignataireQualiter" => "Technicien",
-            "controleMaterielDate" => "2000-01-01"
+            "controleMaterielDate" => now("d-m-y"),
+
+            "OperateurSignataireNom" => ""
         ];
 
         try {
@@ -660,6 +662,35 @@ class ClientController extends Controller
         }
     }
 
+    public static function getOptionsBIAsMap(string $client): array
+    {
+        if (empty($client)) return [];
+
+        $fileName = "{$client}/Options_BI.json";
+
+        if (!Storage::disk('public')->exists($fileName)) {
+            // On retourne la structure par défaut si le fichier n'existe pas encore
+            return [
+                "Constat" => [],
+                "Verification" => [],
+                "NotesParticuliere" => [],
+                "PointVigilance" => []
+            ];
+        }
+
+        try {
+            $content = Storage::disk('public')->get($fileName);
+            $data = json_decode($content, true);
+
+            // On s'assure de bien retourner un tableau associatif
+            return is_array($data) ? $data : [];
+
+        } catch (\Exception $e) {
+            \Log::error("Erreur getOptionsBIAsMap : " . $e->getMessage());
+            return [];
+        }
+    }
+
 
     public static function getConfigCerfa(string $client): array
     {
@@ -682,6 +713,55 @@ class ClientController extends Controller
         } catch (\Exception $e) {
             \Log::error("Erreur Config_Cerfa : " . $e->getMessage());
             return [];
+        }
+    }
+
+    public static function updateOptionsBI(string $client, array $newConfig): bool
+    {
+        if (empty($client) || empty($newConfig)) {
+            return false;
+        }
+
+        $fileName = "{$client}/Options_BI.json";
+        $existingConfig = self::getOptionsBIAsMap($client);
+
+        // array_merge écrase les anciennes valeurs par les nouvelles
+        $updatedConfig = array_merge($existingConfig, $newConfig);
+
+        try {
+            return Storage::disk('public')->put(
+                $fileName,
+                json_encode($updatedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+        } catch (\Exception $e) {
+            \Log::error("Erreur Options_BI : " . $e->getMessage());
+            return false;
+        }
+    }
+
+
+    public static function updateConfigCerfa(string $client, array $newConfig): bool
+    {
+        if (empty($client) || empty($newConfig)) {
+            return false;
+        }
+
+        $fileName = "{$client}/Config_Cerfa.json";
+        $existingConfig = self::getConfigCerfa($client);
+
+        // array_merge va écraser les valeurs de $existingConfig par celles de $newConfig
+        // uniquement pour les clés qui sont présentes dans $newConfig.
+        // C'est beaucoup plus propre et dynamique !
+        $updatedConfig = array_merge($existingConfig, $newConfig);
+
+        try {
+            return Storage::disk('public')->put(
+                $fileName,
+                json_encode($updatedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+        } catch (\Exception $e) {
+            \Log::error("Erreur lors de la mise à jour du Config_Cerfa pour le client {$client}: " . $e->getMessage());
+            return false;
         }
     }
 

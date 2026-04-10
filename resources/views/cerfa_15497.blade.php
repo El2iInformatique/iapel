@@ -40,7 +40,7 @@
     <div class="main-wrapper">
         <div class="signature-container">
             <div class="header-section" style="position: relative;">
-                <a href="#" target="_blank" title="Paramètres" style="position: absolute; top: 15px; right: 20px; color: white; font-size: 1.5rem; text-decoration: none; z-index: 10;">
+                <a href="#" onclick="ouvrirConfiguration(event)" title="Paramètres" style="position: absolute; top: 15px; right: 20px; color: white; font-size: 1.5rem; text-decoration: none; z-index: 10;">
                     <i class="bi bi-gear-fill"></i>
                 </a>
 
@@ -510,7 +510,7 @@
                                 <h6 class="mt-3 text-muted">Opérateur</h6>
                                 <div class="mb-3">
                                     <label for="nom_signataire_operateur" class="form-label">Nom du signataire :</label>
-                                    <input type="text" class="form-input" id="nom_signataire_operateur" name="nom_signataire_operateur" value="{{ old('nom_signataire_operateur') }}" maxlength="27">
+                                    <input type="text" class="form-input" id="nom_signataire_operateur" name="nom_signataire_operateur" value="{{ old('nom_signataire_operateur', $cerfaConfig['OperateurSignataireNom'] ?? '') }}" maxlength="27">
                                 </div>
                                 <div class="mb-3">
                                     <label for="qualite_signataire_operateur" class="form-label">Qualité du signataire :</label>
@@ -573,8 +573,45 @@
         </div>
     </div>
 
+    <div class="modal fade" id="apiModal" tabindex="-1" aria-labelledby="apiModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header" style="background: linear-gradient(135deg, #6f42c1 0%, #4b2885 100%); color: white;">
+                    <h5 class="modal-title" id="apiModalLabel">
+                        <i class="bi bi-shield-lock-fill me-2"></i> Accès sécurisé
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3">Veuillez saisir votre clé API pour accéder à la configuration.</p>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                        <input type="password" id="apiKeyInput" class="form-control" placeholder="Entrez votre clé API" autocomplete="off">
+                    </div>
+                    <div id="apiErrorMsg" class="alert alert-danger mt-3" style="display:none; font-size: 0.9rem; padding: 0.5rem;"></div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn" style="background-color: var(--primary-color, #6f42c1); color: white;" onclick="validerApiKey()">
+                        Valider l'accès
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
+
+    <script>
+        // Nouvelle fonction toute simple pour ouvrir l'onglet
+        function ouvrirConfiguration(event) {
+            event.preventDefault();
+            // On ouvre la page en passant les paramètres dans l'URL
+            const url = `/configuration?entreprise={{ $client }}&document={{ $document }}`;
+            window.open(url, '_blank');
+        }
+    </script>
 
     <script>
     document.addEventListener("DOMContentLoaded", function () {
