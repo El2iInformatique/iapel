@@ -75,7 +75,7 @@ class ClientController extends Controller
             "siret" => "",
 
             "OperateurSignataireQualiter" => "Technicien",
-            "controleMaterielDate" => now("d-m-y"),
+            "controleMaterielDate" => now()->format("Y-m-d"),
 
             "OperateurSignataireNom" => ""
         ];
