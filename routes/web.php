@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\DevisController;
 use App\Http\Controllers\TokenController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -53,6 +54,16 @@ Route::middleware(['throttle:anti-bruteforce-rapport'])->group(function () {
 
     // Téléchargement du document d'intervention réalisé
     Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifToken'); // Legacy
+    
+
+    // Affiche le form ou la config
+    Route::get('/configuration', [ConfigController::class, 'show']);
+    
+    // Traite le formulaire de login
+    Route::post('/configuration/auth', [ConfigController::class, 'authenticate']);
+    
+    // Traite la sauvegarde des paramètres (tu peux ajouter d'autres vérifications si besoin)
+    Route::post('/configuration', [ConfigController::class, 'submit']);
     
 });
 
