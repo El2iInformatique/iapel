@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('token_links_rapport', function (Blueprint $table) {
             $table->id();
             $table->string('token', 40)->unique();
+            //$table->string("documents", 40)->nullable();
             $table->string('paths',0);
             $table->timestamp('expires_at');
             $table->timestamp('created_at');
