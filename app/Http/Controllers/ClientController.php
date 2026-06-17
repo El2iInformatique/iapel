@@ -95,6 +95,44 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Crée le fichier documents.json avec une structure par défaut s'il n'existe pas.
+     * * @param string $client Le nom du client (dossier)
+     * @return bool True si créé avec succès, False s'il existe déjà ou en cas d'erreur
+     */
+    public static function createDocumentsFile(string $client): bool 
+    {
+        $documentsFile = "{$client}/documents.json";
+
+        // Si le fichier existe déjà, on ne l'écrase pas et on s'arrête là
+        if (Storage::disk('public')->exists($documentsFile)) {
+            return false; 
+        }
+
+        // On prépare la structure de base en PHP (tableaux)
+        $defaultData = [
+            "documents" => [
+                [
+                    "code" => "rapport_intervention",
+                    "libelle" => "Rapport d'intervention"
+                ]
+            ]
+        ];
+
+        try {
+            // On transforme le tableau PHP en JSON bien formaté et on sauvegarde
+            $stored = Storage::disk('public')->put(
+                $documentsFile,
+                json_encode($defaultData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            return $stored; // Retourne true si l'écriture s'est bien passée
+
+        } catch (\Exception $e) {
+            \Log::error("[DOCUMENTS_FILE] Erreur de création pour le client {$client}: " . $e->getMessage());
+            return false;
+        }
+    }
 
     public static function copyPdfFileToClientBI(string $client, string $document): bool 
     {
@@ -206,6 +244,13 @@ class ClientController extends Controller
                     if (!ClientController::copyPdfFileToClientBI($client, $document)) {
                         Log::warning("Erreur lors de la copie du fichier pdf : " . $document);
                     }
+                }
+            }
+
+            $documentsFile = "{$client}/documents.json";
+            if (!Storage::disk('public')->exists($documentsFile)) {
+                if (!ClientController::createDocumentsFile($client)) {
+                    Log::warning("Erreur lors de la création du fichier de configuration des documents : " . $documentsFile);
                 }
             }
 
