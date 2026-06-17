@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-
+use Illuminate\Http\UploadedFile;
 
 class ClientController extends Controller
 {
@@ -247,13 +247,6 @@ class ClientController extends Controller
                 }
             }
 
-            $documentsFile = "{$client}/documents.json";
-            if (!Storage::disk('public')->exists($documentsFile)) {
-                if (!ClientController::createDocumentsFile($client)) {
-                    Log::warning("Erreur lors de la création du fichier de configuration des documents : " . $documentsFile);
-                }
-            }
-
         } catch (\Exception $e) {
             // Log de l'erreur pour le debug
             \Log::error("Erreur lors de la création du fichier JSON: " . $e->getMessage());
@@ -263,6 +256,113 @@ class ClientController extends Controller
         return true;
     }
 
+    /**
+     * Create client folder on server.
+     */
+
+    public static function createClientFolder($client): bool
+    {
+        if (!$client) {
+            return false;
+        }
+
+        try {
+            if (!Storage::disk('public')->exists($client)) {
+                Storage::disk('public')->makeDirectory($client);
+            }
+
+            $documentsFile = "{$client}/documents.json";
+            if (!Storage::disk('public')->exists($documentsFile)) {
+                if (!ClientController::createDocumentsFile($client)) {
+                    Log::warning("Erreur lors de la création du fichier de configuration des documents : " . $documentsFile);
+                }
+            }
+            /* VOIR SI D'AUTRES DOCUMENTS SONT NECESSAIRES A RAJOUTER A LA CREATION DU DOSSIER CLIENT */
+
+        } catch (\Throwable $e) {
+            Log::error("Erreur création dossier client: " . $e->getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Create specific folder on server for a client.
+     */
+    public static function createSpecificFolder(Request $request, $client, $document): bool
+    {
+        if (!$client && !$document) {
+            return false;
+        }
+
+        $path = "{$client}/{$document}";
+        
+        try {
+            /** Création du document */
+            if (!Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->makeDirectory($path);
+            }
+            /** Upload du fichier, s'il y en a un */
+            if ($request->hasFile('file')) {
+                if (!ClientController::uploadFile($request, $client, $document)) {
+                    Log::warning("Erreur lors de l\'upload du fichier: ");
+                }
+            }
+
+        } catch (\Throwable $e) {
+            Log::error("Erreur création du dossier " . "$document" . " : " . $e->getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function uploadFile(Request $request, $client, $document)
+    {
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+
+            if (!$file->isValid()) {
+                return response()->json(['error' => 'Invalid file'], 400);
+            }
+
+            $path = "{$client}/{$document}";
+
+            $file->storeAs($path, $file->getClientOriginalName(), 'public');
+
+            return response()->json([
+                'success' => true,
+                'path' => $path
+            ]);
+        }
+    }
+
+    /**
+     * Create full folder on server for a client with specific doc needed.
+     */
+    public static function CreateFullFolder($client, $document, Request $request): bool
+    {
+        if (!$client && !$document) {
+            return false;
+        }
+
+        try {
+            if ($client) {
+                if (!ClientController::createClientFolder($client)) {
+                    Log::warning("Erreur création dossier client: ");
+                }
+                if (!ClientController::createSpecificFolder($request, $client, $document)) {
+                    Log::warning("Erreur création du dossier " . "$document" . " : ");
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error("Erreur création du dossier " . "$document" . " : " . $e->getMessage());
+            return false;
+        }
+
+        return true;
+    }
 
     public static function createDevis($organisation_id, $document, $devis_id, array $validated = null) {
         if (empty($organisation_id) || empty($document) || empty($devis_id) || !$validated) {
