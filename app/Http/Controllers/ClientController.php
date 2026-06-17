@@ -897,6 +897,13 @@ class ClientController extends Controller
         }
     }
 
+    public static function modeleExists(string $client, string $document): bool
+    {
+        return Storage::disk('public')
+            ->exists("{$client}/{$document}/{$document}.pdf");
+
+    }
+
     public static function updateOptionsBI(string $client, array $newConfig): bool
     {
         if (empty($client) || empty($newConfig)) {
