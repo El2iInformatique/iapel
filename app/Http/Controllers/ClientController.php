@@ -134,6 +134,42 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Crée le fichier documents.json avec une structure dynamique.
+     * * @param string $client Le nom du client (dossier)
+     * @return bool True si créé avec succès, False s'il existe déjà ou en cas d'erreur
+     */
+    public static function createDocumentsFileSpecific(string $client, Request $request): bool
+    {
+        $documentsFile = "{$client}/documents.json";
+        $listeDoc = $request->input('documents');
+
+        $data = [
+            "documents" => []
+        ];
+
+        foreach ($listeDoc as $doc) {
+
+            $data["documents"][] = [
+                "code" => $doc,
+                "libelle" => ucfirst(str_replace('_', ' ', $doc))
+            ];
+        }
+
+        try {
+            $stored = Storage::disk('public')->put(
+                $documentsFile,
+                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            return $stored;
+
+        } catch (\Exception $e) {
+            \Log::error("[DOCUMENTS_FILE] Erreur de création pour le client {$client}: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public static function copyPdfFileToClientBI(string $client, string $document): bool 
     {
         // Vérification stricte des paramètres (évite les espaces vides)
@@ -299,7 +335,7 @@ class ClientController extends Controller
         $path = "{$client}/{$document}";
         
         try {
-            /** Création du document */
+            /** Création du repertoire document */
             if (!Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->makeDirectory($path);
             }

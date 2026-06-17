@@ -50,4 +50,8 @@ Route::prefix('api')->group(function () {
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('VerifSecretToken');
 
+    Route::post('/createDocumentsJson/{client}', [ClientController::class, 'createDocumentsFileSpecific'])
+            ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+            ->middleware('VerifSecretToken');
+
 });
