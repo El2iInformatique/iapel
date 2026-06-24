@@ -61,5 +61,5 @@ Route::prefix('api')->group(function () {
             ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
             ->middleware('VerifSecretToken');
 
-    Route::get('/docExist/{client}/{document}', [ClientController::class, 'getDocumentCodes']);
+    Route::get('/docExist/{client}', [ClientController::class, 'getDocumentCodes']);
 });
