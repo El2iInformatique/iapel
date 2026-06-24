@@ -986,7 +986,7 @@ class ClientController extends Controller
         $fileName = "{$client}/documents.json";
 
         $data = [
-            "documents" => array_values($documents) // reset index propre
+            "documents" => array_values($documents)
         ];
 
         try {
@@ -1066,18 +1066,13 @@ class ClientController extends Controller
         ]);
     }
 
-    public static function documentCodeExists(string $client, string $code): bool
+    public static function getDocumentCodes(string $client): array
     {
         $config = self::getDocumentsFile($client);
 
-        $documents = $config['documents'] ?? [];
-
-        foreach ($documents as $doc) {
-            if (($doc['code'] ?? null) === $code) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_map(
+            fn($doc) => $doc['code'] ?? null,
+            $config['documents'] ?? []
+        );
     }
 }
