@@ -306,7 +306,7 @@ class ClientController extends Controller
             if (!Storage::disk('public')->exists($client)) {
                 Storage::disk('public')->makeDirectory($client);
             }
-
+            /** Creation fichier documents.json */
             $documentsFile = "{$client}/documents.json";
             if (!Storage::disk('public')->exists($documentsFile)) {
                 if (!ClientController::createDocumentsFile($client)) {
@@ -897,6 +897,30 @@ class ClientController extends Controller
         }
     }
 
+    public static function getDocumentsFile(string $client): array
+    {
+        if (empty($client)) return [];
+
+        $fileName = "{$client}/documents.json";
+
+        if (!Storage::disk('public')->exists($fileName)) {
+            return [];
+        }
+
+        try {
+            $content = Storage::disk('public')->get($fileName);
+            $data = json_decode($content, true);
+
+            if (!is_array($data)) return [];
+
+            return $data;
+
+        } catch (\Exception $e) {
+            \Log::error("Erreur Documents.json : " . $e->getMessage());
+            return [];
+        }
+    }
+
     public static function modeleExists(string $client, string $document): bool
     {
         return Storage::disk('public')
@@ -936,6 +960,31 @@ class ClientController extends Controller
 
         $fileName = "{$client}/Config_Cerfa.json";
         $existingConfig = self::getConfigCerfa($client);
+
+        // array_merge va écraser les valeurs de $existingConfig par celles de $newConfig
+        // uniquement pour les clés qui sont présentes dans $newConfig.
+        // C'est beaucoup plus propre et dynamique !
+        $updatedConfig = array_merge($existingConfig, $newConfig);
+
+        try {
+            return Storage::disk('public')->put(
+                $fileName,
+                json_encode($updatedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+        } catch (\Exception $e) {
+            \Log::error("Erreur lors de la mise à jour du Config_Cerfa pour le client {$client}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function updateDocumentsFile(string $client, array $newConfig): bool
+    {
+        if (empty($client) || empty($newConfig)) {
+            return false;
+        }
+
+        $fileName = "{$client}/documents.json";
+        $existingConfig = self::getDocumentsFile($client);
 
         // array_merge va écraser les valeurs de $existingConfig par celles de $newConfig
         // uniquement pour les clés qui sont présentes dans $newConfig.
