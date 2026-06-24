@@ -977,38 +977,27 @@ class ClientController extends Controller
         }
     }
 
-    public static function updateDocumentsFile(string $client, array $newConfig): bool
+    public static function updateDocumentsFile(string $client, array $documents): bool
     {
-        if (empty($client) || empty($newConfig)) {
+        if (empty($client)) {
             return false;
         }
 
         $fileName = "{$client}/documents.json";
-        $existingConfig = self::getDocumentsFile($client);
 
-        $existingDocs = collect($existingConfig['documents'] ?? []);
-        $newDocs = collect($newConfig['documents'] ?? []);
-
-        // On indexe par "code"
-        $merged = $existingDocs
-            ->keyBy('code')
-            ->merge(
-                $newDocs->keyBy('code')
-            )
-            ->values()
-            ->all();
-
-        $updatedConfig = [
-            'documents' => $merged
+        $data = [
+            "documents" => array_values($documents) // reset index propre
         ];
 
         try {
             return Storage::disk('public')->put(
                 $fileName,
-                json_encode($updatedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             );
         } catch (\Exception $e) {
-            \Log::error("Erreur update documents {$client}: " . $e->getMessage());
+
+            \Log::error("Erreur replace documents {$client}: " . $e->getMessage());
+
             return false;
         }
     }
@@ -1054,7 +1043,7 @@ class ClientController extends Controller
         ClientController::createClientFolder($client);
 
         $documents = $request->input('documents', []);
-        ClientController::updateDocumentsFile($client, ['documents' => $documents]);
+        ClientController::updateDocumentsFile($client, $documents);
 
         foreach ($request->input('documents', []) as $index => $doc) {
 
@@ -1070,7 +1059,7 @@ class ClientController extends Controller
                 "{$doc['code']}.pdf",
                 'public'
             );
-    }
+        }
 
         return response()->json([
             'success' => true,
