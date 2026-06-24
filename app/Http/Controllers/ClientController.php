@@ -1076,4 +1076,19 @@ class ClientController extends Controller
             'success' => true,
         ]);
     }
+
+    public static function documentCodeExists(string $client, string $code): bool
+    {
+        $config = self::getDocumentsFile($client);
+
+        $documents = $config['documents'] ?? [];
+
+        foreach ($documents as $doc) {
+            if (($doc['code'] ?? null) === $code) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
