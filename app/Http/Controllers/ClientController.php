@@ -986,10 +986,21 @@ class ClientController extends Controller
         $fileName = "{$client}/documents.json";
         $existingConfig = self::getDocumentsFile($client);
 
-        // array_merge va écraser les valeurs de $existingConfig par celles de $newConfig
-        // uniquement pour les clés qui sont présentes dans $newConfig.
-        // C'est beaucoup plus propre et dynamique !
-        $updatedConfig = array_merge($existingConfig, $newConfig);
+        $existingDocs = collect($existingConfig['documents'] ?? []);
+        $newDocs = collect($newConfig['documents'] ?? []);
+
+        // On indexe par "code"
+        $merged = $existingDocs
+            ->keyBy('code')
+            ->merge(
+                $newDocs->keyBy('code')
+            )
+            ->values()
+            ->all();
+
+        $updatedConfig = [
+            'documents' => $merged
+        ];
 
         try {
             return Storage::disk('public')->put(
@@ -997,7 +1008,7 @@ class ClientController extends Controller
                 json_encode($updatedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             );
         } catch (\Exception $e) {
-            \Log::error("Erreur lors de la mise à jour du Config_Cerfa pour le client {$client}: " . $e->getMessage());
+            \Log::error("Erreur update documents {$client}: " . $e->getMessage());
             return false;
         }
     }
@@ -1035,5 +1046,34 @@ class ClientController extends Controller
             \Log::error("[CLIENT_CONTROLLER] Erreur lors de la suppression : " . $e->getMessage());
             return false;
         }
+    }
+
+    public function storeDoc(Request $request)
+    {
+        $client = $request->input('client');
+        ClientController::createClientFolder($client);
+
+        $documents = $request->input('documents', []);
+        ClientController::updateDocumentsFile($client, ['documents' => $documents]);
+
+        foreach ($request->input('documents', []) as $index => $doc) {
+
+            $file = $request->file("documents.$index.file");
+
+            if (!$file) {
+                Log::error("Fichier manquant", ['index' => $index]);
+                continue;
+            }
+
+            $file->storeAs(
+                "{$client}/{$doc['code']}",
+                "{$doc['code']}.pdf",
+                'public'
+            );
+    }
+
+        return response()->json([
+            'success' => true,
+        ]);
     }
 }

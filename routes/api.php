@@ -56,4 +56,8 @@ Route::prefix('api')->group(function () {
 
     Route::get('/modeleExist/{client}/{document}', [ClientController::class, 'modeleExists']);
 
+
+    Route::post('/storeDocs', [ClientController::class, 'storeDoc'])
+            ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+            ->middleware('VerifSecretToken');
 });
