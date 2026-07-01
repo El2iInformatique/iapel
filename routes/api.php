@@ -42,20 +42,11 @@ Route::prefix('api')->group(function () {
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('VerifSecretToken');
 
-    Route::post('/create-client-folder/{client}/{document}', [ClientController::class, 'createSpecificFolder'])
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
-        ->middleware('VerifSecretToken');
-
-    Route::post('/create-client-full/{client}/{document}', [ClientController::class, 'CreateFullFolder'])
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
-        ->middleware('VerifSecretToken');
-
     Route::post('/createDocumentsJson/{client}', [ClientController::class, 'createDocumentsFileSpecific'])
             ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
             ->middleware('VerifSecretToken');
 
     Route::get('/modeleExist/{client}/{document}', [ClientController::class, 'modeleExists']);
-
 
     Route::post('/storeDocs', [ClientController::class, 'storeDoc'])
             ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])

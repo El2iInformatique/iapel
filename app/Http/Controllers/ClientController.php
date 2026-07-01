@@ -136,7 +136,12 @@ class ClientController extends Controller
 
     /**
      * Crée le fichier documents.json avec une structure dynamique.
-     * * @param string $client Le nom du client (dossier)
+     * @param string $client Le nom du client (dossier)
+     * @param Request On peut passer une liste de documents dans le body :
+     * {
+     *  "documents": ["rapport_intervention", "Cerfa_15497"]
+     * }
+     * 
      * @return bool True si créé avec succès, False s'il existe déjà ou en cas d'erreur
      */
     public static function createDocumentsFileSpecific(string $client, Request $request): bool
@@ -293,10 +298,10 @@ class ClientController extends Controller
     }
 
     /**
-     * Create client folder on server.
+     * Create client folder on server + "Documents.json" file.
+     * @param string $client Le nom du client
      */
-
-    public static function createClientFolder($client): bool
+    public static function createClientFolder(string $client): bool
     {
         if (!$client) {
             return false;
@@ -306,7 +311,7 @@ class ClientController extends Controller
             if (!Storage::disk('public')->exists($client)) {
                 Storage::disk('public')->makeDirectory($client);
             }
-            /** Creation fichier documents.json */
+            # Creation fichier documents.json
             $documentsFile = "{$client}/documents.json";
             if (!Storage::disk('public')->exists($documentsFile)) {
                 if (!ClientController::createDocumentsFile($client)) {
@@ -317,83 +322,6 @@ class ClientController extends Controller
 
         } catch (\Throwable $e) {
             Log::error("Erreur création dossier client: " . $e->getMessage());
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Create specific folder on server for a client.
-     */
-    public static function createSpecificFolder(Request $request, $client, $document): bool
-    {
-        if (!$client && !$document) {
-            return false;
-        }
-
-        $path = "{$client}/{$document}";
-        
-        try {
-            /** Création du repertoire document */
-            if (!Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->makeDirectory($path);
-            }
-            /** Upload du fichier, s'il y en a un */
-            if ($request->hasFile('file')) {
-                if (!ClientController::uploadFile($request, $client, $document)) {
-                    Log::warning("Erreur lors de l\'upload du fichier: ");
-                }
-            }
-
-        } catch (\Throwable $e) {
-            Log::error("Erreur création du dossier " . "$document" . " : " . $e->getMessage());
-            return false;
-        }
-
-        return true;
-    }
-
-    public static function uploadFile(Request $request, $client, $document)
-    {
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-
-            if (!$file->isValid()) {
-                return response()->json(['error' => 'Invalid file'], 400);
-            }
-
-            $path = "{$client}/{$document}";
-
-            $file->storeAs($path, $file->getClientOriginalName(), 'public');
-
-            return response()->json([
-                'success' => true,
-                'path' => $path
-            ]);
-        }
-    }
-
-    /**
-     * Create full folder on server for a client with specific doc needed.
-     */
-    public static function CreateFullFolder($client, $document, Request $request): bool
-    {
-        if (!$client && !$document) {
-            return false;
-        }
-
-        try {
-            if ($client) {
-                if (!ClientController::createClientFolder($client)) {
-                    Log::warning("Erreur création dossier client: ");
-                }
-                if (!ClientController::createSpecificFolder($request, $client, $document)) {
-                    Log::warning("Erreur création du dossier " . "$document" . " : ");
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::error("Erreur création du dossier " . "$document" . " : " . $e->getMessage());
             return false;
         }
 
@@ -447,57 +375,6 @@ class ClientController extends Controller
             return false;
         }
 
-    }
-
-
-    public static function checkExistClient($client): bool {
-
-    if (empty($client)) {
-            return false;
-        }
-
-        // Préparation du chemin et des données
-        $relativeFolder = "public/{$client}";
-
-        try {
-            $stored = Storage::exists($relativeFolder);
-
-            // On s'assure que le fichier a bien été écrit sur le disque
-            if (!$stored) {
-                return false;
-            }
-
-            return true;
-        } catch (\Throwable $e) {
-            \Log::error("Erreur lors de la vérification d'existance du dossier client': " . $e->getMessage());
-            return false;
-        }
-    }
-
-
-    public static function checkExistDocument($client, $document, $uid): bool {
-
-    if (empty($client) || empty($document) || empty($uid)) {
-            return false;
-        }
-
-        // Préparation du chemin et des données
-        $relativeFolder = "{$client}/{$document}/{$uid}";
-        $relativeFilePath = "{$relativeFolder}/{$uid}.json";
-
-        try {
-            $stored = Storage::exists($relativeFilePath);
-
-            // On s'assure que le fichier a bien été écrit sur le disque
-            if (!$stored) {
-                return false;
-            }
-
-            return true;
-        } catch (\Throwable $e) {
-            \Log::error("Erreur lors de la vérification d'existance du document d'un client': " . $e->getMessage());
-            return false;
-        }
     }
 
     /**
@@ -637,15 +514,12 @@ class ClientController extends Controller
         }
     }
 
-
     /**
      * Récupère, analyse et formate tous les documents d'un client spécifique.
      *
      * @param string $entreprise Le nom du dossier/client
      * @return array La liste formatée des documents
      */
-
-
     public static function getAllDocuments(string $entreprise): array
     {
         // === 1. RÉCUPÉRATION ET GROUPEMENT DES FICHIERS ===
@@ -872,7 +746,6 @@ class ClientController extends Controller
         }
     }
 
-
     public static function getConfigCerfa(string $client): array
     {
         if (empty($client)) return [];
@@ -897,6 +770,10 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Get list of document in the "Documents.json" file + path of modele file
+     * @param string $client - Le nom du client
+     */
     public static function getDocumentCodes(string $client): array
     {
         if (empty($client)) return [];
@@ -940,11 +817,15 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Check if the pdf file of a specific document exist 
+     * @param string $client - Le nom du client
+     * @param string $document - Nom du document
+     */
     public static function modeleExists(string $client, string $document): bool
     {
         return Storage::disk('public')
             ->exists("{$client}/{$document}/{$document}.pdf");
-
     }
 
     public static function updateOptionsBI(string $client, array $newConfig): bool
@@ -969,7 +850,6 @@ class ClientController extends Controller
             return false;
         }
     }
-
 
     public static function updateConfigCerfa(string $client, array $newConfig): bool
     {
@@ -996,6 +876,11 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Update "Documents.json" 
+     * @param string $client - Le nom du client
+     * @param array $documents - Liste de document
+     */
     public static function updateDocumentsFile(string $client, array $documents): bool
     {
         if (empty($client)) {
@@ -1056,14 +941,22 @@ class ClientController extends Controller
         }
     }
 
-    public function storeDoc(Request $request)
+    /**
+     * Create client folder + Update "Documents.json" with Body + Upload modele file of the doc
+     * @param Request Body -> Form-Data. Sous forme :
+     * client - Text - {NOM_CLIENT}
+     * documents[{INDEX}][code] - Text - {CODE_DOC}
+     * documents[{INDEX}][libelle] - Text - {LIBELLE_DOC}
+     * documents[{INDEX}][file] - File - Joindre le fichier
+     */
+    public static function storeDoc(Request $request)
     {
         $client = $request->input('client');
         ClientController::createClientFolder($client);
 
         $documents = $request->input('documents', []);
         ClientController::updateDocumentsFile($client, $documents);
-
+        # Upload du fichier pour chaque document
         foreach ($request->input('documents', []) as $index => $doc) {
 
             $file = $request->file("documents.$index.file");
