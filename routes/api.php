@@ -38,19 +38,11 @@ Route::prefix('api')->group(function () {
     Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifTokenAndSecretToken');
 
     // Routes de création Client/Documents
-    Route::post('/create-client/{client}', [ClientController::class, 'createClientFolder'])
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
-        ->middleware('VerifSecretToken');
-
-    Route::post('/createDocumentsJson/{client}', [ClientController::class, 'createDocumentsFileSpecific'])
-            ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
-            ->middleware('VerifSecretToken');
-
     Route::get('/modeleExist/{client}/{document}', [ClientController::class, 'modeleExists']);
 
-    Route::post('/storeDocs', [ClientController::class, 'storeDoc'])
+    Route::post('/createDocument', [ClientController::class, 'createDocument'])
             ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
             ->middleware('VerifSecretToken');
 
-    Route::get('/docExist/{client}', [ClientController::class, 'getDocumentCodes']);
+    Route::get('/getDocument/{client}', [ClientController::class, 'getDocument']);
 });

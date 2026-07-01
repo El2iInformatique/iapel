@@ -134,47 +134,6 @@ class ClientController extends Controller
         }
     }
 
-    /**
-     * Crée le fichier documents.json avec une structure dynamique.
-     * @param string $client Le nom du client (dossier)
-     * @param Request On peut passer une liste de documents dans le body :
-     * {
-     *  "documents": ["rapport_intervention", "Cerfa_15497"]
-     * }
-     * 
-     * @return bool True si créé avec succès, False s'il existe déjà ou en cas d'erreur
-     */
-    public static function createDocumentsFileSpecific(string $client, Request $request): bool
-    {
-        $documentsFile = "{$client}/documents.json";
-        $listeDoc = $request->input('documents');
-
-        $data = [
-            "documents" => []
-        ];
-
-        foreach ($listeDoc as $doc) {
-
-            $data["documents"][] = [
-                "code" => $doc,
-                "libelle" => ucfirst(str_replace('_', ' ', $doc))
-            ];
-        }
-
-        try {
-            $stored = Storage::disk('public')->put(
-                $documentsFile,
-                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-            );
-
-            return $stored;
-
-        } catch (\Exception $e) {
-            \Log::error("[DOCUMENTS_FILE] Erreur de création pour le client {$client}: " . $e->getMessage());
-            return false;
-        }
-    }
-
     public static function copyPdfFileToClientBI(string $client, string $document): bool 
     {
         // Vérification stricte des paramètres (évite les espaces vides)
@@ -311,7 +270,7 @@ class ClientController extends Controller
             if (!Storage::disk('public')->exists($client)) {
                 Storage::disk('public')->makeDirectory($client);
             }
-            # Creation fichier documents.json
+            # Creation fichier documents.json avec une structure par défaut
             $documentsFile = "{$client}/documents.json";
             if (!Storage::disk('public')->exists($documentsFile)) {
                 if (!ClientController::createDocumentsFile($client)) {
@@ -774,7 +733,7 @@ class ClientController extends Controller
      * Get list of document in the "Documents.json" file + path of modele file
      * @param string $client - Le nom du client
      */
-    public static function getDocumentCodes(string $client): array
+    public static function getDocument(string $client): array
     {
         if (empty($client)) return [];
 
@@ -949,7 +908,7 @@ class ClientController extends Controller
      * documents[{INDEX}][libelle] - Text - {LIBELLE_DOC}
      * documents[{INDEX}][file] - File - Joindre le fichier
      */
-    public static function storeDoc(Request $request)
+    public static function createDocument(Request $request)
     {
         $client = $request->input('client');
         ClientController::createClientFolder($client);
