@@ -897,7 +897,7 @@ class ClientController extends Controller
         }
     }
 
-    public static function getDocumentsFile(string $client): array
+    public static function getDocumentCodes(string $client): array
     {
         if (empty($client)) return [];
 
@@ -913,7 +913,26 @@ class ClientController extends Controller
 
             if (!is_array($data)) return [];
 
-            return $data;
+            $result = [];
+
+            foreach ($data['documents'] ?? [] as $doc) {
+                if (!isset($doc['code'])) {
+                    continue;
+                }
+
+                $code = $doc['code'];
+
+                $path = "{$client}/{$code}/{$code}.pdf";
+
+                $result[$code] = [
+                    'code' => $code,
+                    'file' => Storage::disk('public')->exists($path)
+                        ? $path
+                        : null,
+                ];
+            }
+
+            return $result;
 
         } catch (\Exception $e) {
             \Log::error("Erreur Documents.json : " . $e->getMessage());
@@ -1064,15 +1083,5 @@ class ClientController extends Controller
         return response()->json([
             'success' => true,
         ]);
-    }
-
-    public static function getDocumentCodes(string $client): array
-    {
-        $config = self::getDocumentsFile($client);
-
-        return array_map(
-            fn($doc) => $doc['code'] ?? null,
-            $config['documents'] ?? []
-        );
     }
 }
