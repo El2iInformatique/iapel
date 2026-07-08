@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-
+use Illuminate\Http\UploadedFile;
 
 class ClientController extends Controller
 {
@@ -95,6 +95,44 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Crée le fichier documents.json avec une structure par défaut s'il n'existe pas.
+     * * @param string $client Le nom du client (dossier)
+     * @return bool True si créé avec succès, False s'il existe déjà ou en cas d'erreur
+     */
+    public static function createDocumentsFile(string $client): bool 
+    {
+        $documentsFile = "{$client}/documents.json";
+
+        // Si le fichier existe déjà, on ne l'écrase pas et on s'arrête là
+        if (Storage::disk('public')->exists($documentsFile)) {
+            return false; 
+        }
+
+        // On prépare la structure de base en PHP (tableaux)
+        $defaultData = [
+            "documents" => [
+                [
+                    "code" => "rapport_intervention",
+                    "libelle" => "Rapport d'intervention"
+                ]
+            ]
+        ];
+
+        try {
+            // On transforme le tableau PHP en JSON bien formaté et on sauvegarde
+            $stored = Storage::disk('public')->put(
+                $documentsFile,
+                json_encode($defaultData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            return $stored; // Retourne true si l'écriture s'est bien passée
+
+        } catch (\Exception $e) {
+            \Log::error("[DOCUMENTS_FILE] Erreur de création pour le client {$client}: " . $e->getMessage());
+            return false;
+        }
+    }
 
     public static function copyPdfFileToClientBI(string $client, string $document): bool 
     {
@@ -218,6 +256,36 @@ class ClientController extends Controller
         return true;
     }
 
+    /**
+     * Create client folder on server + "Documents.json" file.
+     * @param string $client Le nom du client
+     */
+    public static function createClientFolder(string $client): bool
+    {
+        if (!$client) {
+            return false;
+        }
+
+        try {
+            if (!Storage::disk('public')->exists($client)) {
+                Storage::disk('public')->makeDirectory($client);
+            }
+            # Creation fichier documents.json avec une structure par défaut
+            $documentsFile = "{$client}/documents.json";
+            if (!Storage::disk('public')->exists($documentsFile)) {
+                if (!ClientController::createDocumentsFile($client)) {
+                    Log::warning("Erreur lors de la création du fichier de configuration des documents : " . $documentsFile);
+                }
+            }
+            /* VOIR SI D'AUTRES DOCUMENTS SONT NECESSAIRES A RAJOUTER A LA CREATION DU DOSSIER CLIENT */
+
+        } catch (\Throwable $e) {
+            Log::error("Erreur création dossier client: " . $e->getMessage());
+            return false;
+        }
+
+        return true;
+    }
 
     public static function createDevis($organisation_id, $document, $devis_id, array $validated = null) {
         if (empty($organisation_id) || empty($document) || empty($devis_id) || !$validated) {
@@ -266,57 +334,6 @@ class ClientController extends Controller
             return false;
         }
 
-    }
-
-
-    public static function checkExistClient($client): bool {
-
-    if (empty($client)) {
-            return false;
-        }
-
-        // Préparation du chemin et des données
-        $relativeFolder = "public/{$client}";
-
-        try {
-            $stored = Storage::exists($relativeFolder);
-
-            // On s'assure que le fichier a bien été écrit sur le disque
-            if (!$stored) {
-                return false;
-            }
-
-            return true;
-        } catch (\Throwable $e) {
-            \Log::error("Erreur lors de la vérification d'existance du dossier client': " . $e->getMessage());
-            return false;
-        }
-    }
-
-
-    public static function checkExistDocument($client, $document, $uid): bool {
-
-    if (empty($client) || empty($document) || empty($uid)) {
-            return false;
-        }
-
-        // Préparation du chemin et des données
-        $relativeFolder = "{$client}/{$document}/{$uid}";
-        $relativeFilePath = "{$relativeFolder}/{$uid}.json";
-
-        try {
-            $stored = Storage::exists($relativeFilePath);
-
-            // On s'assure que le fichier a bien été écrit sur le disque
-            if (!$stored) {
-                return false;
-            }
-
-            return true;
-        } catch (\Throwable $e) {
-            \Log::error("Erreur lors de la vérification d'existance du document d'un client': " . $e->getMessage());
-            return false;
-        }
     }
 
     /**
@@ -456,15 +473,12 @@ class ClientController extends Controller
         }
     }
 
-
     /**
      * Récupère, analyse et formate tous les documents d'un client spécifique.
      *
      * @param string $entreprise Le nom du dossier/client
      * @return array La liste formatée des documents
      */
-
-
     public static function getAllDocuments(string $entreprise): array
     {
         // === 1. RÉCUPÉRATION ET GROUPEMENT DES FICHIERS ===
@@ -691,7 +705,6 @@ class ClientController extends Controller
         }
     }
 
-
     public static function getConfigCerfa(string $client): array
     {
         if (empty($client)) return [];
@@ -714,6 +727,64 @@ class ClientController extends Controller
             \Log::error("Erreur Config_Cerfa : " . $e->getMessage());
             return [];
         }
+    }
+
+    /**
+     * Get list of document in the "Documents.json" file + path of modele file
+     * @param string $client - Le nom du client
+     */
+    public static function getDocument(string $client): array
+    {
+        if (empty($client)) return [];
+
+        $fileName = "{$client}/documents.json";
+
+        if (!Storage::disk('public')->exists($fileName)) {
+            return [];
+        }
+
+        try {
+            $content = Storage::disk('public')->get($fileName);
+            $data = json_decode($content, true);
+
+            if (!is_array($data)) return [];
+
+            $result = [];
+
+            foreach ($data['documents'] ?? [] as $doc) {
+                if (!isset($doc['code'])) {
+                    continue;
+                }
+
+                $code = $doc['code'];
+
+                $path = "{$client}/{$code}/{$code}.pdf";
+
+                $result[$code] = [
+                    'code' => $code,
+                    'file' => Storage::disk('public')->exists($path)
+                        ? $path
+                        : null,
+                ];
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            \Log::error("Erreur Documents.json : " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Check if the pdf file of a specific document exist 
+     * @param string $client - Le nom du client
+     * @param string $document - Nom du document
+     */
+    public static function modeleExists(string $client, string $document): bool
+    {
+        return Storage::disk('public')
+            ->exists("{$client}/{$document}/{$document}.pdf");
     }
 
     public static function updateOptionsBI(string $client, array $newConfig): bool
@@ -739,7 +810,6 @@ class ClientController extends Controller
         }
     }
 
-
     public static function updateConfigCerfa(string $client, array $newConfig): bool
     {
         if (empty($client) || empty($newConfig)) {
@@ -761,6 +831,36 @@ class ClientController extends Controller
             );
         } catch (\Exception $e) {
             \Log::error("Erreur lors de la mise à jour du Config_Cerfa pour le client {$client}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update "Documents.json" 
+     * @param string $client - Le nom du client
+     * @param array $documents - Liste de document
+     */
+    public static function updateDocumentsFile(string $client, array $documents): bool
+    {
+        if (empty($client)) {
+            return false;
+        }
+
+        $fileName = "{$client}/documents.json";
+
+        $data = [
+            "documents" => array_values($documents)
+        ];
+
+        try {
+            return Storage::disk('public')->put(
+                $fileName,
+                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+        } catch (\Exception $e) {
+
+            \Log::error("Erreur replace documents {$client}: " . $e->getMessage());
+
             return false;
         }
     }
@@ -798,5 +898,42 @@ class ClientController extends Controller
             \Log::error("[CLIENT_CONTROLLER] Erreur lors de la suppression : " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Create client folder + Update "Documents.json" with Body + Upload modele file of the doc
+     * @param Request Body -> Form-Data. Sous forme :
+     * client - Text - {NOM_CLIENT}
+     * documents[{INDEX}][code] - Text - {CODE_DOC}
+     * documents[{INDEX}][libelle] - Text - {LIBELLE_DOC}
+     * documents[{INDEX}][file] - File - Joindre le fichier
+     */
+    public static function createDocument(Request $request)
+    {
+        $client = $request->input('client');
+        ClientController::createClientFolder($client);
+
+        $documents = $request->input('documents', []);
+        ClientController::updateDocumentsFile($client, $documents);
+        # Upload du fichier pour chaque document
+        foreach ($request->input('documents', []) as $index => $doc) {
+
+            $file = $request->file("documents.$index.file");
+
+            if (!$file) {
+                Log::error("Fichier manquant", ['index' => $index]);
+                continue;
+            }
+
+            $file->storeAs(
+                "{$client}/{$doc['code']}",
+                "{$doc['code']}.pdf",
+                'public'
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+        ]);
     }
 }

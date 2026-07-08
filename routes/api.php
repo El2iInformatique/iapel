@@ -3,6 +3,7 @@ use App\Http\Controllers\DevisController;
 use App\Http\Controllers\TokenController;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\BiController;
+use App\Http\Controllers\ClientController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
@@ -36,4 +37,12 @@ Route::prefix('api')->group(function () {
     // Téléchargement du document d'intervention réalisé
     Route::get('/download/{token}', [BiController::class, 'download'])->middleware('VerifTokenAndSecretToken');
 
+    // Routes de création Client/Documents
+    Route::get('/modeleExist/{client}/{document}', [ClientController::class, 'modeleExists']);
+
+    Route::post('/createDocument', [ClientController::class, 'createDocument'])
+            ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+            ->middleware('VerifSecretToken');
+
+    Route::get('/getDocument/{client}', [ClientController::class, 'getDocument']);
 });
