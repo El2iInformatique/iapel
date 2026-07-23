@@ -577,8 +577,7 @@ class ClientController extends Controller
             // --- MAPPING DEVIS ---
             if ($type === 'devis') {
 
-                $docEntry['status'] = $doc['certifie_file'] ? 'certifie' : ($jsonData['refused'] ? 'refused' : '');
-                // $docEntry['status'] = $doc['certifie_file'] ? 'certifie' : (($doc['refused'] ?? false) ? 'refused' : '');
+                $docEntry['status'] = $doc['certifie_file'] ? 'certifie' : (($jsonData['refused'] ?? false) ? 'refused' : '');
                 $traitTs = $doc['pdf_last'] ?? $doc['certifie_last'];
                 $confTs = $doc['certifie_last'];
 
