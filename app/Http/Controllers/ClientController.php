@@ -643,7 +643,7 @@ class ClientController extends Controller
         ClientController::createClientFolder($client);
 
         $documents = $request->input('documents', []);
-        ClientController::updateDocumentsFile($client, $documents);
+        ClientConfigurationService::updateDocumentsFile($client, $documents);
         # Upload du fichier pour chaque document
         foreach ($request->input('documents', []) as $index => $doc) {
 
