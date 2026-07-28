@@ -249,6 +249,16 @@
                                                         <label class="form-check-label" for="absent">Client absent</label>
                                                     </div>   
                                                 </div>
+                                             @foreach ($casesSupplementaires as $index => $case)
+                                                @if ($case != "")
+                                                    <div class="col-md-6 mb-2">                                        
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="{{ $index }}" value="oui" id="{{ $index}}"">
+                                                            <label class="form-check-label" for="{{ $index }}">{{ $case }}</label>
+                                                        </div>   
+                                                    </div>
+                                                @endif
+                                             @endforeach   
                                             </div>  
                                         </div>
                                     </div>
