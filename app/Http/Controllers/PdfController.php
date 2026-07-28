@@ -1105,7 +1105,7 @@ class PdfController extends Controller
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
         );
 
-        $configCera = ClientController::getConfigCerfa($client);
+        $configCera = ClientConfigurationService::getConfigCerfa($client);
         /*
          * Tous les champs d'identification de l'opérateur sont récupérés depuis la configuration du client
          * Cela permet de pré-remplir automatiquement les informations de l'entreprise qui réalise l'intervention dans la vue

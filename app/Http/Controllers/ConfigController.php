@@ -6,6 +6,7 @@ use App\Models\Api_Client;
 use Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\ClientConfigurationService; // Service pour gérer les configurations clients
 
 
 class ConfigController extends Controller
@@ -39,10 +40,10 @@ class ConfigController extends Controller
         $config = [];
 
         if ($document === 'rapport_intervention') {
-            $config = ClientController::getOptionsBI($entreprise);
+            $config = ClientConfigurationService::getOptionsBI($entreprise);
         }
         elseif ($document === 'cerfa_15497') {
-            $config = ClientController::getConfigCerfa($entreprise);
+            $config = ClientConfigurationService::getConfigCerfa($entreprise);
         }
         else {
             $config = [];
