@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Response;
 use App\Services\JsonReader;
+use App\Services\ClientConfigurationService;
 
 
 /**
@@ -660,16 +661,16 @@ class PdfController extends Controller
         
         // Numéro de bulletin (identifiant unique)
         $pdf->SetFont('helvetica', 'b', 8);
-        $pdf->SetXY(23, 37);
+        $pdf->SetXY(23, 36);
         $pdf->Write(10, ($this->reformaterTexte($data['dataToken']['uid']) ?? '000'));    
 
         // Date de l'intervention
         $pdf->SetFont('helvetica', 'b', 8);
-        $pdf->SetXY(31, y: 44);
+        $pdf->SetXY(31, y: 41);
         $pdf->Write(10, ( $this->formatDate($data['date_intervention']) ?? date('d/m/Y')));    
         
         // Nom de l'intervenant principal
-        $pdf->SetXY(32, 54);
+        $pdf->SetXY(33, 49);
         $pdf->Write(10, ($data['intervenant'] ?? ''));    
         
         // === SECTION SPÉCIALE : GESTION DU NOM DE L'ÉQUIPIER AVEC POLICE ADAPTATIVE ===
@@ -684,27 +685,27 @@ class PdfController extends Controller
             $pdf->SetFont('helvetica', 'b', $fontSize);
         }
 
-        $pdf->SetXY(28.2, 63);
+        $pdf->SetXY(29, 57);
         $pdf->Cell($maxWidth, 4, $equipier, 0, 0, 'L', 0, '', 1);
         
         // === ÉTAPE 4 : REMPLISSAGE DES INFORMATIONS CLIENT ===
         $pdf->SetFont('helvetica', '', 6.7);
 
         // Code client unique
-        $pdf->SetXY(37.25, 66);
+        $pdf->SetXY(37, 63);
         $pdf->Write(10, ($data['code_client'] ?? ''));  
         
         // Email du client
-        $pdf->SetXY(29, 71);
+        $pdf->SetXY(29, 69);
         $pdf->Write(10, ($data['email_client'] ?? ''));  
         
         // Téléphone du client
-        $pdf->SetXY(142, 66.25);
+        $pdf->SetXY(142, 63);
         $pdf->Write(10, ($data['telephone_client'] ?? ''));  
-        $pdf->SetXY(139, 71.5);
+        $pdf->SetXY(139, 68);
         $pdf->Write(10, ($data['portable_client'] ?? ''));  
         
-        $pdf->SetFont('helvetica', '', 6.7);
+        $pdf->SetFont('helvetica', '', 7);
 
         $pdf->SetXY(14, 88);
         $pdf->MultiCell(180, 10, ($data['description']."\n" ?? ''));
@@ -712,12 +713,12 @@ class PdfController extends Controller
         
 	    $pdf->SetFont('helvetica', '', 8); 
 
-        $pdf->SetXY(75, 45);
+        $pdf->SetXY(93, 43);
         $pdf->Write(10, ($data['adresse_intervention'] ?? '') . ' ' . ($data['cp_intervention'] ?? '') . ' ' . ($data['ville_intervention'] ?? '') . ' - ' . ($data['lieu_intervention'] ?? ''));  
 
         $pdf->SetFont('helvetica', '', 8);
 
-        $pdf->SetXY(75, 59.5);
+        $pdf->SetXY(93, 55);
         $pdf->Write(10, ($data['adresse_facturation'] ?? '') . ' ' . ($data['cp_facturation'] ?? '') . ' ' . ($data['ville_facturation'] ?? ''));
 
 
@@ -726,7 +727,7 @@ class PdfController extends Controller
         $pdf->SetXY(15, 111);
         $pdf->MultiCell(180, 10, (($this->reformaterTexte($data['compte_rendu']) ?? '')), 0, 'L');
 
-        $pdf->SetFont('helvetica', '', 6.7);
+        $pdf->SetFont('helvetica', '', 7);
 
         $pdf->SetXY(67, 194);
         $pdf->MultiCell(131, 10, (($this->reformaterTexte($data['materiel']) ?? '')), 0, 'L');
@@ -738,29 +739,62 @@ class PdfController extends Controller
 
         $pdf->SetFont('helvetica', '', 11);
         if (isset($data['intervention_realisable']) && ($data['intervention_realisable'] == 'oui')) {            
-            $pdf->SetXY(15.15, 127.6);
+            $pdf->SetXY(14.7, 127.4);
             $pdf->Write(10, 'X');
         }        
-        if (isset($data['terminee']) && ($data['terminee'] == 'oui')) {            
-            $pdf->SetXY(15.15, 143);
-            $pdf->Write(10, 'X');
-        }
-        if (isset($data['intervention_suite']) && ($data['intervention_suite'] == 'oui')) {            
-            $pdf->SetXY(15.15, 149.7);
-            $pdf->Write(10, 'X');
-        }
-        if (isset($data['facturable']) && ($data['facturable'] == 'oui')) {            
-            $pdf->SetXY(15.15, 164.5);
-            $pdf->Write(10, 'X');
-        }
-        if (isset($data['devis_a_faire']) && ($data['devis_a_faire'] == 'oui')) {            
-            $pdf->SetXY(15.15, 157.3);
+
+        if (isset($data['absent']) && ($data['absent'] == 'oui')) {            
+            $pdf->SetXY(14.7, 134.4); 
             $pdf->Write(10, 'X');
         }
 
-        if (isset($data['absent']) && ($data['absent'] == 'oui')) {            
-            $pdf->SetXY(15.15, 133.5); 
+        if (isset($data['terminee']) && ($data['terminee'] == 'oui')) {            
+            $pdf->SetXY(14.7, 141.4);
             $pdf->Write(10, 'X');
+        }
+        if (isset($data['intervention_suite']) && ($data['intervention_suite'] == 'oui')) {            
+            $pdf->SetXY(14.7, 148.5);
+            $pdf->Write(10, 'X');
+        }
+
+        if (isset($data['devis_a_faire']) && ($data['devis_a_faire'] == 'oui')) {            
+            $pdf->SetXY(14.7, 155.5);
+            $pdf->Write(10, 'X');
+        }
+        
+        if (isset($data['facturable']) && ($data['facturable'] == 'oui')) {            
+            $pdf->SetXY(14.7, 162.6);
+            $pdf->Write(10, 'X');
+        }
+
+        //Position des cases supplémentaires (vu qu'on en aura un nombre inconnu, on les gère dynamiquement)
+        $positions = [
+            'case1' => 169.7,
+            'case2' => 176.7,
+        ];
+
+        $cases = ClientConfigurationService::getBiCaseSupplementaires($client);
+
+        foreach ($cases as $key => $label) {
+
+            if(!isset($positions[$key])) {
+                continue; // Ignore les cases pour lesquelles nous n'avons pas de position définie
+            }
+            $y = $positions[$key];
+
+            if (($data[$key] ?? null) === 'oui') {
+                $pdf->SetFont('helvetica', '', 11);
+                $pdf->SetXY(14.7, $y);
+                $pdf->Write(10, 'X');
+                
+                
+            }
+
+            //affichage des libéllés
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->SetXY(19, $y + 0.7);
+            $pdf->Write(8, $label);
+
         }
 
         $pdf->SetFont('helvetica', '', 9);
@@ -1105,7 +1139,7 @@ class PdfController extends Controller
             fn() => abort(500, "Erreur lors de la récupération de vos données.")
         );
 
-        $configCera = ClientController::getConfigCerfa($client);
+        $configCera = ClientConfigurationService::getConfigCerfa($client);
         /*
          * Tous les champs d'identification de l'opérateur sont récupérés depuis la configuration du client
          * Cela permet de pré-remplir automatiquement les informations de l'entreprise qui réalise l'intervention dans la vue

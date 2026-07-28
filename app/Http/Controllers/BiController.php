@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
 use RuntimeException;
+use App\Services\ClientConfigurationService; // Service pour gérer les configurations clients
 
 /**
  * @class BiController
@@ -389,7 +390,7 @@ class BiController extends Controller
         }
 
         if (str_starts_with($document, 'cerfa')) {
-            $cerfaConfig = ClientController::getConfigCerfa($client);
+            $cerfaConfig = ClientConfigurationService::getConfigCerfa($client);
         
             return view($document, compact('data', 'token', 'uid', 'client', 'document', 'cerfaConfig'));
         }
@@ -400,7 +401,9 @@ class BiController extends Controller
         }
 
         // Récupération et décomposition des options
-        $allOption = ClientController::getOptionsBI($client);
+        $allOption = ClientConfigurationService::getOptionsBI($client);
+
+        $casesSupplementaires = ClientConfigurationService::getBiCaseSupplementaires($client);
         
         // On utilise collect() pour extraire les index de manière sécurisée (évite les erreurs d'index inexistant)
         $optionsConstat             = $allOption[0] ?? [];
@@ -410,7 +413,7 @@ class BiController extends Controller
 
         return view('bi', compact(
             'data', 'token', 'uid', 'client', 'document', 
-            'optionsConstat', 'optionsVerification', 'optionsNotesParticuliere', 'optionsPointVigilance'
+            'optionsConstat', 'optionsVerification', 'optionsNotesParticuliere', 'optionsPointVigilance', 'casesSupplementaires'
         ));
     }
 
