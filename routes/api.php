@@ -5,6 +5,8 @@ use App\Http\Controllers\PdfController;
 use App\Http\Controllers\BiController;
 use App\Http\Controllers\ClientController;
 use Illuminate\Support\Facades\Route;
+use App\Services\ClientConfigurationService;
+use App\Http\Controllers\ClientConfigurationController;
 
 Route::prefix('api')->group(function () {
     
@@ -45,4 +47,19 @@ Route::prefix('api')->group(function () {
             ->middleware('VerifSecretToken');
 
     Route::get('/getDocument/{client}', [ClientController::class, 'getDocument']);
+
+
+    //Routes temporaire à améliorer si besoin
+    Route::prefix('clients/{client}')->group(function () {
+        Route::get('/configuration/bi/options', [ClientConfigurationController::class, 'getBiOptions'])->middleware('VerifTokenAndSecretToken');
+        Route::put('/configuration/bi/options', [ClientConfigurationController::class, 'updateBiOptions'])->middleware('VerifTokenAndSecretToken');
+
+        Route::get('/configuration/bi/cases-supplementaires', [ClientConfigurationController::class, 'getBiCasesSupplementaires'])->middleware('VerifTokenAndSecretToken');
+        Route::put('/configuration/bi/cases-supplementaires', [ClientConfigurationController::class, 'updateBiCasesSupplementaires'])->middleware('VerifTokenAndSecretToken');
+
+        Route::get('/configuration/bi/cerfa', [ClientConfigurationController::class, 'getBiCerfa'])->middleware('VerifTokenAndSecretToken');
+        Route::put('/configuration/bi/cerfa', [ClientConfigurationController::class, 'updateBiCerfa'])->middleware('VerifTokenAndSecretToken');
+    });
+
+
 });
