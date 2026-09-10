@@ -481,6 +481,10 @@ class ClientController extends Controller
                     $joursEcoules = Carbon::createFromTimestamp($traitTs)->floatDiffInDays(Carbon::now());
                     $tempsRestants = max(0, 30 - $joursEcoules);
                     $signable = $tempsRestants > 0;
+
+                    if ($tempsRestants <= 0 && $confTs === null && $docEntry['status'] !== 'refused') {
+                         $docEntry['status'] = 'expired';
+                    }
                 }
 
                 // On retire le token de la racine pour les devis
