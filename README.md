@@ -202,6 +202,31 @@ Pour générer ou consulter la doc :
 - **Développement** : `database/database.sqlite`
 - **Production** : Configurez vos accès `DB_*` dans le fichier `.env`.
 
+## Lancement avec Docker
+
+Le conteneur utilise SQLite et monte les données persistantes directement depuis l'hôte :
+
+```bash
+copy .env.example .env
+docker compose build
+docker compose up -d
+```
+
+Renseignez `APP_KEY` dans `.env` avant le premier démarrage (`php artisan key:generate` ou une clé existante).
+L'application est disponible sur `http://localhost:8000`.
+
+Les répertoires suivants restent accessibles et modifiables sans redémarrer le conteneur :
+
+- `storage/app/public` : PDFs, JSON et images ;
+- `storage/app/signature` : `sign.py` et les certificats utilisés par la signature ;
+- `database` : fichier SQLite.
+
+Après modification du code ou du script Python, reconstruisez seulement si une dépendance de l'image change :
+
+```bash
+docker compose exec app python3 storage/app/signature/sign.py <pdf-entree> <pdf-sortie>
+```
+
 ---
 
 ## Crédits

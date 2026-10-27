@@ -1,0 +1,14 @@
+.git
+.gitignore
+.env
+vendor
+node_modules
+storage/app/public
+storage/app/signature
+storage/framework
+storage/logs
+public/storage
+database/*.sqlite-shm
+database/*.sqlite-wal
+bootstrap/cache/*.php
+*.log
