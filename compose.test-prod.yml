@@ -1,0 +1,41 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app-runtime
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8080
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/lib/laravel/database.sqlite
+      XDG_CONFIG_HOME: /tmp
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - ./data-test:/var/lib/laravel
+      - ./storage-test/app/public:/var/www/html/storage/app/public
+      - ./storage-test/app/signature:/var/www/html/storage/app/signature
+      - ./storage-test/framework:/var/www/html/storage/framework
+      - ./storage-test/logs:/var/www/html/storage/logs
+    expose:
+      - "9000"
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx-runtime
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./storage-test/app/public:/var/www/html/storage/app/public:ro
+    depends_on:
+      - app
+    restart: unless-stopped

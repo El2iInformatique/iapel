@@ -1,25 +1,41 @@
+
+# --------------------------------------------------
+# Dépendances PHP
+# --------------------------------------------------
 FROM composer:2.8 AS vendor
 
 WORKDIR /app
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
+
+# --------------------------------------------------
+# Assets frontend
+# --------------------------------------------------
 FROM node:22-bookworm-slim AS assets
 
 WORKDIR /app
-COPY package.json ./
-RUN npm install
-COPY resources ./resources
-COPY public ./public
-COPY vite.config.js ./
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
 RUN npm run build
 
-FROM php:8.2-cli-bookworm
+# --------------------------------------------------
+# Application Laravel + PHP-FPM
+# --------------------------------------------------
+FROM php:8.3-fpm-bookworm AS app-runtime
 
-ENV APP_ENV=production \
-    APP_DEBUG=false \
-    DB_CONNECTION=sqlite \
-    DB_DATABASE=/var/www/html/database/database.sqlite
+ENV DB_CONNECTION=sqlite \
+    DB_DATABASE=/var/lib/laravel/database.sqlite \
+    PYTHONUNBUFFERED=1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -35,33 +51,58 @@ RUN apt-get update \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-
-RUN docker-php-ext-install -j"$(nproc)" \
-    bcmath exif gd mbstring pcntl pdo_sqlite zip
+RUN docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath exif gd mbstring pcntl pdo_sqlite zip
 
 WORKDIR /var/www/html
 
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
 COPY --from=assets /app/public/build ./public/build
+
 COPY requirements.txt /tmp/requirements.txt
 
-RUN python3 -m pip install --no-cache-dir --break-system-packages -r /tmp/requirements.txt
+RUN python3 -m pip install \
+        --no-cache-dir \
+        --break-system-packages \
+        -r /tmp/requirements.txt
 
-RUN php artisan package:discover --ansi
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN mkdir -p \
+        bootstrap/cache \
         storage/app/public \
         storage/app/signature \
         storage/framework/cache/data \
         storage/framework/sessions \
         storage/framework/views \
         storage/logs \
-    && touch database/database.sqlite \
-    && chmod +x docker/entrypoint.sh
+        /var/lib/laravel \
+    && rm -rf public/storage \
+    && ln -s ../storage/app/public public/storage \
+    && chmod -R ug+rwX bootstrap/cache storage \
+    && php artisan package:discover --ansi
 
-EXPOSE 8000
+EXPOSE 9000
 
-ENTRYPOINT ["/var/www/html/docker/entrypoint.sh"]
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Appeler le script via sh évite de dépendre du bit exécutable
+# du fichier copié depuis Windows.
+ENTRYPOINT ["sh", "/usr/local/bin/entrypoint.sh"]
+
+CMD ["php-fpm"]
+
+# --------------------------------------------------
+# Serveur Nginx
+# --------------------------------------------------
+FROM nginx:stable-alpine AS nginx-runtime
+
+COPY --from=app-runtime /var/www/html/public /var/www/html/public
+
+RUN mkdir -p /var/www/html/storage/app/public
+
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
