@@ -17,11 +17,11 @@ services:
       XDG_CONFIG_HOME: /tmp
 
     volumes:
-      - /srv/demo_iapel/data:/var/lib/laravel
-      - /srv/demo_iapel/storage/app/public:/var/www/html/storage/app/public
-      - /srv/demo_iapel/storage/app/signature:/var/www/html/storage/app/signature
-      - /srv/demo_iapel/storage/framework:/var/www/html/storage/framework
-      - /srv/demo_iapel/storage/logs:/var/www/html/storage/logs
+      - /srv/iapel/data:/var/lib/laravel
+      - /srv/iapel/storage/app/public:/var/www/html/storage/app/public
+      - /srv/iapel/storage/app/signature:/var/www/html/storage/app/signature
+      - /srv/iapel/storage/framework:/var/www/html/storage/framework
+      - /srv/iapel/storage/logs:/var/www/html/storage/logs
 
     expose:
       - "9000"
@@ -38,7 +38,7 @@ services:
       - "127.0.0.1:8080:80"
 
     volumes:
-      - /srv/demo_iapel/storage/app/public:/var/www/html/storage/app/public:ro
+      - /srv/iapel/storage/app/public:/var/www/html/storage/app/public:ro
 
     depends_on:
       - app
